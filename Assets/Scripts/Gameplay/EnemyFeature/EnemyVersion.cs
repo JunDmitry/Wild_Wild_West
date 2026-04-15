@@ -2,7 +2,7 @@ using Assets.Scripts.Gameplay.HealthFeature;
 using System;
 using UnityEngine;
 
-namespace Assets.Scripts.Gameplay.PlayerFeature.Components
+namespace Assets.Scripts.Gameplay.EnemyFeature
 {
     [Serializable]
     public class EnemyVersion

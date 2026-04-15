@@ -1,4 +1,4 @@
-namespace Assets.Scripts.Gameplay.PlayerFeature.Components
+namespace Assets.Scripts.Gameplay.EnemyFeature
 {
     public enum EnemyType
     {
