@@ -171,6 +171,7 @@ public abstract class ComponentData : IReadOnlyComponentData
 > Tries make path selector attribute with valid prefabs
 > for set ComponentData
 
+`afasdfas`
 ---
 
 ## Tags for GameObject
