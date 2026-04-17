@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Architecture.Presentation.Interfaces;
 using Assets.Scripts.Gameplay.Configs;
-using Unity.Collections;
 using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Common.Interfaces
@@ -21,16 +20,14 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
     public interface IComponentModel : IModel
     {
-        IReadOnlyDictionary<int, IReadOnlyComponentData> StaticData { get; }
-
         T GetOrDefault<T>(T @default = null) where T : ComponentData;
         ComponentData GetOrDefault(int id, ComponentData @default = null);
         void Add<T>(T componentData) where T : ComponentData;
+        void AddOrReplace<T>(T componentData) where T : ComponentData;
         void Replace<T>(T componentData) where T : ComponentData;
         void Remove<T>() where T : ComponentData;
         void Remove(int id);
         bool Has<T>() where T : ComponentData;
-        bool Has(Type type);
         bool Has(int id);
     }
 
@@ -44,22 +41,25 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
             Id = id;
             _componentByTypeId = initialComponents.ToDictionary(c => c.TypeId, c => c.CloneDeep());
-            StaticData = initialComponents.ToDictionary(c => c.TypeId, c => c);
         }
 
         public int Id { get; }
-        public IReadOnlyDictionary<int, IReadOnlyComponentData> StaticData { get; }
 
         public void Add<T>(T componentData) where T : ComponentData
         {
-            ThrowIf.Invalid(Has(componentData.TypeId), $"This Component already contains in {GetType().Name} component model");
+            ThrowIf.Invalid(Has(TypeId<T>.Id) == false, $"This Component already contains in {GetType().Name} component model with id {Id}");
 
-            _componentByTypeId.Add(componentData.TypeId, componentData);
+            _componentByTypeId.Add(TypeId<T>.Id, componentData.CloneDeep());
+        }
+
+        public void AddOrReplace<T>(T componentData) where T : ComponentData
+        {
+            _componentByTypeId[TypeId<T>.Id] = componentData.CloneDeep();
         }
 
         public T GetOrDefault<T>(T @default = null) where T : ComponentData
         {
-            return (T) GetOrDefault(typeof(T).GetId(), @default);
+            return (T) GetOrDefault(TypeId<T>.Id, @default);
         }
 
         public ComponentData GetOrDefault(int id, ComponentData @default = null)
@@ -69,12 +69,7 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public bool Has<T>() where T : ComponentData
         {
-            return Has(typeof(T));
-        }
-
-        public bool Has(Type type)
-        {
-            return Has(type.GetId());
+            return Has(TypeId<T>.Id);
         }
 
         public bool Has(int id)
@@ -84,7 +79,7 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public void Remove<T>() where T : ComponentData
         {
-            Remove(typeof(T).GetId());
+            Remove(TypeId<T>.Id);
         }
 
         public void Remove(int id)
@@ -94,7 +89,10 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public void Replace<T>(T componentData) where T : ComponentData
         {
-            _componentByTypeId[componentData.TypeId] = componentData;
+            ThrowIf.Invalid(Has(TypeId<T>.Id) == false, 
+                $"Invalid {nameof(Replace)} call. Component {typeof(T).Name} does not exist in {GetType().Name} model with id {Id}");
+
+            _componentByTypeId[TypeId<T>.Id] = componentData.CloneDeep();
         }
     }
 
@@ -108,18 +106,7 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
     [Serializable]
     public abstract class ComponentData : IReadOnlyComponentData
     {
-        private int _typeId;
-
-        public int TypeId
-        {
-            get
-            {
-                if (_typeId == 0)
-                    _typeId = GetType().GetId();
-
-                return _typeId;
-            }
-        }
+        public int TypeId => TypeIdRegistry.Register(GetType());
         
         public abstract ComponentData CloneDeep();
     }
@@ -127,10 +114,10 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
     public abstract class BasePresenter<TModel, TData> : IPresenter
     {
         private bool _isShow;
-        private IModel _model;
+        private TModel _model;
         private IView<TData> _view;
 
-        public BasePresenter(IModel model, IView<TData> view)
+        public BasePresenter(TModel model, IView<TData> view)
         {
             _model = model;
             _view = view;
@@ -184,10 +171,18 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
         void UpdateView(TData data);
     }
 
+    [DisallowMultipleComponent]
     public abstract class BaseView<TData> : MonoBehaviour, IView<TData>
     {
+        private bool _isShow;
+
         public void Show()
         {
+            if (_isShow)
+                return;
+
+            _isShow = true;
+
             OnShowing();
             gameObject.SetActive(true);
             OnShowed();
@@ -195,6 +190,11 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public void Hide()
         {
+            if (_isShow == false)
+                return;
+
+            _isShow = false;
+
             OnHiding();
             gameObject.SetActive(false);
             OnHided();
@@ -215,10 +215,13 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
         { }
     }
 
+    // IView<TData> ?? single contract??
     public abstract class ComponentTag<TInData> : MonoBehaviour
     {
         public abstract string TagName { get; }
-        public abstract IReadOnlyList<int> RequireComponents { get; }
+
+        // Specification pattern for queries??
+        public abstract IReadOnlyList<Type> RequireComponents { get; }
 
         public abstract void UpdateTag(TInData data);
     }
@@ -228,22 +231,46 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
         public abstract event Action<TOutData> OnInteraction;
     }
 
-    public static class TypeIdentifier
+    public static class TypeId<T>
     {
-        private static Dictionary<Type, int> s_idByType = new();
-        private static int s_id = 1;
+        public static readonly int Id = TypeIdRegistry.Register(typeof(T));
+    }
 
-        public static int GetId(this Type type)
+    public class TypeIdRegistry
+    {
+        private readonly static object s_lock = new();
+        private readonly static TypeIdRegistry s_instance;
+
+        private readonly Dictionary<Type, int> _idByType;
+        private int _nextId;
+
+        static TypeIdRegistry()
         {
-            if (type.IsAbstract || type.IsInterface)
-                return default;
+            s_instance = new TypeIdRegistry();
+        }
 
-            if (s_idByType.TryGetValue(type, out int id) == false)
+        private TypeIdRegistry()
+        {
+            _idByType = new();
+            _nextId = 1;
+        }
+
+        public static int Register(Type type)
+        {
+            lock (s_lock)
             {
-                id = s_id++;
-                s_idByType[type] = id;
+                return s_instance.RegisterInternal(type);
             }
-            
+        }
+
+        private int RegisterInternal(Type type)
+        {
+            if (_idByType.TryGetValue(type, out int id) == false)
+            {
+                id = _nextId++;
+                _idByType[type] = id;
+            }
+
             return id;
         }
     }
