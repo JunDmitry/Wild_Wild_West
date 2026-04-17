@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Assets.Scripts.Architecture.Presentation.Interfaces;
 using Assets.Scripts.Gameplay.Configs;
 using UnityEngine;
@@ -104,11 +106,161 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
     }
 
     [Serializable]
-    public abstract class ComponentData : IReadOnlyComponentData
+    public abstract class ComponentData : SafeHandle, IReadOnlyComponentData
     {
+        private static readonly Dictionary<int, AutoPool<ComponentData>> s_poolByTypeId = new();
+
+        private bool _isPooled;
+
+        protected ComponentData()
+            : base(IntPtr.Zero, true)
+        {
+            _isPooled = true;
+        }
+
+        public sealed override bool IsInvalid => _isPooled;
         public int TypeId => TypeIdRegistry.Register(GetType());
         
-        public abstract ComponentData CloneDeep();
+        public ComponentData CloneDeep()
+        {
+            ComponentData clone = GetOrCreatePoolBy(TypeId).Get();
+
+            return clone;
+        }
+        
+        protected sealed override bool ReleaseHandle()
+        {
+            AutoPool<ComponentData> pool = GetOrCreatePoolBy(TypeId);
+            pool.Release(this);
+
+            return true;
+        }
+
+        protected abstract ComponentData OnCreateItem();
+
+        protected abstract void ConfigureClone(ComponentData item);
+
+        protected abstract void Reset(ComponentData item);
+
+        protected virtual void OnGetItem(ComponentData componentData)
+        {
+            componentData._isPooled = false;
+            ConfigureClone(componentData);
+        }
+
+        protected virtual void OnReleaseItem(ComponentData componentData)
+        {
+            componentData._isPooled = true;
+            Reset(componentData);
+        }
+
+        protected virtual void OnDestroyItem(ComponentData componentData) { }
+
+        private AutoPool<ComponentData> GetOrCreatePoolBy(int id)
+        {
+            if (s_poolByTypeId.TryGetValue(id, out AutoPool<ComponentData> pool) == false)
+            {
+                pool = CreatePool();
+                s_poolByTypeId[id] = pool;
+            }
+
+            return pool;
+        }
+
+        private AutoPool<ComponentData> CreatePool()
+        {
+            return new(OnCreateItem, OnGetItem, OnReleaseItem, OnDestroyItem);
+        }
+    }
+
+    public class AutoPool<T> : IDisposable
+        where T : class
+    {
+        private readonly Stack<T> _pool;
+        private readonly Func<T> _create;
+        private readonly Action<T> _onGet;
+        private readonly Action<T> _onRelease;
+        private readonly Action<T> _onDestroy;
+        private readonly int _initialSize;
+        private readonly int _maxSize;
+
+        public AutoPool(Func<T> create,
+            Action<T> onGet = null,
+            Action<T> onRelease = null,
+            Action<T> onDestroy = null,
+            int initialSize = 10, 
+            int maxSize = 10000)
+        {
+            ThrowIf.Null(create, nameof(create));
+            ThrowIf.Invalid(initialSize < 0, $"{nameof(initialSize)} of AutoPool<{typeof(T).Name}> should be more or equal than zero.");
+            ThrowIf.Invalid(maxSize <= 0, $"{nameof(maxSize)} of AutoPool<{typeof(T).Name}> should be positive.");
+
+            _pool = new(initialSize);
+            _create = create;
+            _onGet = onGet;
+            _onRelease = onRelease;
+            _onDestroy = onDestroy;
+            _initialSize = initialSize;
+            _maxSize = maxSize;
+
+            Initialize();
+        }
+
+        public int TotalCount { get; private set; }
+        public int InactiveCount => _pool.Count;
+        public int ActiveCount => TotalCount - _pool.Count;
+
+        public T Get()
+        {
+            T item;
+
+            if (_pool.Count > 0)
+                item = _pool.Pop();
+            else
+                item = Create();
+
+            _onGet?.Invoke(item);
+
+            return item;
+        }
+
+        public void Release(T item)
+        {
+            if (_pool.Count < _maxSize)
+            {
+                _onRelease?.Invoke(item);
+                _pool.Push(item);
+            }
+            else
+            {
+                TotalCount--;
+                _onDestroy?.Invoke(item);
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (T item in _pool)
+            {
+                TotalCount--;
+                _onDestroy?.Invoke(item);
+            }
+
+            _pool.Clear();
+        }
+
+        private void Initialize()
+        {
+            while (_pool.Count < _initialSize)
+                _pool.Push(Create());
+        }
+
+        private T Create()
+        {
+            TotalCount++;
+
+            return _create();
+        }
     }
 
     public abstract class BasePresenter<TModel, TData> : IPresenter

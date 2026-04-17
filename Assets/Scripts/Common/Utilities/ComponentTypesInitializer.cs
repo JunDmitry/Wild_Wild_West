@@ -16,7 +16,7 @@ namespace Assets.Scripts.Common.Utilities
                     .Where(t => (t.IsAbstract == false) && (t.IsInterface == false) && typeof(ComponentData).IsAssignableFrom(t)));
 
             foreach (Type type in types)
-                type.GetId();
+                _ = TypeIdRegistry.Register(type);
         }
     }
 }
