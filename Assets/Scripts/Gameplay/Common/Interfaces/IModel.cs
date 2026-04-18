@@ -1,15 +1,16 @@
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using Assets.Scripts.Architecture.Presentation.Interfaces;
 using Assets.Scripts.Gameplay.Configs;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Assets.Scripts.Gameplay.Common.Interfaces
 {
-    public interface IModel
+    public interface IModel : IDisposable
     {
         int Id { get; }
     }
@@ -20,22 +21,32 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
         TData Data { get; }
     }
 
-    public interface IComponentModel : IModel
+    public interface IReadOnlyComponentModel : IModel
     {
+        event Action<IReadOnlyComponentData> AddedComponent;
+        event Action<IReadOnlyComponentData> RemovedComponent;
+        event Action<IReadOnlyComponentData> ChangedComponent;
+
         T GetOrDefault<T>(T @default = null) where T : ComponentData;
         ComponentData GetOrDefault(int id, ComponentData @default = null);
+        bool Has<T>() where T : ComponentData;
+        bool Has(int id);
+    }
+
+    public interface IComponentModel : IReadOnlyComponentModel
+    {
         void Add<T>(T componentData) where T : ComponentData;
         void AddOrReplace<T>(T componentData) where T : ComponentData;
         void Replace<T>(T componentData) where T : ComponentData;
         void Remove<T>() where T : ComponentData;
         void Remove(int id);
-        bool Has<T>() where T : ComponentData;
-        bool Has(int id);
     }
 
     public class BaseComponentModel : IComponentModel
     {
         private readonly Dictionary<int, ComponentData> _componentByTypeId;
+        
+        private bool _disposed;
 
         public BaseComponentModel(int id, IEnumerable<IReadOnlyComponentData> initialComponents)
         {
@@ -44,19 +55,44 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
             Id = id;
             _componentByTypeId = initialComponents.ToDictionary(c => c.TypeId, c => c.CloneDeep());
         }
+        
+        public event Action<IReadOnlyComponentData> AddedComponent;
+        public event Action<IReadOnlyComponentData> RemovedComponent;
+        public event Action<IReadOnlyComponentData> ChangedComponent;
 
         public int Id { get; }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            foreach (ComponentData componentData in _componentByTypeId.Values)
+            {
+                RemovedComponent?.Invoke(componentData);
+                componentData.Dispose();
+            }
+
+            _componentByTypeId.Clear();
+        }
 
         public void Add<T>(T componentData) where T : ComponentData
         {
             ThrowIf.Invalid(Has(TypeId<T>.Id) == false, $"This Component already contains in {GetType().Name} component model with id {Id}");
 
-            _componentByTypeId.Add(TypeId<T>.Id, componentData.CloneDeep());
+            ComponentData cloneComponent = componentData.CloneDeep();
+            _componentByTypeId.Add(TypeId<T>.Id, cloneComponent);
+            AddedComponent?.Invoke(cloneComponent);
         }
 
         public void AddOrReplace<T>(T componentData) where T : ComponentData
         {
-            _componentByTypeId[TypeId<T>.Id] = componentData.CloneDeep();
+            if (Has(TypeId<T>.Id))
+                Replace(componentData);
+            else
+                Add(componentData);
         }
 
         public T GetOrDefault<T>(T @default = null) where T : ComponentData
@@ -66,7 +102,7 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public ComponentData GetOrDefault(int id, ComponentData @default = null)
         {
-            return _componentByTypeId.GetValueOrDefault(id, @default);
+            return _componentByTypeId.GetValueOrDefault(id, @default)?.CloneDeep();
         }
 
         public bool Has<T>() where T : ComponentData
@@ -86,6 +122,12 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
         public void Remove(int id)
         {
+            if (_componentByTypeId.TryGetValue(id, out ComponentData component))
+            {
+                RemovedComponent?.Invoke(component);
+                component.Dispose();
+            }
+
             _componentByTypeId.Remove(id);
         }
 
@@ -94,172 +136,87 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
             ThrowIf.Invalid(Has(TypeId<T>.Id) == false, 
                 $"Invalid {nameof(Replace)} call. Component {typeof(T).Name} does not exist in {GetType().Name} model with id {Id}");
 
+            _componentByTypeId[TypeId<T>.Id].Dispose();
             _componentByTypeId[TypeId<T>.Id] = componentData.CloneDeep();
+            ChangedComponent?.Invoke(_componentByTypeId[TypeId<T>.Id]);
         }
     }
 
-    public interface IReadOnlyComponentData
+    public interface IReadOnlyComponentData : IDisposable
     {
         int TypeId { get; }
-
         ComponentData CloneDeep();
     }
 
     [Serializable]
-    public abstract class ComponentData : SafeHandle, IReadOnlyComponentData
+    public abstract class ComponentData : IReadOnlyComponentData
     {
-        private static readonly Dictionary<int, AutoPool<ComponentData>> s_poolByTypeId = new();
+        private static readonly ConcurrentDictionary<int, ObjectPool<ComponentData>> s_poolByTypeId = new();
+        
+        private int _typeId = 0;
+        private bool _disposed;
 
-        private bool _isPooled;
-
-        protected ComponentData()
-            : base(IntPtr.Zero, true)
+        public int TypeId
         {
-            _isPooled = true;
+            get
+            {
+                if (_typeId == 0)
+                    _typeId = TypeIdRegistry.Register(GetType());
+
+                return _typeId;
+            }
+        }
+        
+        public static void ClearCache()
+        {
+            foreach (ObjectPool<ComponentData> pool in s_poolByTypeId.Values)
+            {
+                pool.Clear();
+            }
         }
 
-        public sealed override bool IsInvalid => _isPooled;
-        public int TypeId => TypeIdRegistry.Register(GetType());
-        
         public ComponentData CloneDeep()
         {
-            ComponentData clone = GetOrCreatePoolBy(TypeId).Get();
+            IObjectPool<ComponentData> pool = GetPool();
+            ComponentData clone = pool.Get();
+
+            CopyTo(clone);
 
             return clone;
-        }
-        
-        protected sealed override bool ReleaseHandle()
-        {
-            AutoPool<ComponentData> pool = GetOrCreatePoolBy(TypeId);
-            pool.Release(this);
-
-            return true;
-        }
-
-        protected abstract ComponentData OnCreateItem();
-
-        protected abstract void ConfigureClone(ComponentData item);
-
-        protected abstract void Reset(ComponentData item);
-
-        protected virtual void OnGetItem(ComponentData componentData)
-        {
-            componentData._isPooled = false;
-            ConfigureClone(componentData);
-        }
-
-        protected virtual void OnReleaseItem(ComponentData componentData)
-        {
-            componentData._isPooled = true;
-            Reset(componentData);
-        }
-
-        protected virtual void OnDestroyItem(ComponentData componentData) { }
-
-        private AutoPool<ComponentData> GetOrCreatePoolBy(int id)
-        {
-            if (s_poolByTypeId.TryGetValue(id, out AutoPool<ComponentData> pool) == false)
-            {
-                pool = CreatePool();
-                s_poolByTypeId[id] = pool;
-            }
-
-            return pool;
-        }
-
-        private AutoPool<ComponentData> CreatePool()
-        {
-            return new(OnCreateItem, OnGetItem, OnReleaseItem, OnDestroyItem);
-        }
-    }
-
-    public class AutoPool<T> : IDisposable
-        where T : class
-    {
-        private readonly Stack<T> _pool;
-        private readonly Func<T> _create;
-        private readonly Action<T> _onGet;
-        private readonly Action<T> _onRelease;
-        private readonly Action<T> _onDestroy;
-        private readonly int _initialSize;
-        private readonly int _maxSize;
-
-        public AutoPool(Func<T> create,
-            Action<T> onGet = null,
-            Action<T> onRelease = null,
-            Action<T> onDestroy = null,
-            int initialSize = 10, 
-            int maxSize = 10000)
-        {
-            ThrowIf.Null(create, nameof(create));
-            ThrowIf.Invalid(initialSize < 0, $"{nameof(initialSize)} of AutoPool<{typeof(T).Name}> should be more or equal than zero.");
-            ThrowIf.Invalid(maxSize <= 0, $"{nameof(maxSize)} of AutoPool<{typeof(T).Name}> should be positive.");
-
-            _pool = new(initialSize);
-            _create = create;
-            _onGet = onGet;
-            _onRelease = onRelease;
-            _onDestroy = onDestroy;
-            _initialSize = initialSize;
-            _maxSize = maxSize;
-
-            Initialize();
-        }
-
-        public int TotalCount { get; private set; }
-        public int InactiveCount => _pool.Count;
-        public int ActiveCount => TotalCount - _pool.Count;
-
-        public T Get()
-        {
-            T item;
-
-            if (_pool.Count > 0)
-                item = _pool.Pop();
-            else
-                item = Create();
-
-            _onGet?.Invoke(item);
-
-            return item;
-        }
-
-        public void Release(T item)
-        {
-            if (_pool.Count < _maxSize)
-            {
-                _onRelease?.Invoke(item);
-                _pool.Push(item);
-            }
-            else
-            {
-                TotalCount--;
-                _onDestroy?.Invoke(item);
-            }
         }
 
         public void Dispose()
         {
-            foreach (T item in _pool)
-            {
-                TotalCount--;
-                _onDestroy?.Invoke(item);
-            }
+            if (_disposed)
+                return;
 
-            _pool.Clear();
+            _disposed = true;
+
+            IObjectPool<ComponentData> pool = GetPool();
+            Reset();
+            pool.Release(this);
         }
 
-        private void Initialize()
+        public abstract void Reset();
+
+        protected abstract ComponentData OnCreateItem();
+
+        protected abstract void CopyTo(ComponentData item);
+
+        protected virtual void OnGetItem(ComponentData componentData)
         {
-            while (_pool.Count < _initialSize)
-                _pool.Push(Create());
+            _disposed = false;
         }
 
-        private T Create()
-        {
-            TotalCount++;
+        protected virtual void OnReleaseItem(ComponentData componentData)
+        { }
 
-            return _create();
+        protected virtual void OnDestroyItem(ComponentData componentData) 
+        { }
+
+        private ObjectPool<ComponentData> GetPool()
+        {
+            return s_poolByTypeId.GetOrAdd(TypeId, _ => new(OnCreateItem, OnGetItem, OnReleaseItem, OnDestroyItem));
         }
     }
 
@@ -367,14 +324,24 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
         { }
     }
 
+    public interface IComponentTag<IInData>
+    {
+        IEnumerator Show();
+        IEnumerator Hide();
+        void UpdateTag(IInData data);
+    }
+
+    // Create id with Type (enum flags) ideally for componentTag
     // IView<TData> ?? single contract??
-    public abstract class ComponentTag<TInData> : MonoBehaviour
+    public abstract class ComponentTag<TInData> : MonoBehaviour, IComponentTag<TInData>
     {
         public abstract string TagName { get; }
 
         // Specification pattern for queries??
         public abstract IReadOnlyList<Type> RequireComponents { get; }
 
+        public abstract IEnumerator Show();
+        public abstract IEnumerator Hide();
         public abstract void UpdateTag(TInData data);
     }
 
@@ -390,21 +357,27 @@ namespace Assets.Scripts.Gameplay.Common.Interfaces
 
     public class TypeIdRegistry
     {
+        private const int StartId = 1;
+
         private readonly static object s_lock = new();
-        private readonly static TypeIdRegistry s_instance;
+        private readonly static TypeIdRegistry s_instance = new();
 
         private readonly Dictionary<Type, int> _idByType;
         private int _nextId;
 
-        static TypeIdRegistry()
-        {
-            s_instance = new TypeIdRegistry();
-        }
-
         private TypeIdRegistry()
         {
             _idByType = new();
-            _nextId = 1;
+            _nextId = StartId;
+        }
+
+        public static void ClearCache()
+        {
+            if (s_instance == null)
+                return;
+
+            s_instance._idByType.Clear();
+            s_instance._nextId = StartId;
         }
 
         public static int Register(Type type)
