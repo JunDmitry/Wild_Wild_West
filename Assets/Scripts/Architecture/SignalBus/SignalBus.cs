@@ -82,7 +82,7 @@ namespace Assets.Scripts.Architecture.SignalBus
             }
 
             Delegate innerHandler = handler;
-            IDisposable disposable = new DisposableDelegate(() => _handlersByType[eventType]?.Remove(innerHandler));
+            IDisposable disposable = new Disposable(() => _handlersByType[eventType]?.Remove(innerHandler));
             handlers.Add(innerHandler);
 
             return disposable;

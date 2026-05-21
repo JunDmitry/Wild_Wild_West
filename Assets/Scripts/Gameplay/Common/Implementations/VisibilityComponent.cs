@@ -27,5 +27,10 @@ namespace Assets.Scripts.Gameplay.PlayerFeature.Components
             _isVisible = false;
             Visibled?.Invoke(_isVisible);
         }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

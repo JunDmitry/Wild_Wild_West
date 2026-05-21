@@ -3,75 +3,73 @@ using Assets.Scripts.Architecture.SignalBus.Interfaces;
 using Assets.Scripts.Gameplay.Common.Interfaces;
 using Assets.Scripts.Gameplay.PlayerFeature.Components;
 using System;
-using System.Collections.Generic;
 
 namespace Assets.Scripts.Gameplay.Services.UpdateService
 {
-    public class UpdaterService : IDisposable, IUpdaterService
+    public class UpdaterService : IDisposable, IUpdaterService, ITickable, IFixedTickable, ILateTickable
     {
-        private const int BufferSize = 64;
-
-        private readonly HashSet<IUpdate> _updates;
         private readonly ISignalBus<IEvent> _signalBus;
-        private readonly List<IDisposable> _disposables;
-
-        private readonly List<IUpdate> _updatesForAdd;
-        private readonly List<IUpdate> _updatesForRemove;
 
         public UpdaterService(ISignalBus<IEvent> signalBus)
         {
             _signalBus = signalBus;
-            _disposables = new();
-
-            _updates = new(BufferSize);
-            _updatesForAdd = new();
-            _updatesForRemove = new();
 
             Subscribe();
         }
 
+        public event Action<float> Ticked;
+        public event Action<float> FixedTicked;
+        public event Action<float> LateTicked;
+
         public void Dispose()
         {
-            foreach (IDisposable disposable in _disposables)
-            {
-                disposable.Dispose();
-            }
-
-            _disposables.Clear();
+            Ticked = null;
+            FixedTicked = null;
+            LateTicked = null;
         }
 
         public void Update(float deltaTime)
         {
-            foreach (IUpdate updatable in _updates)
-            {
-                updatable.Update(deltaTime);
-            }
+            Ticked?.Invoke(deltaTime);
+        }
 
-            foreach (IUpdate updateForAdd in _updatesForAdd)
-                _updates.Add(updateForAdd);
+        public void FixedUpdate(float fixedDeltaTime)
+        {
+            FixedTicked?.Invoke(fixedDeltaTime);
+        }
 
-            foreach (IUpdate updateForRemove in _updatesForRemove)
-                _updates.Remove(updateForRemove);
-
-            if (_updatesForAdd.Count > 0)
-                _updatesForAdd.Clear();
-
-            if (_updatesForRemove.Count > 0)
-                _updatesForRemove.Clear();
+        public void LateUpdate(float deltaTime)
+        {
+            LateTicked?.Invoke(deltaTime);
         }
 
         private void Subscribe()
         {
-            _disposables.Add(_signalBus.Subscribe<ItemAddedIntoRepositoryEvent<IModel>>(e =>
+            _signalBus.Subscribe<ItemAddedIntoRepositoryEvent<IModel>>(e =>
             {
                 if (e.AddedItem is IUpdate updatable)
-                    _updatesForAdd.Add(updatable);
-            }));
-            _disposables.Add(_signalBus.Subscribe<ItemRemovedFromRepositoryEvent<IModel>>(e =>
+                    Ticked += updatable.Update;
+            });
+            _signalBus.Subscribe<ItemRemovedFromRepositoryEvent<IModel>>(e =>
             {
                 if (e.RemovedItem is IUpdate updatable)
-                    _updatesForRemove.Add(updatable);
-            }));
+                    Ticked -= updatable.Update;
+            });
         }
+    }
+
+    public interface ITickable
+    {
+        event Action<float> Ticked;
+    }
+
+    public interface ILateTickable
+    {
+        event Action<float> LateTicked;
+    }
+
+    public interface IFixedTickable
+    {
+        event Action<float> FixedTicked;
     }
 }

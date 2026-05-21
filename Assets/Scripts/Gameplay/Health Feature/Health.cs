@@ -34,5 +34,10 @@ namespace Assets.Scripts.Gameplay.HealthFeature
             Current = Math.Min(Current + count, _healthContext.Max);
             CurrentChanged?.Invoke(Current);
         }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

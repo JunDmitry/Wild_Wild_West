@@ -13,12 +13,12 @@ public abstract class Presenter<TModel, TView> : IPresenter, IDisposable
     {
     }
 
-    public void Hide()
+    public void Disable()
     {
         throw new System.NotImplementedException();
     }
 
-    public void Show()
+    public void Enable()
     {
         throw new System.NotImplementedException();
     }
@@ -29,5 +29,15 @@ public abstract class Presenter<TModel, TView> : IPresenter, IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
+    }
+
+    public void Bind(IModel model, IView view)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Initialize()
+    {
+        throw new NotImplementedException();
     }
 }

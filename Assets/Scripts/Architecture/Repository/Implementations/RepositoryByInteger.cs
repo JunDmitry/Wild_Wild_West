@@ -4,6 +4,7 @@ using Assets.Scripts.Architecture.SignalBus.Interfaces;
 using Assets.Scripts.Gameplay.PlayerFeature.Components;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Assets.Scripts.Architecture.Repository.Implementations
 {
@@ -24,6 +25,11 @@ namespace Assets.Scripts.Architecture.Repository.Implementations
                 _signalBus.TryPublish(new ItemRemovedFromRepositoryEvent<TInterface>(item));
 
             _itemById.Clear();
+        }
+
+        public TInterface[] GetAll()
+        {
+            return _itemById.Values.ToArray();
         }
 
         public void AddItem<TClass>(int id, TClass @class)
@@ -60,6 +66,12 @@ namespace Assets.Scripts.Architecture.Repository.Implementations
             where TClass : class, TInterface
         {
             return GetItem<TClass>(id) != null;
+        }
+
+        public IEnumerator<(int, TInterface)> GetEnumerator()
+        {
+            foreach (KeyValuePair<int, TInterface> pair in _itemById)
+                yield return (pair.Key, pair.Value);
         }
 
         private TClass GetItem<TClass>(int id)

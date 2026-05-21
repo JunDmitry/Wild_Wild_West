@@ -10,5 +10,10 @@ namespace Assets.Scripts.Gameplay.PlayerFeature.Components
         }
 
         public int Id { get; }
+
+        public void Dispose()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

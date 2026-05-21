@@ -1,0 +1,16 @@
+{
+  "name": "com.charpunityright.ecscodegen",
+  "version": "1.0.0",
+  "displayName": "ECS Code Generator",
+  "description": "Source generator for ECS-like component IDs in Unity 2022.3+",
+  "unity": "2022.3",
+  "author": {
+    "name": "Charpunityright",
+    "email": "scelet0037@mail.ru"
+  },
+  "keywords": [
+    "ecs",
+    "codegen",
+    "source-generator"
+  ]
+}
