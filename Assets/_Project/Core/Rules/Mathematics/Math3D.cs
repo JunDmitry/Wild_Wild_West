@@ -35,6 +35,11 @@ namespace Game.Core.Rules.Mathematics
             return new(position.X + direction.X * distance, position.Y, position.Z + direction.Z * distance);
         }
 
+        public static float Clamp01(float value)
+        {
+            return Clamp(value, 0f, 1f);
+        }
+
         public static float Clamp(float value, float min, float max)
         {
             return value < min ? min : (value > max ? max : value);
