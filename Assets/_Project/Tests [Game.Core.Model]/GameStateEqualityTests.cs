@@ -17,11 +17,11 @@ public class GameStateEqualityTests
             WeaponKind.Ranged,
             0f, 0f);
 
-        WaveState wave = new WaveState(1, WavePhase.RegularCombat, 5, 0, false, false);
+        WaveState wave = new WaveState(1, WavePhase.RegularCombat, 5, 0, BossStatus.NotSpawned);
         Dictionary<EntityId, EnemyState> enemies = new Dictionary<EntityId, EnemyState>();
 
         GameState state = new GameState(
-            GamePhase.Playing, player, enemies, wave, 0f);
+            GamePhase.Playing, player, enemies, wave, 0f, 0f);
 
         Assert.That(state.Equals(state), Is.True);
     }
@@ -43,11 +43,11 @@ public class GameStateEqualityTests
             WeaponKind.Ranged,
             0f, 0f);
 
-        WaveState wave = new WaveState(1, WavePhase.RegularCombat, 5, 0, false, false);
+        WaveState wave = new WaveState(1, WavePhase.RegularCombat, 5, 0, BossStatus.NotSpawned);
         Dictionary<EntityId, EnemyState> enemies = new Dictionary<EntityId, EnemyState>();
 
-        GameState left = new GameState(GamePhase.Playing, leftPlayer, enemies, wave, 0f);
-        GameState right = new GameState(GamePhase.Playing, rightPlayer, enemies, wave, 0f);
+        GameState left = new GameState(GamePhase.Playing, leftPlayer, enemies, wave, 0f, 0f);
+        GameState right = new GameState(GamePhase.Playing, rightPlayer, enemies, wave, 0f, 0f);
 
         Assert.That(left.Equals(right), Is.False);
     }

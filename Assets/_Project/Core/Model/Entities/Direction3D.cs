@@ -7,6 +7,11 @@ namespace Game.Core.Model.Entities
     /// </summary>
     public readonly struct Direction3D : IEquatable<Direction3D>
     {
+        public static readonly Direction3D Zero = new Direction3D(0f, 0f, 0f);
+        public static readonly Direction3D Forward = new Direction3D(0f, 0f, 1f);
+        public static readonly Direction3D Up = new Direction3D(0f, 1f, 0f);
+        public static readonly Direction3D Right = new Direction3D(1f, 0f, 0f);
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Direction3D"/> struct with the specified components.
         /// </summary>
@@ -35,6 +40,36 @@ namespace Game.Core.Model.Entities
         /// </summary>
         public float Z { get; }
 
+        public static bool operator ==(Direction3D a, Direction3D b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Direction3D a, Direction3D b)
+        {
+            return !a.Equals(b);
+        }
+
+        public static Direction3D operator +(Direction3D a, Direction3D b)
+        {
+            return new Direction3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        }
+
+        public static Direction3D operator -(Direction3D a, Direction3D b)
+        {
+            return new Direction3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+
+        public static Direction3D operator *(Direction3D d, float s)
+        {
+            return new Direction3D(d.X * s, d.Y * s, d.Z * s);
+        }
+
+        public static Direction3D operator *(float s, Direction3D d)
+        {
+            return d * s;
+        }
+
         /// <summary>
         /// Returns the hash code for this <see cref="Direction3D"/> instance.
         /// </summary>
@@ -62,6 +97,11 @@ namespace Game.Core.Model.Entities
         public bool Equals(Direction3D other)
         {
             return X == other.X && Y == other.Y && Z == other.Z;
+        }
+
+        public override string ToString()
+        {
+            return $"<{X}, {Y}, {Z}>";
         }
     }
 }

@@ -20,7 +20,8 @@ namespace Game.Core.Model.Initializers
                 player,
                 enemies: new Dictionary<EntityId, EnemyState>(),
                 currentWave: wave,
-                time: 0f);
+                time: 0f,
+                phaseEnteredTime: 0f);
         }
     }
 }

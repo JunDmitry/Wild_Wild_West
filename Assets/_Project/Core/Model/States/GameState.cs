@@ -23,13 +23,15 @@ namespace Game.Core.Model.States
             PlayerState player,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
             WaveState currentWave,
-            float time)
+            float time,
+            float phaseEnteredTime)
         {
             Phase = phase;
             Player = player;
             Enemies = enemies;
             CurrentWave = currentWave;
             Time = time;
+            PhaseEnteredTime = phaseEnteredTime;
         }
 
         /// <summary>
@@ -56,6 +58,7 @@ namespace Game.Core.Model.States
         /// Gets the elapsed game time.
         /// </summary>
         public float Time { get; }
+        public float PhaseEnteredTime { get; }
 
         private static bool NormalizedEnemiesEquals(IReadOnlyDictionary<EntityId, EnemyState> left, IReadOnlyDictionary<EntityId, EnemyState> right)
         {
@@ -91,7 +94,8 @@ namespace Game.Core.Model.States
                 Player,
                 Enemies.Count,
                 CurrentWave,
-                Time);
+                Time,
+                PhaseEnteredTime);
         }
 
         /// <summary>
@@ -115,7 +119,8 @@ namespace Game.Core.Model.States
                 && Player.Equals(other.Player)
                 && NormalizedEnemiesEquals(Enemies, other.Enemies)
                 && CurrentWave.Equals(other.CurrentWave)
-                && Time == other.Time;
+                && Time == other.Time
+                && PhaseEnteredTime == other.PhaseEnteredTime;
         }
     }
 }

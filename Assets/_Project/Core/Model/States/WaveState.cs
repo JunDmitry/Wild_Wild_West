@@ -15,22 +15,19 @@ namespace Game.Core.Model.States
         /// <param name="phase">The current phase of the wave.</param>
         /// <param name="regularToSpawn">The number of regular enemies remaining to spawn.</param>
         /// <param name="regularAlive">The number of regular enemies currently alive.</param>
-        /// <param name="bossSpawned">A value indicating whether the boss has spawned.</param>
-        /// <param name="bossAlive">A value indicating whether the boss is alive.</param>
+        /// <param name="bossStatus"></param>
         public WaveState(
             int number,
             WavePhase phase,
             int regularToSpawn,
             int regularAlive,
-            bool bossSpawned,
-            bool bossAlive)
+            BossStatus bossStatus)
         {
             Number = number;
             Phase = phase;
             RegularToSpawn = regularToSpawn;
             RegularAlive = regularAlive;
-            BossSpawned = bossSpawned;
-            BossAlive = bossAlive;
+            BossStatus = bossStatus;
         }
 
         /// <summary>
@@ -53,15 +50,7 @@ namespace Game.Core.Model.States
         /// </summary>
         public int RegularAlive { get; }
 
-        /// <summary>
-        /// Gets a value indicating whether the boss has spawned.
-        /// </summary>
-        public bool BossSpawned { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the boss is alive.
-        /// </summary>
-        public bool BossAlive { get; }
+        public BossStatus BossStatus { get; }
 
         /// <summary>
         /// Returns the hash code for the current wave state.
@@ -74,8 +63,7 @@ namespace Game.Core.Model.States
                 Phase,
                 RegularToSpawn,
                 RegularAlive,
-                BossSpawned,
-                BossAlive);
+                BossStatus);
         }
 
         /// <summary>
@@ -99,8 +87,7 @@ namespace Game.Core.Model.States
                 && Phase == other.Phase
                 && RegularToSpawn == other.RegularToSpawn
                 && RegularAlive == other.RegularAlive
-                && BossSpawned == other.BossSpawned
-                && BossAlive == other.BossAlive;
+                && BossStatus == other.BossStatus;
         }
     }
 }

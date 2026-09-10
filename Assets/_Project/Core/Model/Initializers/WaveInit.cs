@@ -14,8 +14,7 @@ namespace Game.Core.Model.Initializers
                 Enums.WavePhase.RegularCombat,
                 waveConfig.RegularCount,
                 regularAlive: 0,
-                bossSpawned: false,
-                bossAlive: false);
+                bossStatus: Enums.BossStatus.NotSpawned);
         }
     }
 }

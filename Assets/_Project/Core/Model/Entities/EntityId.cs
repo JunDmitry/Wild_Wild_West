@@ -23,6 +23,16 @@ namespace Game.Core.Model.Entities
         /// </summary>
         public int Value { get; }
 
+        public static bool operator ==(EntityId a, EntityId b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(EntityId a, EntityId b)
+        {
+            return (a == b) == false;
+        }
+
         /// <summary>
         /// Returns the hash code for this <see cref="EntityId"/> instance.
         /// </summary>
@@ -40,6 +50,11 @@ namespace Game.Core.Model.Entities
         public override bool Equals(object obj)
         {
             return obj is EntityId entityId && Equals(entityId);
+        }
+
+        public override string ToString()
+        {
+            return $"EntityId({Value})";
         }
 
         /// <summary>
