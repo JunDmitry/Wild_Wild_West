@@ -1,10 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Architecture.Repository.Events;
 using Assets.Scripts.Architecture.Repository.Interfaces;
 using Assets.Scripts.Architecture.SignalBus.Interfaces;
 using Assets.Scripts.Gameplay.PlayerFeature.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Zenject.Asteroids;
 
 namespace Assets.Scripts.Architecture.Repository.Implementations
 {
@@ -79,7 +80,7 @@ namespace Assets.Scripts.Architecture.Repository.Implementations
         {
             if (_itemById.TryGetValue(id, out TInterface @class) == false)
                 return null;
-
+            
             return @class as TClass;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace Assets.Scripts.Common.Extensions
 {
     public static class FluentExtensions
@@ -10,10 +11,12 @@ namespace Assets.Scripts.Common.Extensions
             return value;
         }
 
-        public static T With<T>(this T value, Action<T> action, Func<T, bool> predicate)
+        public static T WithCondition<T>(this T value, Action<T> action, Func<T, bool> predicate)
         {
             if (predicate != null && predicate(value))
+            {
                 action?.Invoke(value);
+            }
 
             return value;
         }
