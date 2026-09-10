@@ -1,0 +1,20 @@
+{
+    "name": "Game.CompositionRoot",
+    "rootNamespace": "",
+    "references": [
+        "GUID:51fdc423ff1a9304db22d6875174695d",
+        "GUID:41784f66cde15a2439607f7e59997587",
+        "GUID:67346d281c5537e4fa1757ef1ade03bd",
+        "GUID:30bf2010949ea4c4fbd06aa9edbf647f",
+        "GUID:f5d699c82759cfa488769b87cc8c7cd0"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

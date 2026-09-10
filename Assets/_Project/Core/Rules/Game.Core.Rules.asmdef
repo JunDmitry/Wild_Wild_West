@@ -1,0 +1,16 @@
+{
+    "name": "Game.Core.Rules",
+    "rootNamespace": "",
+    "references": [
+        "GUID:51fdc423ff1a9304db22d6875174695d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

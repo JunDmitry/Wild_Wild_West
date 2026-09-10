@@ -1,0 +1,17 @@
+{
+    "name": "Game.Infrastructure",
+    "rootNamespace": "",
+    "references": [
+        "GUID:51fdc423ff1a9304db22d6875174695d",
+        "GUID:67346d281c5537e4fa1757ef1ade03bd"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
