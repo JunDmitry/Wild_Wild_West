@@ -58,7 +58,7 @@ namespace Game.Core.Rules
                 EntityId id = nextId;
                 nextId = new EntityId(nextId.Value + 1);
 
-                EnemyState enemy = new EnemyState(
+                EnemyState enemy = new(
                     id,
                     EnemyKind.Regular,
                     context.NextSpawnPosition,
@@ -105,7 +105,7 @@ namespace Game.Core.Rules
                 EntityId id = nextId;
                 nextId = new EntityId(nextId.Value + 1);
 
-                EnemyState boss = new EnemyState(
+                EnemyState boss = new(
                     id,
                     EnemyKind.Boss,
                     context.NextSpawnPosition,

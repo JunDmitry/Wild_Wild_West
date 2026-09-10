@@ -49,7 +49,7 @@ namespace Game.Core.Rules
             float delta,
             in SimulationResult result)
         {
-            GameState advanced = new GameState(
+            GameState advanced = new(
                 state.Phase,
                 state.Player,
                 state.Enemies,

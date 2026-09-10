@@ -48,7 +48,7 @@ namespace Game.Core.Rules
             (wave, nextEnemies, nextId) = WaveRules.Tick(wave, enemies, config, context, nextId, result);
             enemies = nextEnemies;
 
-            GameState mid = new GameState(
+            GameState mid = new(
                 GamePhase.Playing,
                 player,
                 enemies,
