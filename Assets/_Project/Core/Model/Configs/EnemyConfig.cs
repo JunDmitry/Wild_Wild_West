@@ -15,10 +15,18 @@ namespace Game.Core.Model.Configs
         /// <param name="maxHealth">The maximum health of the enemy.</param>
         public EnemyConfig(
             EnemyKind kind,
-            int maxHealth)
+            int maxHealth,
+            float moveSpeed,
+            float attackDamage,
+            float attackRange,
+            float attackCooldown)
         {
             Kind = kind;
             MaxHealth = maxHealth;
+            MoveSpeed = moveSpeed;
+            AttackDamage = attackDamage;
+            AttackRange = attackRange;
+            AttackCooldown = attackCooldown;
         }
 
         /// <summary>
@@ -30,6 +38,10 @@ namespace Game.Core.Model.Configs
         /// Gets the maximum health of the enemy.
         /// </summary>
         public int MaxHealth { get; }
+        public float MoveSpeed { get; }
+        public float AttackDamage { get; }
+        public float AttackRange { get; }
+        public float AttackCooldown { get; }
 
         /// <summary>
         /// Returns the hash code for the current enemy configuration.
@@ -39,7 +51,11 @@ namespace Game.Core.Model.Configs
         {
             return HashCode.Combine(
                 Kind,
-                MaxHealth);
+                MaxHealth,
+                MoveSpeed,
+                AttackDamage,
+                AttackRange,
+                AttackCooldown);
         }
 
         /// <summary>
@@ -60,7 +76,11 @@ namespace Game.Core.Model.Configs
         public bool Equals(EnemyConfig other)
         {
             return Kind == other.Kind
-                && MaxHealth == other.MaxHealth;
+                && MaxHealth == other.MaxHealth
+                && MoveSpeed == other.MoveSpeed
+                && AttackDamage == other.AttackDamage
+                && AttackRange == other.AttackRange
+                && AttackCooldown == other.AttackCooldown;
         }
     }
 }

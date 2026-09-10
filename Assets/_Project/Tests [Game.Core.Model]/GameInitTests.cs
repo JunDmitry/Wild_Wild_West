@@ -79,13 +79,14 @@ public class GameInitTests
             maxHealth: 100,
             startPosition: Position3D.Zero,
             startRangedReadyTime: 0f,
-            startMeleeReadyTime: 0f);
+            startMeleeReadyTime: 0f,
+            moveSpeed: 5f);
 
-        WeaponConfig ranged = new WeaponConfig(WeaponKind.Ranged, cooldown: 0.4f);
-        WeaponConfig melee = new WeaponConfig(WeaponKind.Melee, cooldown: 0.8f);
+        WeaponConfig ranged = new WeaponConfig(WeaponKind.Ranged, cooldown: 0.4f, damage: 10f, range: 100f);
+        WeaponConfig melee = new WeaponConfig(WeaponKind.Melee, cooldown: 0.8f, damage: 17.5f, range: 20f);
 
-        EnemyConfig regular = new EnemyConfig(EnemyKind.Regular, maxHealth: 50);
-        EnemyConfig boss = new EnemyConfig(EnemyKind.Boss, maxHealth: 300);
+        EnemyConfig regular = new EnemyConfig(EnemyKind.Regular, maxHealth: 50, moveSpeed: 2, attackDamage: 7.5f, attackRange: 17.5f, attackCooldown: 1f);
+        EnemyConfig boss = new EnemyConfig(EnemyKind.Boss, maxHealth: 300, moveSpeed: 1.75f, attackDamage: 25f, attackRange: 20f, attackCooldown: 1.1f);
 
         WaveConfig[] waves = new WaveConfig[]
         {

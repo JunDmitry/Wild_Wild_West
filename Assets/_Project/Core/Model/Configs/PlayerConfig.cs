@@ -19,12 +19,14 @@ namespace Game.Core.Model.Configs
             int maxHealth,
             Position3D startPosition,
             float startRangedReadyTime,
-            float startMeleeReadyTime)
+            float startMeleeReadyTime,
+            float moveSpeed)
         {
             MaxHealth = maxHealth;
             StartPosition = startPosition;
             StartRangedReadyTime = startRangedReadyTime;
             StartMeleeReadyTime = startMeleeReadyTime;
+            MoveSpeed = moveSpeed;
         }
 
         /// <summary>
@@ -47,6 +49,8 @@ namespace Game.Core.Model.Configs
         /// </summary>
         public float StartMeleeReadyTime { get; }
 
+        public float MoveSpeed { get; }
+
         /// <summary>
         /// Returns the hash code for the current player configuration.
         /// </summary>
@@ -57,7 +61,8 @@ namespace Game.Core.Model.Configs
                 MaxHealth,
                 StartPosition,
                 StartRangedReadyTime,
-                StartMeleeReadyTime);
+                StartMeleeReadyTime,
+                MoveSpeed);
         }
 
         /// <summary>
@@ -80,7 +85,8 @@ namespace Game.Core.Model.Configs
             return MaxHealth == other.MaxHealth
                 && StartPosition.Equals(other.StartPosition)
                 && StartRangedReadyTime == other.StartRangedReadyTime
-                && StartMeleeReadyTime == other.StartMeleeReadyTime;
+                && StartMeleeReadyTime == other.StartMeleeReadyTime
+                && MoveSpeed == other.MoveSpeed;
         }
     }
 }

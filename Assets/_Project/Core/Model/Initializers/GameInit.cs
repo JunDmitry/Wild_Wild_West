@@ -10,13 +10,30 @@ namespace Game.Core.Model.Initializers
         public static GameState NewGame(
             in GameConfig config,
             EntityId playerId,
-            int waveNumber)
+            int waveNumber = 1)
         {
             PlayerState player = PlayerInit.FromConfig(config, playerId);
             WaveState wave = WaveInit.FromConfig(config, waveNumber);
 
             return new GameState(
                 phase: Enums.GamePhase.Playing,
+                player,
+                enemies: new Dictionary<EntityId, EnemyState>(),
+                currentWave: wave,
+                time: 0f,
+                phaseEnteredTime: 0f);
+        }
+
+        public static GameState Loading(
+            GameConfig config,
+            EntityId playerId,
+            int waveNumber = 1)
+        {
+            PlayerState player = PlayerInit.FromConfig(config, playerId);
+            WaveState wave = WaveInit.FromConfig(config, waveNumber);
+
+            return new GameState(
+                phase: Enums.GamePhase.Loading,
                 player,
                 enemies: new Dictionary<EntityId, EnemyState>(),
                 currentWave: wave,

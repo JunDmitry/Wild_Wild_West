@@ -15,10 +15,14 @@ namespace Game.Core.Model.Configs
         /// <param name="cooldown">The cooldown time of the weapon.</param>
         public WeaponConfig(
             WeaponKind kind,
-            float cooldown)
+            float cooldown,
+            float damage,
+            float range)
         {
             Kind = kind;
             Cooldown = cooldown;
+            Damage = damage;
+            Range = range;
         }
 
         /// <summary>
@@ -30,6 +34,8 @@ namespace Game.Core.Model.Configs
         /// Gets the cooldown time of the weapon.
         /// </summary>
         public float Cooldown { get; }
+        public float Damage { get; }
+        public float Range { get; }
 
         /// <summary>
         /// Returns the hash code for the current weapon configuration.
@@ -39,7 +45,9 @@ namespace Game.Core.Model.Configs
         {
             return HashCode.Combine(
                 Kind,
-                Cooldown);
+                Cooldown,
+                Damage,
+                Range);
         }
 
         /// <summary>
@@ -60,7 +68,9 @@ namespace Game.Core.Model.Configs
         public bool Equals(WeaponConfig other)
         {
             return Kind == other.Kind
-                && Cooldown == other.Cooldown;
+                && Cooldown == other.Cooldown
+                && Damage == other.Damage
+                && Range == other.Range;
         }
     }
 }
