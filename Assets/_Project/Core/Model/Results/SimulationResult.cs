@@ -157,5 +157,27 @@ namespace Game.Core.Model.Results
         /// Gets a value indicating whether a restart was requested.
         /// </summary>
         public bool RestartRequested { get; }
+
+        public static SimulationResult Idle(WeaponKind selectedWeapon, bool restartRequested)
+        {
+            return new(
+                false,
+                selectedWeapon,
+                false,
+                default,
+                false,
+                0f,
+                false,
+                Array.Empty<EnemySpawnedFact>(),
+                Array.Empty<EnemyDamagedFact>(),
+                Array.Empty<EntityId>(),
+                false,
+                default,
+                false,
+                0,
+                false,
+                default,
+                restartRequested);
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace Game.Core.Rules
 {
     public static class MovementRules
     {
-        public static MovementOutcome MovePlayer(
+        public static MovementOutcome ApplyMovement(
             in PlayerState player,
             bool hasMovementQuery,
             in MovementQuery plannedMovement,
