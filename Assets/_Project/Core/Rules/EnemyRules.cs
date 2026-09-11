@@ -3,8 +3,8 @@ using Game.Core.Model.Configs;
 using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
 using Game.Core.Rules.Mathematics;
+using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules
 {
@@ -12,16 +12,16 @@ namespace Game.Core.Rules
     {
         private const float Epsilon = .0001f;
 
-        public static (PlayerState Player, Dictionary<EntityId, EnemyState> Enemies) TickAll(
+        public static EnemyTickOutcome TickAll(
             in PlayerState player,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
             in GameConfig config,
             float time,
-            float delta,
-            SimulationResultBuilder resultBuilder)
+            float delta)
         {
             Dictionary<EntityId, EnemyState> nextEnemies = new(enemies.Count);
             PlayerState nextPlayer = player;
+            float totalDamageToPlayer = 0f;
 
             foreach (KeyValuePair<EntityId, EnemyState> pair in enemies)
             {
@@ -45,10 +45,16 @@ namespace Game.Core.Rules
                 else if (time >= enemy.AttackReadyTime)
                 {
                     enemy = new EnemyState(
-                        enemy.Id, enemy.Kind, enemy.Position,
-                        enemy.CurrentHealth, enemy.MaxHealth, time + enemyConfig.AttackCooldown);
+                        enemy.Id,
+                        enemy.Kind,
+                        enemy.Position,
+                        enemy.CurrentHealth,
+                        enemy.MaxHealth,
+                        time + enemyConfig.AttackCooldown);
+
                     float health = CombatRules.ApplyDamage(nextPlayer.CurrentHealth, enemyConfig.AttackDamage);
                     float dealt = nextPlayer.CurrentHealth - health;
+                    totalDamageToPlayer += dealt;
 
                     nextPlayer = new(
                         nextPlayer.Id,
@@ -58,18 +64,19 @@ namespace Game.Core.Rules
                         nextPlayer.SelectedWeapon,
                         nextPlayer.RangedReadyTime,
                         nextPlayer.MeleeReadyTime);
-
-                    resultBuilder.AddPlayerDamage(dealt);
                 }
 
                 nextEnemies[pair.Key] = enemy;
             }
 
-            return (nextPlayer, nextEnemies);
+            return new(
+                nextPlayer,
+                nextEnemies,
+                totalDamageToPlayer);
         }
 
         private static EnemyState MoveToward(
-            EnemyState enemy,
+            in EnemyState enemy,
             Position3D target,
             float speed,
             float delta)

@@ -1,32 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Core.Model.Configs;
 using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
-using Game.Core.Model.Results;
+using Game.Core.Model.Facts;
+using Game.Core.Model.Simulation.Queries;
+using Game.Core.Model.Simulation.Resolutions;
 using Game.Core.Model.States;
 using Game.Core.Rules.Builders;
+using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules
 {
     public static class WeaponRules
     {
-        public static PlayerState TrySwitch(
+        public static WeaponSwitchOutcome TrySwitch(
             in PlayerState player,
-            bool switchPressed,
-            SimulationResultBuilder resultBuilder)
+            bool switchPressed)
         {
             if (switchPressed == false)
             {
-                return player;
+                return new(player, false, player.SelectedWeapon);
             }
 
             WeaponKind next = player.SelectedWeapon == Model.Enums.WeaponKind.Ranged
                 ? WeaponKind.Melee
                 : WeaponKind.Ranged;
 
-            resultBuilder.MarkWeaponSwitched(next);
-
-            return new PlayerState(
+            PlayerState updated = new(
                 player.Id,
                 player.Position,
                 player.CurrentHealth,
@@ -34,52 +35,52 @@ namespace Game.Core.Rules
                 next,
                 player.RangedReadyTime,
                 player.MeleeReadyTime);
+
+            return new(updated, true, next);
         }
 
-        public static (PlayerState Player, IReadOnlyDictionary<EntityId, EnemyState> Enemies) TryPlayerAttack(
+        public static AttackExecutionOutcome TryPlayerAttack(
             in PlayerState player,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
-            in FrameInput input,
-            in FrameContext context,
+            in AttackQuery plannedAttack,
+            in AttackResolution resolution,
             in GameConfig config,
-            float time,
-            SimulationResultBuilder resultBuilder)
+            float time)
         {
-            if (input.AttackPressed == false)
+            if (plannedAttack.Kind == AttackQueryKind.None)
             {
-                return (player, enemies);
+                return new(
+                    player,
+                    enemies,
+                    false,
+                    player.SelectedWeapon,
+                    false,
+                    Array.Empty<EnemyDamagedFact>());
             }
 
             WeaponConfig weapon = player.SelectedWeapon == WeaponKind.Ranged
                 ? config.RangedWeapon
                 : config.MeleeWeapon;
-            float readyTime = player.SelectedWeapon == WeaponKind.Ranged
-                ? player.RangedReadyTime
-                : player.MeleeReadyTime;
-
-            if (time < readyTime)
-            {
-                return (player, enemies);
-            }
-
             float nextReady = time + weapon.Cooldown;
+
             PlayerState updatedPlayer = WithReadyTime(player, player.SelectedWeapon, nextReady);
-            bool anyHit = false;
             Dictionary<EntityId, EnemyState> nextEnemies = new(enemies);
+            List<EnemyDamagedFact> damagedFacts = new();
+            bool anyHit = false;
 
             if (updatedPlayer.SelectedWeapon == WeaponKind.Ranged)
             {
-                if (context.HasRangedHit && nextEnemies.TryGetValue(context.RangedHitId, out EnemyState target))
+                if (resolution.HasRangedHit && nextEnemies.TryGetValue(resolution.RangedHitId, out EnemyState target))
                 {
                     anyHit = true;
-                    ApplyHit(nextEnemies, target, weapon.Damage, resultBuilder);
+                    ApplyHit(nextEnemies, target, weapon.Damage, damagedFacts);
                 }
             }
             else
             {
-                for (int i = 0; i < context.MeleeHitIds.Count; i++)
+                for (int i = 0; i < resolution.MeleeHitIds.Count; i++)
                 {
-                    EntityId id = context.MeleeHitIds[i];
+                    EntityId id = resolution.MeleeHitIds[i];
 
                     if (nextEnemies.TryGetValue(id, out EnemyState target) == false)
                     {
@@ -87,13 +88,17 @@ namespace Game.Core.Rules
                     }
 
                     anyHit = true;
-                    ApplyHit(nextEnemies, target, weapon.Damage, resultBuilder);
+                    ApplyHit(nextEnemies, target, weapon.Damage, damagedFacts);
                 }
             }
 
-            resultBuilder.MarkPlayerAttacked(updatedPlayer.SelectedWeapon, anyHit);
-
-            return (updatedPlayer, nextEnemies);
+            return new(
+                updatedPlayer,
+                nextEnemies,
+                attackExecuted: true,
+                player.SelectedWeapon,
+                anyHit,
+                damagedFacts);
         }
 
         private static PlayerState WithReadyTime(in PlayerState player, WeaponKind kind, float readyTime)
@@ -124,7 +129,7 @@ namespace Game.Core.Rules
             Dictionary<EntityId, EnemyState> enemies,
             in EnemyState target,
             float damage,
-            SimulationResultBuilder resultBuilder)
+            List<EnemyDamagedFact> damagedFacts)
         {
             float health = CombatRules.ApplyDamage(target.CurrentHealth, damage);
             EnemyState updated = new(
@@ -135,7 +140,7 @@ namespace Game.Core.Rules
                 target.MaxHealth,
                 target.AttackReadyTime);
 
-            resultBuilder.AddEnemyDamaged(new Model.Facts.EnemyDamagedFact(updated.Id, damage, health));
+            damagedFacts.Add(new Model.Facts.EnemyDamagedFact(updated.Id, damage, health));
             enemies[target.Id] = updated;
         }
     }

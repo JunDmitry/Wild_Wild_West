@@ -2,26 +2,24 @@
 using System.Collections.Generic;
 using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
-using Game.Core.Model.Results;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
 using Game.Core.Rules.Mathematics;
+using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules
 {
     public static class DeathRules
     {
-        public static (PlayerState Player, Dictionary<EntityId, EnemyState> Enemies, WaveState Wave) Apply(
+        public static DeathResolutionOutcome Apply(
             in PlayerState player,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
-            in WaveState wave,
-            SimulationResultBuilder resultBuilder)
+            in WaveState wave)
         {
-            Dictionary<EntityId, EnemyState> nextEnemies = new();
-            WaveState nextWave = wave;
+            Dictionary<EntityId, EnemyState> survivedEnemies = new();
+            List<EntityId> defeatedEnemyIds = new();
 
-            int defeatedEnemiesCount = 0;
-            BossStatus status = nextWave.BossStatus;
+            int defeatedRegularsCount = 0;
+            BossStatus bossStatus = wave.BossStatus;
 
             foreach (KeyValuePair<EntityId, EnemyState> pair in enemies)
             {
@@ -29,38 +27,42 @@ namespace Game.Core.Rules
 
                 if (CombatRules.IsDefeated(enemy.CurrentHealth) == false)
                 {
-                    nextEnemies[pair.Key] = enemy;
+                    survivedEnemies[pair.Key] = enemy;
                     continue;
                 }
 
-                resultBuilder.AddEnemyDefeated(enemy.Id);
+                defeatedEnemyIds.Add(enemy.Id);
 
                 if (enemy.Kind == EnemyKind.Regular)
                 {
-                    defeatedEnemiesCount++;
+                    defeatedRegularsCount++;
                 }
                 else
                 {
-                    status = BossStatus.Defeated;
+                    bossStatus = BossStatus.Defeated;
                 }
             }
 
-            if (defeatedEnemiesCount > 0 || status != nextWave.BossStatus)
+            WaveState nextWave = wave;
+
+            if (defeatedRegularsCount > 0 || bossStatus != nextWave.BossStatus)
             {
                 nextWave = new(
                     nextWave.Number,
                     nextWave.Phase,
                     nextWave.RegularToSpawn,
-                    Math3D.Max(0, nextWave.RegularAlive - defeatedEnemiesCount),
-                    status);
+                    Math3D.Max(0, nextWave.RegularAlive - defeatedRegularsCount),
+                    bossStatus);
             }
 
-            if (CombatRules.IsDefeated(player.CurrentHealth))
-            {
-                resultBuilder.MarkPlayerDefeated();
-            }
+            bool playerDefeated = CombatRules.IsDefeated(player.CurrentHealth);
 
-            return (player, nextEnemies, nextWave);
+            return new(
+                player,
+                survivedEnemies,
+                nextWave,
+                playerDefeated,
+                defeatedEnemyIds);
         }
     }
 }

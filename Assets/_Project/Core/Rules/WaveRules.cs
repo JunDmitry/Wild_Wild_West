@@ -1,53 +1,49 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Game.Core.Model.Configs;
 using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
+using Game.Core.Model.Facts;
 using Game.Core.Model.Initializers;
-using Game.Core.Model.Results;
-using Game.Core.Model.Spawning;
+using Game.Core.Model.Simulation.Resolutions;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
+using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules
 {
     public static class WaveRules
     {
-        public static (WaveState Wave, Dictionary<EntityId, EnemyState> Enemies) Tick(
+        public static WaveExecutionOutcome Tick(
             in WaveState wave,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
             in GameConfig config,
-            in FrameContext context,
-            SimulationResultBuilder resultBuilder)
+            in SpawnResolution spawnResolution)
         {
-            WaveState nextWave = wave;
+            WaveExecutionOutcome result = default;
             Dictionary<EntityId, EnemyState> nextEnemies = new(enemies);
 
             switch (wave.Phase)
             {
                 case WavePhase.RegularCombat:
-                    (nextWave, nextEnemies) = TickRegular(
+                    result = TickRegular(
                         wave,
                         nextEnemies,
                         config,
-                        context,
-                        resultBuilder);
+                        spawnResolution);
                     break;
 
                 case WavePhase.BossCombat:
-                    (nextWave, nextEnemies) = TickBoss(
+                    result = TickBoss(
                         wave,
                         nextEnemies,
                         config,
-                        context,
-                        resultBuilder);
+                        spawnResolution);
                     break;
 
                 case WavePhase.Completed:
                     break;
             }
 
-            return (nextWave, nextEnemies);
+            return result;
         }
 
         public static WaveState StartNextWave(GameConfig config, int nextNumber)
@@ -55,31 +51,34 @@ namespace Game.Core.Rules
             return WaveInit.FromConfig(config, nextNumber);
         }
 
-        private static (WaveState nextWave, Dictionary<EntityId, EnemyState> nextEnemies) TickRegular(
+        private static WaveExecutionOutcome TickRegular(
             WaveState wave,
             Dictionary<EntityId, EnemyState> enemies,
             in GameConfig config,
-            in FrameContext context,
-            SimulationResultBuilder resultBuilder)
+            in SpawnResolution spawnResolution)
         {
             WaveConfig waveConfig = config.Waves[wave.Number - 1];
+            bool enemySpawned = true;
+            EnemySpawnedFact spawnedFact = default;
+            bool phaseChanged = false;
+            WavePhase newPhase = wave.Phase;
 
-            if (wave.RegularToSpawn > 0 && TryGetSpawnReservation(context, out SpawnReservation spawnReservation))
+            if (wave.RegularToSpawn > 0 && spawnResolution.HasSpawn)
             {
                 EnemyState enemy = new(
-                    spawnReservation.EntityId,
+                    spawnResolution.EntityId,
                     EnemyKind.Regular,
-                    spawnReservation.Position,
+                    spawnResolution.Position,
                     config.RegularEnemy.MaxHealth,
                     config.RegularEnemy.MaxHealth,
                     attackReadyTime: 0f);
 
-                enemies[spawnReservation.EntityId] = enemy;
-
-                resultBuilder.AddEnemySpawned(new Model.Facts.EnemySpawnedFact(
-                    enemy.Id,
-                    enemy.Kind,
-                    enemy.Position));
+                enemies[spawnResolution.EntityId] = enemy;
+                enemySpawned = true;
+                spawnedFact = new Model.Facts.EnemySpawnedFact(
+                                    enemy.Id,
+                                    enemy.Kind,
+                                    enemy.Position);
 
                 wave = new WaveState(
                     wave.Number,
@@ -113,35 +112,46 @@ namespace Game.Core.Rules
                     wave.RegularToSpawn,
                     wave.RegularAlive,
                     candidateStatus);
-                resultBuilder.MarkWavePhase(candidatePhase);
+                phaseChanged = true;
+                newPhase = candidatePhase;
             }
 
-            return (wave, enemies);
+            return new(
+                wave,
+                enemies,
+                enemySpawned,
+                spawnedFact,
+                phaseChanged,
+                newPhase);
         }
 
-        private static (WaveState nextWave, Dictionary<EntityId, EnemyState> nextEnemies) TickBoss(
+        private static WaveExecutionOutcome TickBoss(
             WaveState wave,
             Dictionary<EntityId, EnemyState> enemies,
             in GameConfig config,
-            in FrameContext context,
-            SimulationResultBuilder resultBuilder)
+            in SpawnResolution spawnResolution)
         {
-            if (wave.BossStatus == BossStatus.NotSpawned && TryGetSpawnReservation(context, out SpawnReservation spawnReservation))
+            bool enemySpawned = true;
+            EnemySpawnedFact spawnedFact = default;
+            bool phaseChanged = false;
+            WavePhase newPhase = wave.Phase;
+
+            if (wave.BossStatus == BossStatus.NotSpawned && spawnResolution.HasSpawn)
             {
                 EnemyState boss = new(
-                    spawnReservation.EntityId,
+                    spawnResolution.EntityId,
                     EnemyKind.Boss,
-                    spawnReservation.Position,
+                    spawnResolution.Position,
                     config.BossEnemy.MaxHealth,
                     config.BossEnemy.MaxHealth,
                     attackReadyTime: 0f);
 
-                enemies[spawnReservation.EntityId] = boss;
-
-                resultBuilder.AddEnemySpawned(new Model.Facts.EnemySpawnedFact(
+                enemies[spawnResolution.EntityId] = boss;
+                enemySpawned = true;
+                spawnedFact = new Model.Facts.EnemySpawnedFact(
                     boss.Id,
                     boss.Kind,
-                    boss.Position));
+                    boss.Position);
 
                 wave = new WaveState(
                     wave.Number,
@@ -153,30 +163,23 @@ namespace Game.Core.Rules
 
             if (wave.BossStatus == BossStatus.Defeated)
             {
+                newPhase = WavePhase.Completed;
+                phaseChanged = true;
                 wave = new WaveState(
                     wave.Number,
                     WavePhase.Completed,
                     wave.RegularToSpawn,
                     wave.RegularAlive,
                     BossStatus.Defeated);
-
-                resultBuilder.MarkWavePhase(WavePhase.Completed);
             }
 
-            return (wave, enemies);
-        }
-
-        private static bool TryGetSpawnReservation(in FrameContext context, out SpawnReservation reservation)
-        {
-            if (context.SpawnReservations.Count <= 0)
-            {
-                reservation = default;
-                return false;
-            }
-
-            reservation = context.SpawnReservations[0];
-
-            return true;
+            return new(
+                wave,
+                enemies,
+                enemySpawned,
+                spawnedFact,
+                phaseChanged,
+                newPhase);
         }
     }
 }
