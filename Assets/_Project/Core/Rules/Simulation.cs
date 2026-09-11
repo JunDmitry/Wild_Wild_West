@@ -8,7 +8,6 @@ using Game.Core.Model.Results;
 using Game.Core.Model.Simulation.Queries;
 using Game.Core.Model.Simulation.Resolutions;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
 using Game.Core.Rules.Outcomes;
 using Game.Core.Rules.Planning;
 
@@ -33,7 +32,6 @@ namespace Game.Core.Rules
             in ResolvedSimulationContext context,
             float delta)
         {
-            SimulationResultBuilder resultBuilder = new();
             float targetTime = state.Time + delta;
 
             if (state.Phase != GamePhase.Playing)

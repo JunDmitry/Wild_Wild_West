@@ -2,7 +2,6 @@
 using Game.Core.Model.Configs;
 using Game.Core.Model.Enums;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
 using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules

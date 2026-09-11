@@ -7,7 +7,6 @@ using Game.Core.Model.Facts;
 using Game.Core.Model.Simulation.Queries;
 using Game.Core.Model.Simulation.Resolutions;
 using Game.Core.Model.States;
-using Game.Core.Rules.Builders;
 using Game.Core.Rules.Outcomes;
 
 namespace Game.Core.Rules
