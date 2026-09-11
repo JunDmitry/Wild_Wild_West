@@ -12,23 +12,23 @@ namespace Game.Core.Model.Results
     public sealed class SimulationResult
     {
         public SimulationResult(
-        bool weaponSwitched,
-        WeaponKind selectedWeapon,
-        bool playerAttacked,
-        WeaponKind attackWeapon,
-        bool playerAttackHit,
-        float playerDamageTaken,
-        bool playerDefeated,
-        IReadOnlyList<EnemySpawnedFact> enemiesSpawned,
-        IReadOnlyList<EnemyDamagedFact> enemiesDamaged,
-        IReadOnlyList<EntityId> enemiesDefeated,
-        bool wavePhaseChanged,
-        WavePhase wavePhase,
-        bool waveStarted,
-        int waveNumber,
-        bool gamePhaseChanged,
-        GamePhase gamePhase,
-        bool restartRequested)
+            bool weaponSwitched,
+            WeaponKind selectedWeapon,
+            bool playerAttacked,
+            WeaponKind attackWeapon,
+            bool playerAttackHit,
+            float playerDamageTaken,
+            bool playerDefeated,
+            IReadOnlyList<EnemySpawnedFact> enemiesSpawned,
+            IReadOnlyList<EnemyDamagedFact> enemiesDamaged,
+            IReadOnlyList<EntityId> enemiesDefeated,
+            bool wavePhaseChanged,
+            WavePhase wavePhase,
+            bool waveStarted,
+            int waveNumber,
+            bool gamePhaseChanged,
+            GamePhase gamePhase,
+            bool restartRequested)
         {
             WeaponSwitched = weaponSwitched;
             SelectedWeapon = selectedWeapon;
@@ -37,9 +37,9 @@ namespace Game.Core.Model.Results
             PlayerAttackHit = playerAttackHit;
             PlayerDamageTaken = playerDamageTaken;
             PlayerDefeated = playerDefeated;
-            EnemiesSpawned = enemiesSpawned;
-            EnemiesDamaged = enemiesDamaged;
-            EnemiesDefeated = enemiesDefeated;
+            EnemiesSpawned = enemiesSpawned ?? Array.Empty<EnemySpawnedFact>();
+            EnemiesDamaged = enemiesDamaged ?? Array.Empty<EnemyDamagedFact>();
+            EnemiesDefeated = enemiesDefeated ?? Array.Empty<EntityId>();
             WavePhaseChanged = wavePhaseChanged;
             WavePhase = wavePhase;
             WaveStarted = waveStarted;
