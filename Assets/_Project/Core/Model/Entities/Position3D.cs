@@ -47,7 +47,7 @@ namespace Game.Core.Model.Entities
 
         public static bool operator !=(Position3D a, Position3D b)
         {
-            return !a.Equals(b);
+            return a.Equals(b) == false;
         }
 
         /// <summary>
