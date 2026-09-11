@@ -2,8 +2,8 @@
 using Game.Core.Model.Configs;
 using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
-using Game.Core.Model.Results;
 using Game.Core.Model.States;
+using Game.Core.Rules.Builders;
 using Game.Core.Rules.Mathematics;
 
 namespace Game.Core.Rules
@@ -18,7 +18,7 @@ namespace Game.Core.Rules
             in GameConfig config,
             float time,
             float delta,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             Dictionary<EntityId, EnemyState> nextEnemies = new(enemies.Count);
             PlayerState nextPlayer = player;
@@ -59,7 +59,7 @@ namespace Game.Core.Rules
                         nextPlayer.RangedReadyTime,
                         nextPlayer.MeleeReadyTime);
 
-                    result.AddPlayerDamage(dealt);
+                    resultBuilder.AddPlayerDamage(dealt);
                 }
 
                 nextEnemies[pair.Key] = enemy;

@@ -4,6 +4,7 @@ using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
 using Game.Core.Model.Results;
 using Game.Core.Model.States;
+using Game.Core.Rules.Builders;
 
 namespace Game.Core.Rules
 {
@@ -12,7 +13,7 @@ namespace Game.Core.Rules
         public static PlayerState TrySwitch(
             in PlayerState player,
             bool switchPressed,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             if (switchPressed == false)
             {
@@ -23,7 +24,7 @@ namespace Game.Core.Rules
                 ? WeaponKind.Melee
                 : WeaponKind.Ranged;
 
-            result.MarkWeaponSwitched(next);
+            resultBuilder.MarkWeaponSwitched(next);
 
             return new PlayerState(
                 player.Id,
@@ -42,7 +43,7 @@ namespace Game.Core.Rules
             in FrameContext context,
             in GameConfig config,
             float time,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             if (input.AttackPressed == false)
             {
@@ -71,7 +72,7 @@ namespace Game.Core.Rules
                 if (context.HasRangedHit && nextEnemies.TryGetValue(context.RangedHitId, out EnemyState target))
                 {
                     anyHit = true;
-                    ApplyHit(nextEnemies, target, weapon.Damage, result);
+                    ApplyHit(nextEnemies, target, weapon.Damage, resultBuilder);
                 }
             }
             else
@@ -86,11 +87,11 @@ namespace Game.Core.Rules
                     }
 
                     anyHit = true;
-                    ApplyHit(nextEnemies, target, weapon.Damage, result);
+                    ApplyHit(nextEnemies, target, weapon.Damage, resultBuilder);
                 }
             }
 
-            result.MarkPlayerAttacked(updatedPlayer.SelectedWeapon, anyHit);
+            resultBuilder.MarkPlayerAttacked(updatedPlayer.SelectedWeapon, anyHit);
 
             return (updatedPlayer, nextEnemies);
         }
@@ -123,7 +124,7 @@ namespace Game.Core.Rules
             Dictionary<EntityId, EnemyState> enemies,
             in EnemyState target,
             float damage,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             float health = CombatRules.ApplyDamage(target.CurrentHealth, damage);
             EnemyState updated = new(
@@ -134,7 +135,7 @@ namespace Game.Core.Rules
                 target.MaxHealth,
                 target.AttackReadyTime);
 
-            result.AddEnemyDamaged(new Model.Facts.EnemyDamagedFact(updated.Id, damage, health));
+            resultBuilder.AddEnemyDamaged(new Model.Facts.EnemyDamagedFact(updated.Id, damage, health));
             enemies[target.Id] = updated;
         }
     }

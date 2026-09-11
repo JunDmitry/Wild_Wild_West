@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Core.Model.Configs
 {
@@ -26,7 +27,7 @@ namespace Game.Core.Model.Configs
             WeaponConfig meleeWeapon,
             EnemyConfig regularEnemy,
             EnemyConfig bossEnemy,
-            WaveConfig[] waves,
+            IReadOnlyList<WaveConfig> waves,
             float restartDelay)
         {
             Arena = arena;
@@ -35,7 +36,7 @@ namespace Game.Core.Model.Configs
             MeleeWeapon = meleeWeapon;
             RegularEnemy = regularEnemy;
             BossEnemy = bossEnemy;
-            Waves = waves;
+            Waves = waves.ToArray();
             RestartDelay = restartDelay;
         }
 

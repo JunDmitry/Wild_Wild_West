@@ -1,5 +1,4 @@
-﻿using Game.Core.Model.Entities;
-using Game.Core.Model.States;
+﻿using Game.Core.Model.States;
 
 namespace Game.Core.Model.Results
 {
@@ -13,15 +12,12 @@ namespace Game.Core.Model.Results
         /// </summary>
         /// <param name="state">The updated game state.</param>
         /// <param name="result">The result of the simulation step.</param>
-        /// <param name="nextEntityId">The next entity identifier to be used.</param>
         public SimulationOutput(
             GameState state,
-            SimulationResult result,
-            EntityId nextEntityId)
+            SimulationResult result)
         {
             State = state;
             Result = result;
-            NextEntityId = nextEntityId;
         }
 
         /// <summary>
@@ -33,10 +29,5 @@ namespace Game.Core.Model.Results
         /// Gets the result of the simulation step.
         /// </summary>
         public SimulationResult Result { get; }
-
-        /// <summary>
-        /// Gets the next entity identifier to be used.
-        /// </summary>
-        public EntityId NextEntityId { get; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Core.Model.Spawning;
 
 namespace Game.Core.Model.Entities
 {
@@ -21,22 +22,20 @@ namespace Game.Core.Model.Entities
             bool movementBlocked,
             bool hasRangedHit,
             EntityId rangedHitId,
-            IReadOnlyList<EntityId> meleeHitIds,
-            bool hasSpawnPosition,
-            Position3D nextSpawnPosition)
+            IReadOnlyList<EntityId> meleeHitIds = null,
+            IReadOnlyList<SpawnReservation> spawnReservations = null)
         {
             MovementBlocked = movementBlocked;
             HasRangedHit = hasRangedHit;
             RangedHitId = rangedHitId;
-            MeleeHitIds = meleeHitIds;
-            HasSpawnPosition = hasSpawnPosition;
-            NextSpawnPosition = nextSpawnPosition;
+            MeleeHitIds = meleeHitIds ?? Array.Empty<EntityId>();
+            SpawnReservations = spawnReservations ?? Array.Empty<SpawnReservation>();
         }
 
         /// <summary>
         /// Gets an empty <see cref="FrameContext"/> instance.
         /// </summary>
-        public static FrameContext Empty { get; } = new(false, false, default, Array.Empty<EntityId>(), false, Position3D.Zero);
+        public static FrameContext Empty { get; } = new(false, false, default, Array.Empty<EntityId>(), Array.Empty<SpawnReservation>());
 
         /// <summary>
         /// Gets a value indicating whether movement is blocked.
@@ -57,15 +56,6 @@ namespace Game.Core.Model.Entities
         /// Gets the identifiers of the entities hit by the melee attack.
         /// </summary>
         public IReadOnlyList<EntityId> MeleeHitIds { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether a spawn position is available.
-        /// </summary>
-        public bool HasSpawnPosition { get; }
-
-        /// <summary>
-        /// Gets the next spawn position.
-        /// </summary>
-        public Position3D NextSpawnPosition { get; }
+        public IReadOnlyList<SpawnReservation> SpawnReservations { get; }
     }
 }

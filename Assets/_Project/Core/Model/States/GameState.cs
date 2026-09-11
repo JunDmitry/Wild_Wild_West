@@ -28,7 +28,7 @@ namespace Game.Core.Model.States
         {
             Phase = phase;
             Player = player;
-            Enemies = enemies;
+            Enemies = new Dictionary<EntityId, EnemyState>(enemies);
             CurrentWave = currentWave;
             Time = time;
             PhaseEnteredTime = phaseEnteredTime;

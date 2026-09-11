@@ -2,6 +2,7 @@
 using Game.Core.Model.Enums;
 using Game.Core.Model.Results;
 using Game.Core.Model.States;
+using Game.Core.Rules.Builders;
 
 namespace Game.Core.Rules
 {
@@ -10,11 +11,11 @@ namespace Game.Core.Rules
         public static GameState ApplyPhaseTransitions(
             in GameState state,
             in GameConfig config,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
-            if (state.Phase == GamePhase.Playing && result.PlayerDefeated)
+            if (state.Phase == GamePhase.Playing && resultBuilder.PlayerDefeated)
             {
-                result.MarkGamePhase(GamePhase.Defeat);
+                resultBuilder.MarkGamePhase(GamePhase.Defeat);
                 return WithPhase(state, GamePhase.Defeat, state.Time);
             }
 
@@ -22,13 +23,13 @@ namespace Game.Core.Rules
             {
                 if (state.CurrentWave.Number >= config.Waves.Count)
                 {
-                    result.MarkGamePhase(GamePhase.Victory);
+                    resultBuilder.MarkGamePhase(GamePhase.Victory);
                     return WithPhase(state, GamePhase.Victory, state.Time);
                 }
 
                 int nextNumber = state.CurrentWave.Number + 1;
                 WaveState nextWave = WaveRules.StartNextWave(config, nextNumber);
-                result.MarkWaveStarted(nextNumber);
+                resultBuilder.MarkWaveStarted(nextNumber);
 
                 return new GameState(
                     state.Phase,
@@ -47,7 +48,7 @@ namespace Game.Core.Rules
             in GameConfig config,
             float time,
             float delta,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             GameState advanced = new(
                 state.Phase,
@@ -63,7 +64,7 @@ namespace Game.Core.Rules
 
                 if (elapsed >= config.RestartDelay)
                 {
-                    result.MarkRestartRequested();
+                    resultBuilder.MarkRestartRequested();
                 }
             }
 

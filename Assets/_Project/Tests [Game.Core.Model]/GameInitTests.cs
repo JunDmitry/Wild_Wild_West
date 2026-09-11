@@ -11,7 +11,7 @@ public class GameInitTests
     public void NewGame_ContainsExpectedPlayer()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 1);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 1);
 
         Assert.That(gameState.Player.SelectedWeapon, Is.EqualTo(WeaponKind.Ranged));
         Assert.That(gameState.Player.MaxHealth, Is.EqualTo(100));
@@ -22,7 +22,7 @@ public class GameInitTests
     public void NewGame_PhaseIsPlaying()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 1);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 1);
 
         Assert.That(gameState.Phase, Is.EqualTo(GamePhase.Playing));
     }
@@ -31,7 +31,7 @@ public class GameInitTests
     public void NewGame_WaveIsInRegularCombat()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 1);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 1);
 
         Assert.That(gameState.CurrentWave.Phase, Is.EqualTo(WavePhase.RegularCombat));
         Assert.That(gameState.CurrentWave.RegularToSpawn, Is.EqualTo(5));
@@ -42,7 +42,7 @@ public class GameInitTests
     public void NewGame_NoEnemies()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 1);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 1);
 
         Assert.That(gameState.Enemies, Is.Empty);
     }
@@ -51,7 +51,7 @@ public class GameInitTests
     public void NewGame_TimeIsZero()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 1);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 1);
 
         Assert.That(gameState.Time, Is.EqualTo(0f));
     }
@@ -60,7 +60,7 @@ public class GameInitTests
     public void NewGame_WaveNumberCountsFromConfig()
     {
         GameConfig config = CreateValidConfig();
-        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.Identity, waveNumber: 3);
+        Game.Core.Model.States.GameState gameState = GameInit.NewGame(config, EntityId.None, waveNumber: 3);
 
         Assert.That(gameState.CurrentWave.Number, Is.EqualTo(3));
     }

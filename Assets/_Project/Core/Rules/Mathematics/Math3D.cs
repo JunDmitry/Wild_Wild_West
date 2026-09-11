@@ -64,5 +64,40 @@ namespace Game.Core.Rules.Mathematics
         {
             return a < b ? a : b;
         }
+
+        public static Direction3D Add(Direction3D a, Direction3D b)
+        {
+            return new Direction3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        }
+
+        public static Direction3D Subtract(Direction3D a, Direction3D b)
+        {
+            return new Direction3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+
+        public static Direction3D Multiple(Direction3D d, float s)
+        {
+            return new Direction3D(d.X * s, d.Y * s, d.Z * s);
+        }
+
+        public static Direction3D Multiple(float s, Direction3D d)
+        {
+            return Multiple(d, s);
+        }
+
+        public static Position3D Add(Position3D p, Direction3D d)
+        {
+            return new Position3D(p.X + d.X, p.Y + d.Y, p.Z + d.Z);
+        }
+
+        public static Position3D Subtract(Position3D p)
+        {
+            return new Position3D(-p.X, -p.Y, -p.Z);
+        }
+
+        public static Direction3D Subtract(Position3D a, Position3D b)
+        {
+            return new Direction3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
     }
 }

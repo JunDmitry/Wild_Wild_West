@@ -4,6 +4,7 @@ using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
 using Game.Core.Model.Results;
 using Game.Core.Model.States;
+using Game.Core.Rules.Builders;
 using Game.Core.Rules.Mathematics;
 
 namespace Game.Core.Rules
@@ -14,7 +15,7 @@ namespace Game.Core.Rules
             in PlayerState player,
             IReadOnlyDictionary<EntityId, EnemyState> enemies,
             in WaveState wave,
-            in SimulationResult result)
+            SimulationResultBuilder resultBuilder)
         {
             Dictionary<EntityId, EnemyState> nextEnemies = new();
             WaveState nextWave = wave;
@@ -32,7 +33,7 @@ namespace Game.Core.Rules
                     continue;
                 }
 
-                result.AddEnemyDefeated(enemy.Id);
+                resultBuilder.AddEnemyDefeated(enemy.Id);
 
                 if (enemy.Kind == EnemyKind.Regular)
                 {
@@ -56,7 +57,7 @@ namespace Game.Core.Rules
 
             if (CombatRules.IsDefeated(player.CurrentHealth))
             {
-                result.MarkPlayerDefeated();
+                resultBuilder.MarkPlayerDefeated();
             }
 
             return (player, nextEnemies, nextWave);

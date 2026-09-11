@@ -11,7 +11,7 @@ public class GameStateEqualityTests
     public void IdenticalStates_AreEqual()
     {
         PlayerState player = new PlayerState(
-            EntityId.Identity,
+            EntityId.None,
             new Position3D(0, 0, 0),
             100, 100,
             WeaponKind.Ranged,
@@ -30,14 +30,14 @@ public class GameStateEqualityTests
     public void DifferentPlayerHealth_StatesDiffer()
     {
         PlayerState leftPlayer = new PlayerState(
-            EntityId.Identity,
+            EntityId.None,
             new Position3D(0, 0, 0),
             100, 100,
             WeaponKind.Ranged,
             0f, 0f);
 
         PlayerState rightPlayer = new PlayerState(
-            EntityId.Identity,
+            EntityId.None,
             new Position3D(0, 0, 0),
             90, 100,
             WeaponKind.Ranged,

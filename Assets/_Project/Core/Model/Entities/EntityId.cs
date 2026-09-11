@@ -7,7 +7,7 @@ namespace Game.Core.Model.Entities
     /// </summary>
     public readonly struct EntityId : IEquatable<EntityId>
     {
-        public static readonly EntityId Identity = new EntityId(-1);
+        public static readonly EntityId None = new(0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EntityId"/> struct with the specified value.

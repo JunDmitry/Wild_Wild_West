@@ -50,21 +50,6 @@ namespace Game.Core.Model.Entities
             return !a.Equals(b);
         }
 
-        public static Position3D operator +(Position3D p, Direction3D d)
-        {
-            return new Position3D(p.X + d.X, p.Y + d.Y, p.Z + d.Z);
-        }
-
-        public static Position3D operator -(Position3D p)
-        {
-            return new Position3D(-p.X, -p.Y, -p.Z);
-        }
-
-        public static Direction3D operator -(Position3D a, Position3D b)
-        {
-            return new Direction3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-        }
-
         /// <summary>
         /// Returns the hash code for this <see cref="Position3D"/> instance.
         /// </summary>

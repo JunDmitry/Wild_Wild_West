@@ -4,6 +4,7 @@ using Game.Core.Model.Entities;
 using Game.Core.Model.Enums;
 using Game.Core.Model.Results;
 using Game.Core.Model.States;
+using Game.Core.Rules.Builders;
 
 namespace Game.Core.Rules
 {
@@ -14,38 +15,75 @@ namespace Game.Core.Rules
             in GameConfig config,
             in FrameInput input,
             in FrameContext context,
-            EntityId nextEntityId,
             float delta)
         {
-            SimulationResult result = new();
+            SimulationResultBuilder resultBuilder = new();
             float time = state.Time + delta;
 
             if (state.Phase != GamePhase.Playing)
             {
-                GameState idle = GameFlowRules.TickNonPlaying(state, config, time, delta, result);
-                return new(idle, result, nextEntityId);
+                GameState idle = GameFlowRules.TickNonPlaying(
+                    state,
+                    config,
+                    time,
+                    delta,
+                    resultBuilder);
+
+                return new(idle, resultBuilder.Build());
             }
 
             PlayerState player = state.Player;
             IReadOnlyDictionary<EntityId, EnemyState> enemies = state.Enemies;
             Dictionary<EntityId, EnemyState> nextEnemies;
             WaveState wave = state.CurrentWave;
-            EntityId nextId = nextEntityId;
 
-            player = WeaponRules.TrySwitch(player, input.SwitchWeaponPressed, result);
+            player = WeaponRules.TrySwitch(
+                player,
+                input.SwitchWeaponPressed,
+                resultBuilder);
+
             player = MovementRules.MovePlayer(
-                player, input, context, config.Arena, config.Player.MoveSpeed, delta);
+                player,
+                input,
+                context,
+                config.Arena,
+                config.Player.MoveSpeed,
+                delta);
 
             (player, enemies) = WeaponRules.TryPlayerAttack(
-                player, enemies, input, context, config, time, result);
+                player,
+                enemies,
+                input,
+                context,
+                config,
+                time,
+                resultBuilder);
+
             (player, nextEnemies) = EnemyRules.TickAll(
-                player, enemies, config, time, delta, result);
+                player,
+                enemies,
+                config,
+                time,
+                delta,
+                resultBuilder);
+
             enemies = nextEnemies;
 
-            (player, nextEnemies, wave) = DeathRules.Apply(player, enemies, wave, result);
+            (player, nextEnemies, wave) = DeathRules.Apply(
+                player,
+                enemies,
+                wave,
+                resultBuilder);
+
             enemies = nextEnemies;
 
-            (wave, nextEnemies, nextId) = WaveRules.Tick(wave, enemies, config, context, nextId, result);
+            (wave, nextEnemies) = WaveRules.Tick(
+                wave,
+                enemies,
+                config,
+                context,
+                resultBuilder);
+
             enemies = nextEnemies;
 
             GameState mid = new(
@@ -55,9 +93,13 @@ namespace Game.Core.Rules
                 wave,
                 time,
                 state.PhaseEnteredTime);
-            GameState finalState = GameFlowRules.ApplyPhaseTransitions(mid, config, result);
 
-            return new SimulationOutput(finalState, result, nextId);
+            GameState finalState = GameFlowRules.ApplyPhaseTransitions(
+                mid,
+                config,
+                resultBuilder);
+
+            return new SimulationOutput(finalState, resultBuilder.Build());
         }
     }
 }
