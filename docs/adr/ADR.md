@@ -31,6 +31,7 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 | ID | Title | Status | Date | Link |
 |---|---|---|---|---|
 | ADR-0000 | Use ADRs to document architectural decisions | Accepted | YYYY-MM-DD | [ADR-0000](ADR-0000-use-adrs.md) |
+| ADR-0001 | Independent identity per type | Accepted | 2026-09-13 | [ADR-0001](ADR-0001-Independent_identity_per_type.md)
 
 ## New ADR Template
 
