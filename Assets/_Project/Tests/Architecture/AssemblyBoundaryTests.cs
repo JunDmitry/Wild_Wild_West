@@ -79,7 +79,7 @@ namespace Game.Architecture.Tests
             string assemblyName,
             bool forbidUnity)
         {
-            Assembly root = this.FindPlayerAssembly(assemblyName);
+            Assembly root = FindPlayerAssembly(assemblyName);
             Stack<Assembly> pending = new();
             HashSet<string> visited = new(StringComparer.Ordinal);
 
@@ -101,8 +101,7 @@ namespace Game.Architecture.Tests
 
                 foreach (string referencePath in current.compiledAssemblyReferences)
                 {
-                    string referenceName =
-                        Path.GetFileNameWithoutExtension(referencePath);
+                    string referenceName = Path.GetFileNameWithoutExtension(referencePath);
 
                     AssertDependencyAllowed(
                         assemblyName,
@@ -127,7 +126,7 @@ namespace Game.Architecture.Tests
             foreach (string assetGuid in assetGuids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(assetGuid);
-                AssemblyDefinitionData definition = this.ReadDefinition(path);
+                AssemblyDefinitionData definition = ReadDefinition(path);
 
                 bool isTargetAssembly = definition.Name.StartsWith("Game.Arena.", StringComparison.Ordinal)
                     || definition.Name.Equals("Game.CompositionRoot", StringComparison.Ordinal);
