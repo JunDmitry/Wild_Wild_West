@@ -1,11 +1,8 @@
 {
-    "name": "Game.CompositionRoot",
-    "rootNamespace": "Game.CompositionRoot",
+    "name": "Game.Arena.Presentation",
+    "rootNamespace": "Game.Arena.Presentation",
     "references": [
-        "Game.Arena.Domain",
-        "Game.Arena.Application",
-        "Game.Arena.Infrastructure",
-        "Game.Arena.Presentation"
+        "Game.Arena.Application"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

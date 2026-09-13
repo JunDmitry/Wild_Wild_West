@@ -1,5 +1,5 @@
-using Game.Core.Model.Entities;
 using System;
+using Game.Core.Model.Entities;
 
 namespace Game.Application.Identity
 {
