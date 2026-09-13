@@ -2,9 +2,9 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-12
-- **Authors:** project team
+- **Authors:** Dmitry Rysev
 - **Reviewers:** none
-- **Related ADRs:** ADR-0001
+- **Related ADRs:** [ADR-0001](ADR-0001-Independent_identity_per_type.md)
 
 ## Context
 

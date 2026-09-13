@@ -4,7 +4,7 @@
 - **Date:** 2026-09-12
 - **Authors:** project team
 - **Reviewers:** none
-- **Related ADRs:** ADR-0002, ADR-0003
+- **Related ADRs:** [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md), [ADR-0003](ADR-0003-arena-run-aggregate-and-repository.md)
 
 ## Context
 

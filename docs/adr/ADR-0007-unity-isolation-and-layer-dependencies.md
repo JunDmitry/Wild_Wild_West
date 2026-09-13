@@ -2,9 +2,9 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-13
-- **Authors:** project team
+- **Authors:** Dmitry Rysev
 - **Reviewers:** none
-- **Related ADRs:** ADR-0002, ADR-0006
+- **Related ADRs:** [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md), [ADR-0006](ADR-0006-sequential-external-interaction-protocol.md)
 
 ## Context
 

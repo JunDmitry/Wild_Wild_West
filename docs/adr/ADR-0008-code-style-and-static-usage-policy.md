@@ -4,7 +4,7 @@
 - **Date:** 2026-09-13
 - **Authors:** project team
 - **Reviewers:** none
-- **Related ADRs:** ADR-0001, ADR-0007
+- **Related ADRs:** [ADR-0001](ADR-0001-Independent_identity_per_type.md), [ADR-0007](ADR-0007-unity-isolation-and-layer-dependencies.md)
 
 ## Context
 

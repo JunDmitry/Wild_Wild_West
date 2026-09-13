@@ -4,7 +4,7 @@
 - **Date:** 2026-09-13
 - **Authors:** project team
 - **Reviewers:** none
-- **Related ADRs:** ADR-0002, ADR-0005
+- **Related ADRs:** [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md), [ADR-0005](ADR-0005-domain-events-and-application-notifications.md)
 
 ## Context
 

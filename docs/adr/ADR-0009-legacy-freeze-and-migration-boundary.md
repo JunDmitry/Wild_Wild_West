@@ -4,7 +4,7 @@
 - **Date:** 2026-09-13
 - **Authors:** Dmitry Rysev
 - **Reviewers:** none
-- **Related ADRs:** ADR-0002, ADR-0003, ADR-0007
+- **Related ADRs:** [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md), [ADR-0003](ADR-0003-arena-run-aggregate-and-repository.md), [ADR-0007](ADR-0007-unity-isolation-and-layer-dependencies.md)
 
 ## Context
 
