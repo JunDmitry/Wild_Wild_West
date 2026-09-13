@@ -39,6 +39,7 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 | ADR-0006 | Sequential external interaction protocol | Accepted | 2026-09-13 | [ADR-0006](ADR-0006-sequential-external-interaction-protocol.md) |
 | ADR-0007 | Unity isolation and layer dependencies | Accepted | 2026-09-13 | [ADR-0007](ADR-0007-unity-isolation-and-layer-dependencies.md) |
 | ADR-0008 | Code style and static usage policy | Accepted | 2026-09-13 | [ADR-0008](ADR-0008-code-style-and-static-usage-policy.md) |
+| ADR-0009 | Legacy freeze and migration boundary | Accepted | 2026-09-13 | [ADR-0009](ADR-0009-legacy-freeze-and-migration-boundary.md) |
 
 ## New ADR Template
 
