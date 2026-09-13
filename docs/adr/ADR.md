@@ -30,8 +30,15 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 
 | ID | Title | Status | Date | Link |
 |---|---|---|---|---|
-| ADR-0000 | Use ADRs to document architectural decisions | Accepted | YYYY-MM-DD | [ADR-0000](ADR-0000-use-adrs.md) |
-| ADR-0001 | Independent identity per type | Accepted | 2026-09-13 | [ADR-0001](ADR-0001-Independent_identity_per_type.md)
+| ADR-0000 | Use ADRs to document architectural decisions | Accepted | YYYY-MM-DD | [ADR-0000](ADR.md) |
+| ADR-0001 | Independent identity per type | Accepted | 2026-09-13 | [ADR-0001](ADR-0001-Independent_identity_per_type.md) |
+| ADR-0002 | Adopt iddd arena combat | Accepted | 2026-09-13 | [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md) |
+| ADR-0003 | Arena run aggregate and repository | Accepted | 2026-09-13 | [ADR-0003](ADR-0003-arena-run-aggregate-and-repository.md) |
+| ADR-0004 | Typed process wide identity sources | Accepted | 2026-09-13 | [ADR-0004](ADR-0004-typed-process-wide-identity-sources.md) |
+| ADR-0005 | Domain events and application notifications | Accepted | 2026-09-13 | [ADR-0005](ADR-0005-domain-events-and-application-notifications.md) |
+| ADR-0006 | Sequential external interaction protocol | Accepted | 2026-09-13 | [ADR-0006](ADR-0006-sequential-external-interaction-protocol.md) |
+| ADR-0007 | Unity isolation and layer dependencies | Accepted | 2026-09-13 | [ADR-0007](ADR-0007-unity-isolation-and-layer-dependencies.md) |
+| ADR-0008 | Code style and static usage policy | Accepted | 2026-09-13 | [ADR-0008](ADR-0008-code-style-and-static-usage-policy.md) |
 
 ## New ADR Template
 
