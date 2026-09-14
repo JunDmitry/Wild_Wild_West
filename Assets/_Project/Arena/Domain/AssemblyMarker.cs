@@ -1,6 +1,6 @@
 namespace Game.Arena.Domain
 {
-	internal sealed class AssemblyMarker
+    internal sealed class AssemblyMarker
     {
         private AssemblyMarker()
         {

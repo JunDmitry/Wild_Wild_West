@@ -1,7 +1,7 @@
 # Trace matrix
 
 | Behavior |	Legacy characterization |	Legacy defect |	Future ArenaRun test |
-|---|---|---|---|
+|----------|----------------------------|-----------------|----------------------|
 | B-001 New run |	NewGameStartsWithFirstRegularCombatWave |	— |	StartCreatesPlayingRunAtFirstWave |
 | B-002 Movement |	UnblockedMovementChangesPlayerPosition |	LEG-020 |	ResolvedMovementUpdatesPlayerPosition |
 | B-003 Weapon switch |	Existing legacy unit tests |	— |	SwitchWeaponChangesSelectedWeapon |
