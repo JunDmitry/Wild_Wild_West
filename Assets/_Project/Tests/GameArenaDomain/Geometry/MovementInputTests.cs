@@ -49,5 +49,24 @@ namespace Game.Arena.Domain.Tests.Geometry
             Assert.That(succeeded, Is.True);
             Assert.That(direction, Is.EqualTo(Direction3D.Forward));
         }
+
+        [Test]
+        public void FromVectorRejectsVerticalComponent()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    MovementInput.FromVector(
+                        new Displacement3D(0f, 0.1f, 0f));
+                });
+        }
+
+        [Test]
+        public void AcceptedToleranceIsNormalizedToOne()
+        {
+            MovementInput input = MovementInput.FromVector(new Displacement3D(1.00005f, 0f, 0f));
+
+            Assert.That(input.Magnitude, Is.EqualTo(1f).Within(0.0001f));
+        }
     }
 }

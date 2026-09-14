@@ -176,6 +176,22 @@ Movement Input is expressed as a Raw Displacement whose length does not exceed o
 
 Movement Input may be zero, meaning that the Player requested no movement.
 
+### Arena Bounds
+
+The logical horizontal limits of the Arena and its ground height.
+
+Arena Bounds constrain the center of a combatant while accounting for its Collision Radius.
+
+Arena Bounds are not Unity colliders or scene geometry.
+
+### Collision Radius
+
+The non-zero horizontal radius used when validating a combatant position against Arena Bounds and when requesting external collision resolution.
+
+### Movement Speed
+
+The non-zero maximum distance per second that a combatant may request through movement behavior.
+
 ## External Interaction Terms
 
 ### Interaction Request

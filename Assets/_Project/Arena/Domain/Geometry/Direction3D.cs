@@ -29,6 +29,19 @@ namespace Game.Arena.Domain.Geometry
 
         public float Z { get; }
 
+        public bool IsValid
+        {
+            get
+            {
+                double x = X;
+                double y = Y;
+                double z = Z;
+                double lengthSquared = (x * x) + (y * y) + (z * z);
+
+                return Math.Abs(lengthSquared - 1d) <= GeometryTolerance.DirectionUnitLength;
+            }
+        }
+
         public static Direction3D From(Displacement3D displacement)
         {
             bool succeeded = TryFrom(displacement, out Direction3D direction);
@@ -43,7 +56,10 @@ namespace Game.Arena.Domain.Geometry
 
         public static bool TryFrom(Displacement3D displacement, out Direction3D direction)
         {
-            float length = displacement.Length;
+            double x = displacement.X;
+            double y = displacement.Y;
+            double z = displacement.Z;
+            double length = Math.Sqrt((x * x) + (y * y) + (z * z));
 
             if (length < GeometryTolerance.MinimumDirectionLength)
             {
@@ -51,10 +67,13 @@ namespace Game.Arena.Domain.Geometry
                 return false;
             }
 
-            direction = new Direction3D(
-                displacement.X / length,
-                displacement.Y / length,
-                displacement.Z / length);
+            direction = new Direction3D((float)(x / length), (float)(y / length), (float)(z / length));
+
+            if (direction.IsValid == false)
+            {
+                direction = default;
+                return false;
+            }
 
             return true;
         }

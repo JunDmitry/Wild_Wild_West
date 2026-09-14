@@ -14,12 +14,28 @@ namespace Game.Arena.Domain.Geometry
         public Displacement3D Vector { get; }
 
         public bool IsZero => Vector.IsZero;
+        public float Magnitude => Vector.Length;
 
         public static MovementInput FromVector(Displacement3D vector)
         {
-            if (vector.Length > GeometryTolerance.MovementInputMaximumLength)
+            if (vector.Y != 0f)
             {
                 throw new ArgumentOutOfRangeException(nameof(vector));
+            }
+
+            float length = vector.Length;
+
+            if (length > GeometryTolerance.MovementInputMaximumAcceptedLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vector));
+            }
+
+            if (length > 1f)
+            {
+                Direction3D direction = Direction3D.From(vector);
+                Displacement3D normalized = direction * 1f;
+
+                return new MovementInput(normalized);
             }
 
             return new MovementInput(vector);

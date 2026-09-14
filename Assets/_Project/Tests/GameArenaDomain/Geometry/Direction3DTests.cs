@@ -75,5 +75,26 @@ namespace Game.Arena.Domain.Tests.Geometry
 
             Assert.That(lengthSquared, Is.EqualTo(1f).Within(0.0001f));
         }
+
+        [Test]
+        public void DefaultDirectionIsInvalid()
+        {
+            Direction3D direction = default;
+
+            Assert.That(direction.IsValid, Is.False);
+        }
+
+        [Test]
+        public void FromNormalizesLargeFiniteDisplacement()
+        {
+            Displacement3D displacement = new Displacement3D(
+                float.MaxValue,
+                0f,
+                float.MaxValue);
+
+            Direction3D direction = Direction3D.From(displacement);
+
+            Assert.That(direction.IsValid, Is.True);
+        }
     }
 }
