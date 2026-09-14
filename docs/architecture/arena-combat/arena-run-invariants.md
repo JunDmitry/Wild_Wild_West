@@ -80,22 +80,32 @@ INV-054: An Attack affects only targets belonging to the same Arena Run.
 
 INV-060: The Domain does not allocate ArenaRunId, PlayerId, or EnemyId.
 
-INV-061: The Domain does not determine Unity collision or navigation results.
+INV-061: The Domain does not determine Unity collision, navigation, or physical spawn placement results.
 
-INV-062: An Interaction Resolution can only be applied to the Interaction Request that produced it.
+INV-062: Every external Interaction Request is identified by its ArenaRunId, InteractionId, and AggregateRevision.
 
-INV-063: An Interaction Resolution created for an older Run Revision cannot mutate a newer Arena Run revision.
+INV-063: An Interaction Resolution is accepted only when ArenaRunId, InteractionId, AggregateRevision, interaction type, and expected interaction stage match the pending Interaction Request.
 
-INV-064: Applying a valid state-changing Interaction Resolution advances the Run Revision.
+INV-064: An Interaction Resolution created for an older AggregateRevision cannot mutate a newer Arena Run revision.
 
-INV-065: Applying the same Interaction Resolution more than once must not duplicate a domain transition.
+INV-065: An accepted state-changing aggregate operation advances AggregateRevision exactly once.
+
+INV-066: A read-only operation, a rejected operation, and creation of an Interaction Request without a state change do not advance AggregateRevision.
+
+INV-067: A rejected or stale Interaction Resolution does not change aggregate state, advance AggregateRevision, or produce Domain Events.
+
+INV-068: Applying the same Interaction Resolution more than once cannot duplicate a domain transition.
+
+INV-069: InteractionId is allocated by ArenaRun from a monotonically increasing sequence local to that Arena Run.
+
+INV-070: One Enemy Movement Batch is one Interaction and therefore has one InteractionId; individual batch entries are correlated by EnemyId.
 
 ## Domain Events
 
-INV-070: Domain Events describe facts that have already occurred.
+INV-080: Domain Events describe facts that have already occurred.
 
-INV-071: Domain Events do not contain Unity-specific types.
+INV-081: Domain Events do not contain Unity-specific types.
 
-INV-072: A Domain Event cannot mutate the Arena Run.
+INV-082: A Domain Event cannot mutate the Arena Run.
 
-INV-073: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
+INV-083: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
