@@ -55,5 +55,13 @@ namespace Game.Arena.Domain.Tests.Aggregates.ArenaRun
                         events);
                 });
         }
+
+        [Test]
+        public void ConstructorStoresStateChangeFlag()
+        {
+            ArenaRunChange change = new(AggregateRevision.Initial.Next(), true, Array.Empty<IDomainEvent>());
+
+            Assert.That(change.HasStateChange, Is.True);
+        }
     }
 }

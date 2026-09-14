@@ -8,9 +8,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRunChange
     {
-        private readonly ReadOnlyCollection<IDomainEvent> _domainEvents;
+        private readonly ReadOnlyCollection<IDomainEvent> _eventsSnapshot;
 
-        public ArenaRunChange(AggregateRevision revision, IReadOnlyList<IDomainEvent> domainEvents)
+        public ArenaRunChange(
+            AggregateRevision revision,
+            IReadOnlyList<IDomainEvent> domainEvents)
+            : this(revision, false, domainEvents)
+        {
+        }
+
+        public ArenaRunChange(AggregateRevision revision, bool hasStateChange, IReadOnlyList<IDomainEvent> domainEvents)
         {
             if (domainEvents == null)
             {
@@ -27,11 +34,13 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Revision = revision;
-            _domainEvents = Array.AsReadOnly(events);
+            HasStateChange = hasStateChange;
+            _eventsSnapshot = Array.AsReadOnly(events);
         }
 
         public AggregateRevision Revision { get; }
+        public bool HasStateChange { get; }
 
-        public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents;
+        public IReadOnlyList<IDomainEvent> DomainEvents => _eventsSnapshot;
     }
 }

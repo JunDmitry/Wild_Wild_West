@@ -45,6 +45,7 @@ The following target tests are mandatory:
 | A rejected resolution changes aggregate state | `RejectedInteractionResolutionDoesNotChangeState` |
 | A rejected resolution advances AggregateRevision | `RejectedInteractionResolutionDoesNotAdvanceRevision` |
 | An accepted state-changing resolution advances AggregateRevision | `AcceptedStateChangingResolutionAdvancesRevision` |
+| An accepted resolution without state change does not advance AggregateRevision | `AcceptedResolutionWithoutMovementDoesNotAdvanceRevision` |
 | An interaction request is created without state change | `CreatingInteractionRequestDoesNotAdvanceRevision` |
 | Resolution type does not match pending interaction | `MismatchedInteractionResolutionIsRejected` |
 | Enemy movement batch resolution contains an unknown EnemyId | `EnemyMovementBatchWithUnknownEnemyIsRejected` |

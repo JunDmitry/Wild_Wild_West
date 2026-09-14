@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Game.Arena.Domain.Movement
+namespace Game.Arena.Domain.Interactions.Movement
 {
     public readonly struct MovementSpeed : IEquatable<MovementSpeed>
     {

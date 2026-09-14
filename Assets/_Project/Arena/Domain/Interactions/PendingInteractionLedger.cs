@@ -39,10 +39,7 @@ namespace Game.Arena.Domain.Interactions
             }
 
             _lastIssued = _lastIssued.Next();
-            _correlation = new InteractionCorrelation(
-                _owner,
-                _lastIssued,
-                currentRevision);
+            _correlation = new InteractionCorrelation(_owner, _lastIssued, currentRevision);
             _kind = kind;
             _hasPending = true;
 

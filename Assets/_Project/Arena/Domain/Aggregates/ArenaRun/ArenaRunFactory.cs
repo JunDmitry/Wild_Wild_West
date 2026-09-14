@@ -1,6 +1,6 @@
 ﻿using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
-using Game.Arena.Domain.Movement;
+using Game.Arena.Domain.Interactions.Movement;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {

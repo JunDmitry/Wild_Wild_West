@@ -232,6 +232,26 @@ A Pending Interaction that the Arena Run closed without applying a resolution.
 
 A resolution for an Abandoned Interaction is rejected as closed.
 
+### Player Movement Request
+
+A domain interaction request created when the Player attempts to move and the Arena Run needs the external world to resolve collision-dependent movement.
+
+The request contains Interaction Correlation, source position, requested position, and Collision Radius.
+
+Creating a Player Movement Request does not change Aggregate Revision.
+
+### Player Movement Resolution
+
+The external world's answer to a Player Movement Request.
+
+The resolution contains Interaction Correlation and an accepted Player position.
+
+ArenaRun accepts the resolution only through its own API after validating correlation, pending interaction state, interaction kind, Aggregate Revision, and Arena Bounds.
+
+A resolution that does not change Player position closes the pending interaction without advancing Aggregate Revision.
+
+A resolution that changes Player position advances Aggregate Revision exactly once.
+
 ## Lifecycle Terms
 
 ### Run Revision
