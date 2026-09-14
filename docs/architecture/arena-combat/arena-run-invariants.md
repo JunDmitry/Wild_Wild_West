@@ -100,6 +100,12 @@ INV-069: InteractionId is allocated by ArenaRun from a monotonically increasing 
 
 INV-070: One Enemy Movement Batch is one Interaction and therefore has one InteractionId; individual batch entries are correlated by EnemyId.
 
+INV-071: At most one Interaction is pending for an Arena Run at any moment.
+
+INV-072: A pending Interaction is closed only by successful completion or explicit abandonment by the Arena Run.
+
+INV-073: Resolutions are validated in a fixed order: foreign Arena Run, unknown Interaction, closed Interaction, stale revision, kind mismatch.
+
 ## Domain Events
 
 INV-080: Domain Events describe facts that have already occurred.

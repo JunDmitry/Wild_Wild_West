@@ -48,6 +48,10 @@ The following target tests are mandatory:
 | An interaction request is created without state change | `CreatingInteractionRequestDoesNotAdvanceRevision` |
 | Resolution type does not match pending interaction | `MismatchedInteractionResolutionIsRejected` |
 | Enemy movement batch resolution contains an unknown EnemyId | `EnemyMovementBatchWithUnknownEnemyIsRejected` |
+| An interaction is opened while another is pending | `OpenWhilePendingThrows` |
+| An abandoned interaction receives a resolution | `AbandonedInteractionResolutionIsRejected` |
+| A resolution carries the opening revision but the aggregate has advanced | `StaleInteractionResolutionIsRejected` |
+| A resolution carries an older revision than the opening one | `ResolutionCarryingOldRevisionIsRejected` |
 
 ## Legacy Defect Migration Rule
 

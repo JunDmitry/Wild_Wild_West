@@ -198,6 +198,24 @@ The resolved Enemy identity and spawn position corresponding to a Spawn Request.
 
 Allocating identity and selecting a physical spawn point do not belong to the Domain.
 
+### Interaction Correlation
+
+The triple of Arena Run Id, Interaction Id, and Aggregate Revision captured when an Interaction Request is opened.
+
+A resolution is admitted only when its Interaction Correlation matches the pending interaction and the current Aggregate Revision.
+
+### Pending Interaction
+
+An Interaction Request that has been opened by the Arena Run and has not yet been completed or abandoned.
+
+At most one Pending Interaction exists per Arena Run at any moment.
+
+### Abandoned Interaction
+
+A Pending Interaction that the Arena Run closed without applying a resolution.
+
+A resolution for an Abandoned Interaction is rejected as closed.
+
 ## Lifecycle Terms
 
 ### Run Revision
