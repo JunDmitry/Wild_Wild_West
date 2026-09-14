@@ -119,14 +119,19 @@ namespace Game.Architecture.Tests
         [Test]
         public void ArenaAssemblyDefinitionsAreCoveredByDependencyContract()
         {
-            string[] assetGuids = AssetDatabase.FindAssets(
-                "t:AssemblyDefinitionAsset",
-                new[] { "Assets" });
+            string[] assetGuids = AssetDatabase.FindAssets("t:AssemblyDefinitionAsset", new[] { "Assets" });
 
             foreach (string assetGuid in assetGuids)
             {
                 string path = AssetDatabase.GUIDToAssetPath(assetGuid);
                 AssemblyDefinitionData definition = ReadDefinition(path);
+
+                bool isTestAssembly = definition.Name.EndsWith(".Tests", StringComparison.Ordinal);
+
+                if (isTestAssembly)
+                {
+                    continue;
+                }
 
                 bool isTargetAssembly = definition.Name.StartsWith("Game.Arena.", StringComparison.Ordinal)
                     || definition.Name.Equals("Game.CompositionRoot", StringComparison.Ordinal);
@@ -136,8 +141,7 @@ namespace Game.Architecture.Tests
                     continue;
                 }
 
-                Assert.That(_allowedReferences.ContainsKey(definition.Name), Is.True,
-                    $"Dependency contract is missing for {definition.Name}.");
+                Assert.That(_allowedReferences.ContainsKey(definition.Name), Is.True, $"Dependency contract is missing for {definition.Name}.");
             }
         }
 

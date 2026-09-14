@@ -152,6 +152,30 @@ The external world's answer describing the actual accepted result of a Movement 
 
 The Domain accepts a Movement Resolution only for the interaction that produced it.
 
+### Raw Displacement
+
+A three-dimensional vector describing an offset or difference between two Positions.
+
+A Raw Displacement may have any length, including zero.
+
+A Raw Displacement is not guaranteed to represent a valid Direction.
+
+### Direction
+
+A three-dimensional vector guaranteed to have unit length.
+
+A Direction cannot be constructed from a zero-length or near-zero-length Raw Displacement.
+
+There is no zero Direction. Absence of movement is expressed by the absence of a valid Direction, not by a degenerate Direction value.
+
+### Movement Input
+
+The raw movement instruction provided by the Player for one gameplay step.
+
+Movement Input is expressed as a Raw Displacement whose length does not exceed one.
+
+Movement Input may be zero, meaning that the Player requested no movement.
+
 ## External Interaction Terms
 
 ### Interaction Request
