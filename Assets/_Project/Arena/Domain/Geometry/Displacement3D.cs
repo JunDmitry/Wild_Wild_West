@@ -24,9 +24,9 @@ namespace Game.Arena.Domain.Geometry
 
         public float Z { get; }
 
-        public float LengthSquared => (X * X) + (Y * Y) + (Z * Z);
+        public float LengthSquared => (float)(((double)X * X) + ((double)Y * Y) + ((double)Z * Z));
 
-        public float Length => (float)Math.Sqrt(LengthSquared);
+        public float Length => (float)Math.Sqrt(((double)X * X) + ((double)Y * Y) + ((double)Z * Z));
 
         public bool IsZero
         {

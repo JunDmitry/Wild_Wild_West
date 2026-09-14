@@ -26,17 +26,17 @@ namespace Game.Arena.Domain.Geometry
 
         public float DistanceTo(Position3D other)
         {
-            float dx = X - other.X;
-            float dy = Y - other.Y;
-            float dz = Z - other.Z;
+            double dx = X - other.X;
+            double dy = Y - other.Y;
+            double dz = Z - other.Z;
 
             return (float)Math.Sqrt((dx * dx) + (dy * dy) + (dz * dz));
         }
 
         public float GroundDistanceTo(Position3D other)
         {
-            float dx = X - other.X;
-            float dz = Z - other.Z;
+            double dx = X - other.X;
+            double dz = Z - other.Z;
 
             return (float)Math.Sqrt((dx * dx) + (dz * dz));
         }

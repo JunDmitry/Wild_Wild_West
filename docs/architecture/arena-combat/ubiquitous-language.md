@@ -206,6 +206,28 @@ A monotonically increasing version of an Arena Run used to prevent an external I
 
 A Run Revision is local to one Arena Run and is not an entity identity.
 
+### Arena Run Status
+
+The domain lifecycle state of an Arena Run.
+
+The valid statuses are Playing, Defeat, and Victory.
+
+Loading, scene reloading, asset loading, and scene binding are Application lifecycle concepts and are not Arena Run statuses.
+
+### Aggregate Revision
+
+The monotonic consistency version of one Arena Run.
+
+A successfully accepted state-changing aggregate operation advances Aggregate Revision exactly once.
+
+Multiple Domain Events caused by the same atomic aggregate operation share the resulting Aggregate Revision.
+
+### Interaction Id
+
+A monotonically increasing identifier local to one Arena Run that identifies an external interaction initiated by that Arena Run.
+
+Interaction Id is not a domain entity identity and does not use the process-wide entity identity sequence.
+
 ### Domain Event
 
 An immutable statement that a meaningful fact has occurred inside the Arena Combat domain.
