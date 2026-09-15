@@ -1,4 +1,6 @@
 ﻿using System;
+using Game.Arena.Domain.Geometry;
+using Game.Arena.Domain.Time;
 
 namespace Game.Arena.Domain.Interactions.Movement
 {
@@ -31,6 +33,18 @@ namespace Game.Arena.Domain.Interactions.Movement
             }
 
             return new MovementSpeed(unitsPerSecond);
+        }
+
+        public Distance DistanceOver(GameDuration duration)
+        {
+            double travelled = UnitsPerSecond * duration.Seconds;
+
+            if (travelled > float.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(duration));
+            }
+
+            return Distance.FromValue((float)travelled);
         }
 
         public bool Equals(MovementSpeed other)

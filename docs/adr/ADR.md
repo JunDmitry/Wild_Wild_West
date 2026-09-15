@@ -41,6 +41,7 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 | ADR-0008 | Code style and static usage policy | Accepted | 2026-09-13 | [ADR-0008](ADR-0008-code-style-and-static-usage-policy.md) |
 | ADR-0009 | Legacy freeze and migration boundary | Accepted | 2026-09-13 | [ADR-0009](ADR-0009-legacy-freeze-and-migration-boundary.md) |
 | ADR-0010 | Correlate domain interactions with aggregate revision | Accepted | 2026-09-14 | [ADR-0010](ADR-0010-correlate-domain-interactions-with-aggregate.md) |
+| ADR-0011 | Domain authority over movement resolution and explicit cancellation | Accepted | 2026-09-15 | [ADR-0011](ADR-0011-domain-authority-over-movement-resolution.md) |
 
 ## New ADR Template
 

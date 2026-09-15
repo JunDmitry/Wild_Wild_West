@@ -102,9 +102,17 @@ INV-070: One Enemy Movement Batch is one Interaction and therefore has one Inter
 
 INV-071: At most one Interaction is pending for an Arena Run at any moment.
 
-INV-072: A pending Interaction is closed only by successful completion or explicit abandonment by the Arena Run.
+INV-072: A pending Interaction is closed only by successful application of its resolution or by explicit cancellation through the Arena Run API.
 
 INV-073: Resolutions are validated in a fixed order: foreign Arena Run, unknown Interaction, closed Interaction, stale revision, kind mismatch.
+
+INV-074: A rejected Interaction Resolution, including a resolution with an invalid payload, does not close the pending Interaction.
+
+INV-075: Cancelling a pending Interaction does not advance AggregateRevision and does not produce Domain Events.
+
+INV-076: An accepted Player position must lie on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance.
+
+INV-077: The external world may shorten a requested movement but cannot extend, redirect, or relocate it.
 
 ## Domain Events
 

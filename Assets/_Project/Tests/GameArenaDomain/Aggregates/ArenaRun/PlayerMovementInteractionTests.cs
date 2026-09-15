@@ -8,7 +8,7 @@ using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Time;
 using NUnit.Framework;
 
-namespace Game.Arena.Domain.Tests.Aggregates.ArenaRun
+namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
 {
     [TestFixture]
     public sealed class PlayerMovementInteractionTests
@@ -30,220 +30,381 @@ namespace Game.Arena.Domain.Tests.Aggregates.ArenaRun
         [Test]
         public void CreatingInteractionRequestDoesNotAdvanceRevision()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
 
-            PlayerMovementRequestOutcome outcome = run.RequestPlayerMovement(input, new GameDuration(1d));
+            PlayerMovementRequestOutcome outcome = RequestRight(run, 1d);
 
             Assert.That(outcome.HasRequest, Is.True);
             Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
-            Assert.That(outcome.Request.Correlation.AggregateRevision, Is.EqualTo(AggregateRevision.Initial));
             Assert.That(outcome.Request.Correlation.ArenaRunId, Is.EqualTo(run.Id));
             Assert.That(outcome.Request.Correlation.InteractionId.Value, Is.EqualTo(1UL));
+            Assert.That(outcome.Request.Correlation.AggregateRevision, Is.EqualTo(AggregateRevision.Initial));
+        }
+
+        [Test]
+        public void RequestExpressesIntentAndComputesRequestedPosition()
+        {
+            ArenaRun run = CreateRun();
+
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+
+            Assert.That(request.From, Is.EqualTo(Position3D.Zero));
+            Assert.That(request.Direction, Is.EqualTo(Direction3D.Right));
+            Assert.That(request.RequestedDistance.Value, Is.EqualTo(5f));
+            Assert.That(request.RequestedPosition, Is.EqualTo(new Position3D(5f, 0f, 0f)));
         }
 
         [Test]
         public void ResolvedMovementUpdatesPlayerPosition()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution resolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.RequestedPosition);
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, request.RequestedPosition));
 
-            PlayerMovementResolutionOutcome resolutionOutcome = run.ApplyPlayerMovement(resolution);
-
-            Assert.That(resolutionOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Applied));
+            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Applied));
             Assert.That(run.PlayerPosition, Is.EqualTo(new Position3D(5f, 0f, 0f)));
-            Assert.That(resolutionOutcome.Change.HasStateChange, Is.True);
-            Assert.That(resolutionOutcome.Change.DomainEvents, Is.Empty);
+            Assert.That(outcome.Change.HasStateChange, Is.True);
+            Assert.That(outcome.Change.DomainEvents, Is.Empty);
+            Assert.That(run.HasPendingInteraction, Is.False);
         }
 
         [Test]
         public void AcceptedStateChangingResolutionAdvancesRevision()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution resolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.RequestedPosition);
-            PlayerMovementResolutionOutcome resolutionOutcome = run.ApplyPlayerMovement(resolution);
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, request.RequestedPosition));
 
             Assert.That(run.Revision.Value, Is.EqualTo(1UL));
-            Assert.That(resolutionOutcome.Change.Revision, Is.EqualTo(run.Revision));
-            Assert.That(resolutionOutcome.Change.HasStateChange, Is.True);
+            Assert.That(outcome.Change.Revision, Is.EqualTo(run.Revision));
         }
 
         [Test]
-        public void MovementCannotCrossArenaBoundary()
+        public void AcceptedPositionAtPartialRequestedDistanceIsApplied()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun(new Position3D(19f, 0f, 0f));
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome outcome = run.RequestPlayerMovement(input, new GameDuration(10d));
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(1.5f, 0f, 0f)));
 
-            Assert.That(outcome.HasRequest, Is.True);
-            Assert.That(outcome.Request.RequestedPosition, Is.EqualTo(new Position3D(19.5f, 0f, 0f)));
+            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Applied));
+            Assert.That(run.PlayerPosition, Is.EqualTo(new Position3D(1.5f, 0f, 0f)));
         }
 
         [Test]
-        public void RequestAtBoundaryWithoutPositionChangeReturnsPositionUnchanged()
+        public void AcceptedPositionAtOriginIsAcceptedWithoutStateChange()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun(new Position3D(19.5f, 0f, 0f));
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome outcome = run.RequestPlayerMovement(input, new GameDuration(1d));
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, request.From));
 
-            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementRequestStatus.PositionUnchanged));
-            Assert.That(outcome.HasRequest, Is.False);
+            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.AcceptedWithoutStateChange));
             Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
+            Assert.That(outcome.Change.HasStateChange, Is.False);
+            Assert.That(run.HasPendingInteraction, Is.False);
         }
 
         [Test]
-        public void ZeroMovementInputDoesNotOpenInteraction()
+        public void AcceptedPositionBeyondRequestedDistanceIsRejected()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome firstOutcome = run.RequestPlayerMovement(MovementInput.Zero, new GameDuration(1d));
-            MovementInput movementInput = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
-            PlayerMovementRequestOutcome secondOutcome = run.RequestPlayerMovement(movementInput, new GameDuration(1d));
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(10f, 0f, 0f)));
 
-            Assert.That(firstOutcome.Status, Is.EqualTo(PlayerMovementRequestStatus.NoMovement));
-            Assert.That(secondOutcome.HasRequest, Is.True);
-            Assert.That(secondOutcome.Request.Correlation.InteractionId.Value, Is.EqualTo(1UL));
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.AcceptedPositionBeyondRequestedDistance));
         }
 
         [Test]
-        public void OpenWhilePendingThrowsThroughArenaRun()
+        public void AcceptedPositionBehindRequestedDirectionIsRejected()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            run.RequestPlayerMovement(input, new GameDuration(1d));
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(-1f, 0f, 0f)));
 
-            Assert.Throws<InvalidOperationException>(
-                () =>
-                {
-                    run.RequestPlayerMovement(input, new GameDuration(1d));
-                });
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.AcceptedPositionBehindRequest));
         }
 
         [Test]
-        public void AcceptedResolutionWithoutMovementDoesNotAdvanceRevision()
+        public void AcceptedPositionOutsideRequestedMovementRayIsRejected()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution blockedResolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.From);
-            PlayerMovementResolutionOutcome resolutionOutcome = run.ApplyPlayerMovement(blockedResolution);
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(1f, 0f, 1f)));
 
-            Assert.That(resolutionOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.AcceptedWithoutStateChange));
-            Assert.That(run.PlayerPosition, Is.EqualTo(Position3D.Zero));
-            Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
-            Assert.That(resolutionOutcome.Change.HasStateChange, Is.False);
-
-            PlayerMovementRequestOutcome nextRequest = run.RequestPlayerMovement(input, new GameDuration(1d));
-
-            Assert.That(nextRequest.Request.Correlation.InteractionId.Value, Is.EqualTo(2UL));
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.AcceptedPositionOffMovementPath));
         }
 
         [Test]
-        public void DuplicateInteractionResolutionIsRejected()
+        public void RejectedPayloadResolutionDoesNotClosePendingInteraction()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
+            run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(10f, 0f, 0f)));
 
-            PlayerMovementResolution resolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.RequestedPosition);
-
-            run.ApplyPlayerMovement(resolution);
-            AggregateRevision revisionAfterFirstApply = run.Revision;
-
-            PlayerMovementResolutionOutcome duplicateOutcome = run.ApplyPlayerMovement(resolution);
-
-            Assert.That(duplicateOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Rejected));
-            Assert.That(duplicateOutcome.RejectionReason, Is.EqualTo(PlayerMovementResolutionRejectionReason.InteractionClosed));
-            Assert.That(run.Revision, Is.EqualTo(revisionAfterFirstApply));
-            Assert.That(duplicateOutcome.Change.HasStateChange, Is.False);
+            Assert.That(run.HasPendingInteraction, Is.True);
         }
 
         [Test]
-        public void ResolutionForAnotherArenaRunIsRejected()
+        public void ValidResolutionCanBeAppliedAfterRejectedPayloadResolution()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            InteractionCorrelation foreignCorrelation = new(ArenaRunId.FromValue(99UL), requestOutcome.Request.Correlation.InteractionId, requestOutcome.Request.Correlation.AggregateRevision);
-            PlayerMovementResolution foreignResolution = new(foreignCorrelation, requestOutcome.Request.RequestedPosition);
-            PlayerMovementResolutionOutcome rejectedOutcome = run.ApplyPlayerMovement(foreignResolution);
+            run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(10f, 0f, 0f)));
 
-            Assert.That(rejectedOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Rejected));
-            Assert.That(rejectedOutcome.RejectionReason, Is.EqualTo(PlayerMovementResolutionRejectionReason.ForeignArenaRun));
-            Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
-            Assert.That(run.PlayerPosition, Is.EqualTo(Position3D.Zero));
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, request.RequestedPosition));
 
-            PlayerMovementResolution validResolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.RequestedPosition);
-            PlayerMovementResolutionOutcome acceptedOutcome = run.ApplyPlayerMovement(validResolution);
-
-            Assert.That(acceptedOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Applied));
+            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Applied));
+            Assert.That(run.PlayerPosition, Is.EqualTo(new Position3D(5f, 0f, 0f)));
         }
 
         [Test]
-        public void RejectedInteractionResolutionDoesNotChangeState()
+        public void InvalidMovementResolutionDoesNotAdvanceAggregateRevision()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution invalidResolution = new(requestOutcome.Request.Correlation, new Position3D(100f, 0f, 0f));
-            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(invalidResolution);
-
-            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Rejected));
-            Assert.That(outcome.RejectionReason, Is.EqualTo(PlayerMovementResolutionRejectionReason.AcceptedPositionOutsideArena));
-            Assert.That(run.PlayerPosition, Is.EqualTo(Position3D.Zero));
-        }
-
-        [Test]
-        public void RejectedInteractionResolutionDoesNotAdvanceRevision()
-        {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
-
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution invalidResolution = new(requestOutcome.Request.Correlation, new Position3D(100f, 0f, 0f));
-            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(invalidResolution);
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(10f, 0f, 0f)));
 
             Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
             Assert.That(outcome.Change.HasStateChange, Is.False);
         }
 
         [Test]
-        public void InvalidMovementResolutionClosesPendingInteraction()
+        public void InvalidMovementResolutionDoesNotProduceDomainEvents()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = CreateRun();
-            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input, new GameDuration(1d));
-            PlayerMovementResolution invalidResolution = new(requestOutcome.Request.Correlation, new Position3D(100f, 0f, 0f));
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
 
-            run.ApplyPlayerMovement(invalidResolution);
-            PlayerMovementResolution validResolution = new(requestOutcome.Request.Correlation, requestOutcome.Request.RequestedPosition);
-            PlayerMovementResolutionOutcome secondOutcome = run.ApplyPlayerMovement(validResolution);
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(1f, 0f, 1f)));
 
-            Assert.That(secondOutcome.Status, Is.EqualTo(PlayerMovementResolutionStatus.Rejected));
-            Assert.That(secondOutcome.RejectionReason, Is.EqualTo(PlayerMovementResolutionRejectionReason.InteractionClosed));
+            Assert.That(outcome.Change.DomainEvents, Is.Empty);
+            Assert.That(run.PlayerPosition, Is.EqualTo(Position3D.Zero));
         }
 
-        private Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun CreateRun()
+        [Test]
+        public void CancelledInteractionResolutionIsRejected()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+
+            InteractionCancellationOutcome cancellation = run.CancelPendingInteraction(
+                request.Correlation,
+                InteractionCancellationReason.ExternalResolutionTimeout);
+
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, request.RequestedPosition));
+
+            Assert.That(cancellation.IsCancelled, Is.True);
+            Assert.That(run.HasPendingInteraction, Is.False);
+            Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.InteractionClosed));
+        }
+
+        [Test]
+        public void CancelWithoutPendingInteractionReportsNoPending()
+        {
+            ArenaRun run = CreateRun();
+            InteractionCorrelation correlation = new InteractionCorrelation(
+                run.Id,
+                InteractionId.None.Next(),
+                AggregateRevision.Initial);
+
+            InteractionCancellationOutcome outcome = run.CancelPendingInteraction(
+                correlation,
+                InteractionCancellationReason.ApplicationShutdown);
+
+            Assert.That(outcome.Status, Is.EqualTo(InteractionCancellationStatus.NoPendingInteraction));
+        }
+
+        [Test]
+        public void CancelWithMismatchedCorrelationKeepsPending()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+            InteractionCorrelation mismatched = new InteractionCorrelation(
+                run.Id,
+                request.Correlation.InteractionId.Next(),
+                request.Correlation.AggregateRevision);
+
+            InteractionCancellationOutcome outcome = run.CancelPendingInteraction(
+                mismatched,
+                InteractionCancellationReason.SupersededByLifecycle);
+
+            Assert.That(outcome.Status, Is.EqualTo(InteractionCancellationStatus.CorrelationMismatch));
+            Assert.That(run.HasPendingInteraction, Is.True);
+        }
+
+        [Test]
+        public void MovementCannotCrossArenaBoundary()
+        {
+            ArenaRun run = CreateRun(new Position3D(19f, 0f, 0f));
+
+            PlayerMovementRequestOutcome outcome = RequestRight(run, 10d);
+
+            Assert.That(outcome.HasRequest, Is.True);
+            Assert.That(outcome.Request.RequestedDistance.Value, Is.EqualTo(0.5f).Within(0.0001f));
+            Assert.That(outcome.Request.RequestedPosition.X, Is.EqualTo(19.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void RequestAtBoundaryWithoutPositionChangeReturnsPositionUnchanged()
+        {
+            ArenaRun run = CreateRun(new Position3D(19.5f, 0f, 0f));
+
+            PlayerMovementRequestOutcome outcome = RequestRight(run, 1d);
+
+            Assert.That(outcome.Status, Is.EqualTo(PlayerMovementRequestStatus.PositionUnchanged));
+            Assert.That(run.HasPendingInteraction, Is.False);
+        }
+
+        [Test]
+        public void ZeroMovementInputDoesNotOpenInteraction()
+        {
+            ArenaRun run = CreateRun();
+
+            PlayerMovementRequestOutcome zeroOutcome = run.RequestPlayerMovement(
+                MovementInput.Zero,
+                new GameDuration(1d));
+
+            PlayerMovementRequestOutcome nextOutcome = RequestRight(run, 1d);
+
+            Assert.That(zeroOutcome.Status, Is.EqualTo(PlayerMovementRequestStatus.NoMovement));
+            Assert.That(nextOutcome.Request.Correlation.InteractionId.Value, Is.EqualTo(1UL));
+        }
+
+        [Test]
+        public void OpenWhilePendingThrowsThroughArenaRun()
+        {
+            ArenaRun run = CreateRun();
+            RequestRight(run, 1d);
+
+            Assert.Throws<InvalidOperationException>(
+                () =>
+                {
+                    RequestRight(run, 1d);
+                });
+        }
+
+        [Test]
+        public void DuplicateInteractionResolutionIsRejected()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+            PlayerMovementResolution resolution = new PlayerMovementResolution(
+                request.Correlation,
+                request.RequestedPosition);
+
+            run.ApplyPlayerMovement(resolution);
+            AggregateRevision revisionAfterApply = run.Revision;
+            PlayerMovementResolutionOutcome duplicate = run.ApplyPlayerMovement(resolution);
+
+            Assert.That(
+                duplicate.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.InteractionClosed));
+            Assert.That(run.Revision, Is.EqualTo(revisionAfterApply));
+        }
+
+        [Test]
+        public void ResolutionForAnotherArenaRunIsRejected()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+            InteractionCorrelation foreign = new InteractionCorrelation(
+                ArenaRunId.FromValue(99UL),
+                request.Correlation.InteractionId,
+                request.Correlation.AggregateRevision);
+
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(foreign, request.RequestedPosition));
+
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.ForeignArenaRun));
+            Assert.That(run.HasPendingInteraction, Is.True);
+            Assert.That(run.PlayerPosition, Is.EqualTo(Position3D.Zero));
+        }
+
+        [Test]
+        public void StaleInteractionResolutionIsRejected()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+            InteractionCorrelation stale = new InteractionCorrelation(
+                run.Id,
+                request.Correlation.InteractionId,
+                request.Correlation.AggregateRevision.Next());
+
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(stale, request.RequestedPosition));
+
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerMovementResolutionRejectionReason.StaleRevision));
+        }
+
+        [Test]
+        public void SecondRequestUsesUpdatedPositionAndRevision()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest first = RequestRight(run, 1d).Request;
+            run.ApplyPlayerMovement(new PlayerMovementResolution(first.Correlation, first.RequestedPosition));
+
+            PlayerMovementRequest second = RequestRight(run, 1d).Request;
+
+            Assert.That(second.From, Is.EqualTo(new Position3D(5f, 0f, 0f)));
+            Assert.That(second.Correlation.InteractionId.Value, Is.EqualTo(2UL));
+            Assert.That(second.Correlation.AggregateRevision.Value, Is.EqualTo(1UL));
+        }
+
+        private PlayerMovementRequestOutcome RequestRight(ArenaRun run, double seconds)
+        {
+            MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));
+
+            return run.RequestPlayerMovement(input, new GameDuration(seconds));
+        }
+
+        private ArenaRun CreateRun()
         {
             return CreateRun(Position3D.Zero);
         }
 
-        private Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun CreateRun(Position3D startPosition)
+        private ArenaRun CreateRun(Position3D startPosition)
         {
-            return _factory.Start(ArenaRunId.FromValue(1UL), PlayerId.FromValue(2UL), startPosition, _playerSpeed, _playerRadius, _arenaBounds);
+            return _factory.Start(
+                ArenaRunId.FromValue(1UL),
+                PlayerId.FromValue(2UL),
+                startPosition,
+                _playerSpeed,
+                _playerRadius,
+                _arenaBounds);
         }
     }
 }

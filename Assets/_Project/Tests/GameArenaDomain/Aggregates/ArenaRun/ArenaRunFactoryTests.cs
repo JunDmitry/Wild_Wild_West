@@ -6,7 +6,7 @@ using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
 using NUnit.Framework;
 
-namespace Game.Arena.Domain.Tests.Aggregates.ArenaRun
+namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
 {
     [TestFixture]
     public sealed class ArenaRunFactoryTests

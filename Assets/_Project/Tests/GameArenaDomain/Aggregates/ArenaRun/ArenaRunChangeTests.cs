@@ -5,7 +5,7 @@ using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Identity;
 using NUnit.Framework;
 
-namespace Game.Arena.Domain.Tests.Aggregates.ArenaRun
+namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
 {
     [TestFixture]
     public sealed class ArenaRunChangeTests

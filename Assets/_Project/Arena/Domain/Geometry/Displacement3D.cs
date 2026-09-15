@@ -43,6 +43,11 @@ namespace Game.Arena.Domain.Geometry
             return Direction3D.TryFrom(this, out direction);
         }
 
+        public float Dot(Direction3D direction)
+        {
+            return (X * direction.X) + (Y * direction.Y) + (Z * direction.Z);
+        }
+
         public bool Equals(Displacement3D other)
         {
             return X == other.X && Y == other.Y && Z == other.Z;

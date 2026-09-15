@@ -4,33 +4,28 @@ namespace Game.Arena.Domain.Geometry
 {
     public readonly struct CollisionRadius : IEquatable<CollisionRadius>
     {
-        private CollisionRadius(float value)
+        private CollisionRadius(Distance value)
         {
             Value = value;
         }
 
-        public float Value { get; }
+        public Distance Value { get; }
 
-        public bool IsValid => Value > 0f && float.IsNaN(Value) == false && float.IsInfinity(Value) == false;
+        public bool IsValid => Value.IsZero == false;
 
-        public static CollisionRadius FromValue(float value)
+        public static CollisionRadius FromDistance(Distance value)
         {
-            if (float.IsNaN(value))
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
-
-            if (float.IsInfinity(value))
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
-
-            if (value <= 0f)
+            if (value.IsZero)
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
 
             return new CollisionRadius(value);
+        }
+
+        public static CollisionRadius FromValue(float value)
+        {
+            return FromDistance(Distance.FromValue(value));
         }
 
         public bool Equals(CollisionRadius other)

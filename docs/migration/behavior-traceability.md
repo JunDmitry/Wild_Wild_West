@@ -50,9 +50,16 @@ The following target tests are mandatory:
 | Resolution type does not match pending interaction | `MismatchedInteractionResolutionIsRejected` |
 | Enemy movement batch resolution contains an unknown EnemyId | `EnemyMovementBatchWithUnknownEnemyIsRejected` |
 | An interaction is opened while another is pending | `OpenWhilePendingThrows` |
-| An abandoned interaction receives a resolution | `AbandonedInteractionResolutionIsRejected` |
+| A cancelled interaction receives a resolution | `CancelledInteractionResolutionIsRejected` |
 | A resolution carries the opening revision but the aggregate has advanced | `StaleInteractionResolutionIsRejected` |
 | A resolution carries an older revision than the opening one | `ResolutionCarryingOldRevisionIsRejected` |
+| A resolution with an invalid payload closes the pending interaction | `RejectedPayloadResolutionDoesNotClosePendingInteraction` |
+| A valid resolution follows a rejected payload resolution | `ValidResolutionCanBeAppliedAfterRejectedPayloadResolution` |
+| An accepted position extends the requested movement | `AcceptedPositionBeyondRequestedDistanceIsRejected` |
+| An accepted position lies behind the movement origin | `AcceptedPositionBehindRequestedDirectionIsRejected` |
+| An accepted position leaves the movement path | `AcceptedPositionOutsideRequestedMovementRayIsRejected` |
+| An accepted position shortens the requested movement | `AcceptedPositionAtPartialRequestedDistanceIsApplied` |
+| Cancellation is attempted with a mismatched correlation | `CancelWithMismatchedCorrelationKeepsPending` |
 
 ## Legacy Defect Migration Rule
 

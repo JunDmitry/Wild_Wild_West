@@ -93,20 +93,6 @@ namespace Game.Arena.Domain.Tests.Interactions
         }
 
         [Test]
-        public void AbandonedInteractionResolutionIsRejected()
-        {
-            PendingInteractionLedger ledger = new(s_owner);
-            InteractionCorrelation correlation = ledger.Open(InteractionKind.PlayerMovement, AggregateRevision.Initial);
-
-            bool abandoned = ledger.AbandonPending();
-            InteractionAdmission admission = ledger.Admit(new TestResolution(correlation, InteractionKind.PlayerMovement), AggregateRevision.Initial);
-
-            Assert.That(abandoned, Is.True);
-            Assert.That(ledger.HasPending, Is.False);
-            Assert.That(admission.RejectionReason, Is.EqualTo(InteractionRejectionReason.InteractionClosed));
-        }
-
-        [Test]
         public void StaleInteractionResolutionIsRejected()
         {
             PendingInteractionLedger ledger = new(s_owner);
@@ -152,6 +138,39 @@ namespace Game.Arena.Domain.Tests.Interactions
                 {
                     ledger.Complete(InteractionId.None.Next());
                 });
+        }
+
+        [Test]
+        public void CancelledInteractionResolutionIsRejected()
+        {
+            PendingInteractionLedger ledger = new(s_owner);
+            InteractionCorrelation correlation = ledger.Open(
+                InteractionKind.PlayerMovement,
+                AggregateRevision.Initial);
+
+            bool cancelled = ledger.Cancel(correlation);
+            InteractionAdmission admission = ledger.Admit(new TestResolution(correlation, InteractionKind.PlayerMovement), AggregateRevision.Initial);
+
+            Assert.That(cancelled, Is.True);
+            Assert.That(ledger.HasPending, Is.False);
+            Assert.That(admission.RejectionReason, Is.EqualTo(InteractionRejectionReason.InteractionClosed));
+        }
+
+        [Test]
+        public void CancelWithMismatchedCorrelationKeepsPending()
+        {
+            PendingInteractionLedger ledger = new(s_owner);
+            ledger.Open(InteractionKind.PlayerMovement, AggregateRevision.Initial);
+
+            InteractionCorrelation foreign = new(
+                s_owner,
+                InteractionId.None.Next().Next(),
+                AggregateRevision.Initial);
+
+            bool cancelled = ledger.Cancel(foreign);
+
+            Assert.That(cancelled, Is.False);
+            Assert.That(ledger.HasPending, Is.True);
         }
 
         private sealed class TestResolution : IInteractionResolution

@@ -184,6 +184,12 @@ Arena Bounds constrain the center of a combatant while accounting for its Collis
 
 Arena Bounds are not Unity colliders or scene geometry.
 
+### Distance
+
+A non-negative finite spatial length in Arena units.
+
+Distance is used for movement, collision geometry, and attack ranges.
+
 ### Collision Radius
 
 The non-zero horizontal radius used when validating a combatant position against Arena Bounds and when requesting external collision resolution.
@@ -226,27 +232,31 @@ An Interaction Request that has been opened by the Arena Run and has not yet bee
 
 At most one Pending Interaction exists per Arena Run at any moment.
 
-### Abandoned Interaction
+### Cancelled Interaction
 
-A Pending Interaction that the Arena Run closed without applying a resolution.
+A Pending Interaction that the Arena Run closed through explicit cancellation without applying a resolution.
 
-A resolution for an Abandoned Interaction is rejected as closed.
+Cancellation carries a reason such as lifecycle supersession, external resolution timeout, Arena Run termination, or application shutdown.
+
+A resolution for a Cancelled Interaction is rejected as closed.
 
 ### Player Movement Request
 
 A domain interaction request created when the Player attempts to move and the Arena Run needs the external world to resolve collision-dependent movement.
 
-The request contains Interaction Correlation, source position, requested position, and Collision Radius.
+The request expresses movement intent as source position, Direction, requested Distance, and Collision Radius. The requested position is derived from these values and is not stored separately.
+
+The requested Distance is already limited by Arena Bounds along the Direction.
 
 Creating a Player Movement Request does not change Aggregate Revision.
 
 ### Player Movement Resolution
 
-The external world's answer to a Player Movement Request.
+The external world's answer to a Player Movement Request containing Interaction Correlation and an accepted Player position.
 
-The resolution contains Interaction Correlation and an accepted Player position.
+The accepted position must lie on the requested movement path between the source position and the requested position. The external world may shorten the movement but cannot extend, redirect, or relocate it.
 
-ArenaRun accepts the resolution only through its own API after validating correlation, pending interaction state, interaction kind, Aggregate Revision, and Arena Bounds.
+A rejected resolution leaves the Pending Interaction open.
 
 A resolution that does not change Player position closes the pending interaction without advancing Aggregate Revision.
 

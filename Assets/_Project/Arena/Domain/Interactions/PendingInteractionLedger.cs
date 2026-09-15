@@ -103,9 +103,14 @@ namespace Game.Arena.Domain.Interactions
             _hasPending = false;
         }
 
-        public bool AbandonPending()
+        public bool Cancel(InteractionCorrelation correlation)
         {
             if (_hasPending == false)
+            {
+                return false;
+            }
+
+            if (correlation != _correlation)
             {
                 return false;
             }

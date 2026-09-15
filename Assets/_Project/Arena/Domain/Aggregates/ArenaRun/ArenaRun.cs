@@ -16,6 +16,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private readonly ArenaBounds _arenaBounds;
         private readonly PendingInteractionLedger _interactionLedger;
 
+        private PlayerMovementRequest _pendingMovementRequest;
+
         internal ArenaRun(
             ArenaRunId id,
             Player player,
@@ -54,6 +56,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public ArenaRunId Id { get; }
         public ArenaRunStatus Status { get; private set; }
         public AggregateRevision Revision { get; private set; }
+
+        public bool HasPendingInteraction => _interactionLedger.HasPending;
         public PlayerId PlayerId => _player.Id;
         public Position3D PlayerPosition => _player.Position;
         public WaveNumber CurrentWaveNumber => _currentWave.Number;
@@ -84,35 +88,21 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return PlayerMovementRequestOutcome.NoMovement;
             }
 
-            double distance = _player.MovementSpeed.UnitsPerSecond * duration.Seconds * movementInput.Magnitude;
+            Distance requestedDistance = _player.MovementSpeed
+                .DistanceOver(duration)
+                .Scaled(movementInput.Magnitude);
 
-            if (double.IsNaN(distance))
-            {
-                throw new ArgumentOutOfRangeException(nameof(duration));
-            }
+            Distance pemittedDistance = _arenaBounds.PermittedTravel(_player.Position, direction, _player.CollisionRadius, requestedDistance);
 
-            if (double.IsInfinity(distance))
-            {
-                throw new ArgumentOutOfRangeException(nameof(duration));
-            }
-
-            if (distance > float.MaxValue)
-            {
-                throw new ArgumentOutOfRangeException(nameof(duration));
-            }
-
-            Position3D requestedPosition = _player.Position.MovedAlong(direction, (float)distance);
-            requestedPosition = _arenaBounds.Clamp(requestedPosition, _player.CollisionRadius);
-
-            if (requestedPosition == _player.Position)
+            if (pemittedDistance.IsZero)
             {
                 return PlayerMovementRequestOutcome.PositionUnchanged;
             }
 
             InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.PlayerMovement, Revision);
-            PlayerMovementRequest request = new(correlation, _player.Position, requestedPosition, _player.CollisionRadius);
+            _pendingMovementRequest = new(correlation, _player.Position, direction, pemittedDistance, _player.CollisionRadius);
 
-            return PlayerMovementRequestOutcome.Requested(request);
+            return PlayerMovementRequestOutcome.Requested(_pendingMovementRequest);
         }
 
         public PlayerMovementResolutionOutcome ApplyPlayerMovement(PlayerMovementResolution resolution)
@@ -124,11 +114,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return PlayerMovementResolutionOutcome.Rejected(MapRejectionReason(admission.RejectionReason), CreateNoChange());
             }
 
-            if (_arenaBounds.Contains(resolution.AcceptedPosition, _player.CollisionRadius) == false)
-            {
-                _interactionLedger.AbandonPending();
+            PlayerMovementResolutionRejectionReason geometryRejection = ValidateAcceptedPosition(_pendingMovementRequest, resolution.AcceptedPosition);
 
-                return PlayerMovementResolutionOutcome.Rejected(PlayerMovementResolutionRejectionReason.AcceptedPositionOutsideArena, CreateNoChange());
+            if (geometryRejection != PlayerMovementResolutionRejectionReason.None)
+            {
+                return PlayerMovementResolutionOutcome.Rejected(geometryRejection, CreateNoChange());
             }
 
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
@@ -138,11 +128,60 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return PlayerMovementResolutionOutcome.AcceptedWithoutStateChange(CreateNoChange());
             }
 
-            AggregateRevision nextRevision = Revision.Next();
             _player.MoveTo(resolution.AcceptedPosition);
-            Revision = nextRevision;
+            Revision = Revision.Next();
 
             return PlayerMovementResolutionOutcome.Applied(CreateStateChange());
+        }
+
+        public InteractionCancellationOutcome CancelPendingInteraction(
+            InteractionCorrelation correlation,
+            InteractionCancellationReason reason)
+        {
+            if (_interactionLedger.HasPending == false)
+            {
+                return InteractionCancellationOutcome.NoPendingInteraction(reason);
+            }
+
+            bool cancelled = _interactionLedger.Cancel(correlation);
+
+            if (cancelled == false)
+            {
+                return InteractionCancellationOutcome.CorrelationMismatch(reason);
+            }
+
+            return InteractionCancellationOutcome.Cancelled(reason);
+        }
+
+        private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)
+        {
+            float tolerance = GeometryTolerance.MovementPathTolerance;
+            Displacement3D travel = acceptedPosition - pendingMovementRequest.From;
+            float along = travel.Dot(pendingMovementRequest.Direction);
+
+            if (along < -tolerance)
+            {
+                return PlayerMovementResolutionRejectionReason.AcceptedPositionBehindRequest;
+            }
+
+            if (along > pendingMovementRequest.RequestedDistance.Value + tolerance)
+            {
+                return PlayerMovementResolutionRejectionReason.AcceptedPositionBeyondRequestedDistance;
+            }
+
+            float lateralSquared = travel.LengthSquared - (along * along);
+
+            if (lateralSquared > tolerance * tolerance)
+            {
+                return PlayerMovementResolutionRejectionReason.AcceptedPositionOffMovementPath;
+            }
+
+            if (_arenaBounds.Contains(acceptedPosition, _player.CollisionRadius) == false)
+            {
+                return PlayerMovementResolutionRejectionReason.AcceptedPositionOutsideArena;
+            }
+
+            return PlayerMovementResolutionRejectionReason.None;
         }
 
         private ArenaRunChange CreateNoChange()

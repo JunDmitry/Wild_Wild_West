@@ -70,7 +70,7 @@ namespace Game.Arena.Domain.Geometry
                 return false;
             }
 
-            float diameter = radius.Value * 2f;
+            float diameter = radius.Value.Value * 2f;
             float width = MaximumX - MinimumX;
             float depth = MaximumZ - MinimumZ;
 
@@ -86,10 +86,12 @@ namespace Game.Arena.Domain.Geometry
                 return false;
             }
 
-            float minimumCenterX = MinimumX + radius.Value;
-            float maximumCenterX = MaximumX - radius.Value;
-            float minimumCenterZ = MinimumZ + radius.Value;
-            float maximumCenterZ = MaximumZ - radius.Value;
+            float radiusValue = radius.Value.Value;
+            float tolerance = GeometryTolerance.BoundsTolerance;
+            float minimumCenterX = MinimumX + radiusValue - tolerance;
+            float maximumCenterX = MaximumX - radiusValue + tolerance;
+            float minimumCenterZ = MinimumZ + radiusValue - tolerance;
+            float maximumCenterZ = MaximumZ - radiusValue + tolerance;
 
             return position.X >= minimumCenterX
                 && position.X <= maximumCenterX
@@ -98,24 +100,45 @@ namespace Game.Arena.Domain.Geometry
                 && position.Y == GroundY;
         }
 
-        public Position3D Clamp(
-            Position3D position,
-            CollisionRadius radius)
+        public Distance PermittedTravel(
+            Position3D from,
+            Direction3D direction,
+            CollisionRadius radius,
+            Distance requested)
         {
             if (CanContain(radius) == false)
             {
                 throw new ArgumentOutOfRangeException(nameof(radius));
             }
 
-            float minimumCenterX = MinimumX + radius.Value;
-            float maximumCenterX = MaximumX - radius.Value;
-            float minimumCenterZ = MinimumZ + radius.Value;
-            float maximumCenterZ = MaximumZ - radius.Value;
+            if (direction.IsValid == false)
+            {
+                throw new ArgumentException("Direction is invalid.", nameof(direction));
+            }
 
-            float x = ClampValue(position.X, minimumCenterX, maximumCenterX);
-            float z = ClampValue(position.Z, minimumCenterZ, maximumCenterZ);
+            float radiusValue = radius.Value.Value;
+            float permitted = requested.Value;
 
-            return new Position3D(x, GroundY, z);
+            permitted = LimitAlongAxis(
+                permitted,
+                from.X,
+                direction.X,
+                MinimumX + radiusValue,
+                MaximumX - radiusValue);
+
+            permitted = LimitAlongAxis(
+                permitted,
+                from.Z,
+                direction.Z,
+                MinimumZ + radiusValue,
+                MaximumZ - radiusValue);
+
+            if (permitted < 0f)
+            {
+                permitted = 0f;
+            }
+
+            return Distance.FromValue(permitted);
         }
 
         public bool Equals(ArenaBounds other)
@@ -156,22 +179,38 @@ namespace Game.Arena.Domain.Geometry
             return !left.Equals(right);
         }
 
-        private static float ClampValue(
-            float value,
+        private static float LimitAlongAxis(
+            float distance,
+            float axisPosition,
+            float axisDirection,
             float minimum,
             float maximum)
         {
-            if (value < minimum)
+            if (axisDirection > 0f)
             {
-                return minimum;
+                float available = (maximum - axisPosition) / axisDirection;
+
+                if (available < distance)
+                {
+                    return available;
+                }
+
+                return distance;
             }
 
-            if (value > maximum)
+            if (axisDirection < 0f)
             {
-                return maximum;
+                float available = (minimum - axisPosition) / axisDirection;
+
+                if (available < distance)
+                {
+                    return available;
+                }
+
+                return distance;
             }
 
-            return value;
+            return distance;
         }
 
         private static bool IsFinite(float value)

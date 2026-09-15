@@ -7,5 +7,9 @@
         public const float MinimumDirectionLength = 0.0001f;
 
         public const float MovementInputMaximumAcceptedLength = 1.0001f;
+
+        public const float BoundsTolerance = 0.0001f;
+
+        public const float MovementPathTolerance = 0.001f;
     }
 }

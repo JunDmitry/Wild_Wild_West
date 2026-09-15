@@ -41,18 +41,6 @@ namespace Game.Arena.Domain.Tests.Geometry
         }
 
         [Test]
-        public void ClampAccountsForCollisionRadiusAndGroundHeight()
-        {
-            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 2f);
-
-            CollisionRadius radius = CollisionRadius.FromValue(1f);
-
-            Position3D result = bounds.Clamp(new Position3D(20f, 50f, -20f), radius);
-
-            Assert.That(result, Is.EqualTo(new Position3D(9f, 2f, -9f)));
-        }
-
-        [Test]
         public void CanContainRejectsRadiusLargerThanArena()
         {
             ArenaBounds bounds = new(-1f, 1f, -1f, 1f, 0f);
@@ -60,6 +48,71 @@ namespace Game.Arena.Domain.Tests.Geometry
             CollisionRadius radius = CollisionRadius.FromValue(2f);
 
             Assert.That(bounds.CanContain(radius), Is.False);
+        }
+
+        [Test]
+        public void PermittedTravelIsLimitedByBoundaryAlongDirection()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+
+            Distance permitted = bounds.PermittedTravel(
+                new Position3D(7f, 0f, 0f),
+                Direction3D.Right,
+                radius,
+                Distance.FromValue(50f));
+
+            Assert.That(permitted.Value, Is.EqualTo(2f).Within(0.0001f));
+        }
+
+        [Test]
+        public void PermittedTravelReturnsRequestedWhenBoundaryIsFar()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+
+            Distance permitted = bounds.PermittedTravel(
+                Position3D.Zero,
+                Direction3D.Back,
+                radius,
+                Distance.FromValue(3f));
+
+            Assert.That(permitted.Value, Is.EqualTo(3f));
+        }
+
+        [Test]
+        public void PermittedTravelIsZeroAtBoundary()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+
+            Distance permitted = bounds.PermittedTravel(
+                new Position3D(0f, 0f, -9f),
+                Direction3D.Back,
+                radius,
+                Distance.FromValue(3f));
+
+            Assert.That(permitted.IsZero, Is.True);
+        }
+
+        [Test]
+        public void PermittedTravelKeepsDiagonalMovementOnRay()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+            Direction3D diagonal = Direction3D.From(new Displacement3D(1f, 0f, 1f));
+
+            Distance permitted = bounds.PermittedTravel(
+                new Position3D(8f, 0f, 0f),
+                diagonal,
+                radius,
+                Distance.FromValue(50f));
+
+            Position3D destination = new Position3D(8f, 0f, 0f).MovedAlong(diagonal, permitted);
+
+            Assert.That(destination.X, Is.EqualTo(9f).Within(0.001f));
+            Assert.That(destination.Z, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(bounds.Contains(destination, radius), Is.True);
         }
     }
 }

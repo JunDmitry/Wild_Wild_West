@@ -54,6 +54,11 @@ namespace Game.Arena.Domain.Geometry
                 Z + (direction.Z * distance));
         }
 
+        public Position3D MovedAlong(Direction3D direction, Distance distance)
+        {
+            return MovedAlong(direction, distance.Value);
+        }
+
         public Position3D WithHeight(float y)
         {
             return new Position3D(X, y, Z);
