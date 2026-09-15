@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
@@ -6,6 +7,7 @@ using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Time;
+using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
@@ -60,6 +62,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public bool HasPendingInteraction => _interactionLedger.HasPending;
         public PlayerId PlayerId => _player.Id;
         public Position3D PlayerPosition => _player.Position;
+        public Health PlayerHealth => _player.Health;
+        public WeaponKind SelectedWeapon => _player.SelectedWeapon;
         public WaveNumber CurrentWaveNumber => _currentWave.Number;
         public WavePhase CurrentWavePhase => _currentWave.Phase;
         public ArenaBounds ArenaBounds => _arenaBounds;
@@ -69,6 +73,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             if (Status != ArenaRunStatus.Playing)
             {
                 return PlayerMovementRequestOutcome.NotPlaying;
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                throw new InvalidOperationException("An interaction is already pending.");
             }
 
             if (movementInput.IsZero)
@@ -103,6 +112,24 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _pendingMovementRequest = new(correlation, _player.Position, direction, pemittedDistance, _player.CollisionRadius);
 
             return PlayerMovementRequestOutcome.Requested(_pendingMovementRequest);
+        }
+
+        public WeaponSwitchOutcome SwitchWeapon()
+        {
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return WeaponSwitchOutcome.RunIsNotPlaying(SelectedWeapon, CreateNoChange());
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                return WeaponSwitchOutcome.InteractionPending(SelectedWeapon, CreateNoChange());
+            }
+
+            _player.SwitchWeapon();
+            Revision = Revision.Next();
+
+            return WeaponSwitchOutcome.Switched(SelectedWeapon, CreateStateChange());
         }
 
         public PlayerMovementResolutionOutcome ApplyPlayerMovement(PlayerMovementResolution resolution)

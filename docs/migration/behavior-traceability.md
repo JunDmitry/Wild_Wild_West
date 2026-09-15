@@ -12,7 +12,7 @@ Target Arena Run tests define the intended behavior of the Arena Combat bounded 
 |---|---|---|---|---|---|
 | B-001 New run | A new Arena Run starts with one Player at full Health, Ranged Weapon selected, Wave 1 active in Regular Combat, and no active Enemies. | INV-001, INV-002, INV-010, INV-030, INV-031, INV-040 | `NewGameStartsWithFirstRegularCombatWave` | — | `StartCreatesPlayingRunAtFirstWave` |
 | B-002 Movement | Player movement is expressed on the Arena XZ plane, does not directly modify vertical position, respects Arena boundaries, and uses an external Movement Resolution for collision-dependent movement. | INV-013, INV-044, INV-061, INV-062, INV-063, INV-064, INV-065 | `UnblockedMovementChangesPlayerPosition`, `BlockedMovementPreservesPlayerPosition` | LEG-020 | `ResolvedMovementUpdatesPlayerPosition`, `MovementCannotCrossArenaBoundary` |
-| B-003 Weapon switch | Switching changes the selected Weapon between Ranged and Melee while the Player is allowed to act. | INV-013, INV-044, INV-053 | Existing legacy weapon rule tests | — | `SwitchWeaponChangesSelectedWeapon` |
+| B-003 Weapon switch | Switching changes the selected Weapon between Ranged and Melee while the Player is allowed to act. | INV-013, INV-015, INV-044, INV-053, INV-078 | Existing legacy weapon rule tests | — | `SwitchWeaponChangesSelectedWeapon`, `NewRunSelectsRangedWeapon`, `SwitchWeaponIsRejectedWhileInteractionIsPending` |
 | B-004 Q + LMB | When weapon switching and attacking are requested during the same gameplay step, the weapon switch is applied before planning and executing the attack. | INV-013, INV-044, INV-051, INV-052, INV-053, INV-062, INV-063 | — | LEG-001, LEG-002, LEG-024 | `SwitchAndAttackUsesNewlySelectedWeapon` |
 | B-005 Ranged attack | A ready Ranged Attack produces an external three-dimensional attack interaction, applies a matching resolution only once, damages a valid Enemy in the same Arena Run, and advances ranged readiness. | INV-020, INV-050, INV-051, INV-052, INV-054, INV-062, INV-063, INV-064, INV-065 | `RangedAttackDamagesResolvedEnemy` | LEG-022 | `ResolvedRangedAttackDamagesTarget`, `StaleRangedAttackResolutionIsRejected` |
 | B-006 Melee attack | A ready Melee Attack uses the Player position after resolved movement, affects each valid Enemy at most once, and advances melee readiness. | INV-020, INV-024, INV-050, INV-051, INV-052, INV-054, INV-062, INV-063, INV-064, INV-065 | — | LEG-006, LEG-019, LEG-022 | `MeleeAttackUsesResolvedPlayerPosition`, `MeleeAttackDamagesEachEnemyOnce` |
@@ -60,6 +60,8 @@ The following target tests are mandatory:
 | An accepted position leaves the movement path | `AcceptedPositionOutsideRequestedMovementRayIsRejected` |
 | An accepted position shortens the requested movement | `AcceptedPositionAtPartialRequestedDistanceIsApplied` |
 | Cancellation is attempted with a mismatched correlation | `CancelWithMismatchedCorrelationKeepsPending` |
+| A state-changing command is issued while an interaction is pending | `SwitchWeaponIsRejectedWhileInteractionIsPending` |
+| A state-changing command is issued after the pending interaction is resolved | `SwitchWeaponIsAllowedAfterPendingInteractionIsResolved` |
 
 ## Legacy Defect Migration Rule
 

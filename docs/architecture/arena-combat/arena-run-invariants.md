@@ -20,6 +20,10 @@ INV-012: Player Health cannot be lower than zero.
 
 INV-013: A defeated Player cannot perform movement, weapon selection, or attack operations.
 
+INV-014: An Arena Run cannot start with a Player whose Health is depleted or uninitialized.
+
+INV-015: An Arena Run starts with the Ranged weapon selected.
+
 ## Enemy
 
 INV-020: Every active Enemy belongs to exactly one Arena Run.
@@ -113,6 +117,10 @@ INV-075: Cancelling a pending Interaction does not advance AggregateRevision and
 INV-076: An accepted Player position must lie on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance.
 
 INV-077: The external world may shorten a requested movement but cannot extend, redirect, or relocate it.
+
+INV-078: While an Interaction is pending, the Arena Run rejects state-changing commands other than applying or cancelling that Interaction.
+
+INV-079: Opening a second Interaction while one is pending is a programming error of the orchestrator and is signalled as an exception rather than a rejected command.
 
 ## Domain Events
 

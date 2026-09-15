@@ -1,6 +1,8 @@
-﻿using Game.Arena.Domain.Geometry;
+﻿using Game.Arena.Domain.Combat;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
@@ -9,12 +11,24 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public Player(
             PlayerId id,
             Position3D position,
+            Health health,
+            WeaponKind selectedWeapon,
             MovementSpeed movementSpeed,
             CollisionRadius collisionRadius)
         {
             if (id.IsNone)
             {
                 throw new System.ArgumentException("PlayerId cannot be None.", nameof(id));
+            }
+
+            if (health.IsValid == false)
+            {
+                throw new System.ArgumentException("Health is invalid.", nameof(health));
+            }
+
+            if (health.IsDepleted)
+            {
+                throw new System.ArgumentException("Player cannot start defeated.", nameof(health));
             }
 
             if (movementSpeed.IsValid == false)
@@ -29,12 +43,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             Id = id;
             Position = position;
+            Health = health;
+            SelectedWeapon = selectedWeapon;
             MovementSpeed = movementSpeed;
             CollisionRadius = collisionRadius;
         }
 
         public PlayerId Id { get; }
         public Position3D Position { get; private set; }
+        public Health Health { get; private set; }
+        public WeaponKind SelectedWeapon { get; private set; }
         public MovementSpeed MovementSpeed { get; }
         public CollisionRadius CollisionRadius { get; }
 
@@ -48,6 +66,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Position = position;
 
             return true;
+        }
+
+        public void SwitchWeapon()
+        {
+            if (SelectedWeapon == WeaponKind.Ranged)
+            {
+                SelectedWeapon = WeaponKind.Melee;
+                return;
+            }
+
+            SelectedWeapon = WeaponKind.Ranged;
         }
     }
 }

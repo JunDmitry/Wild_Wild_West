@@ -6,6 +6,7 @@ using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Time;
+using Game.Arena.Domain.Vitality;
 using NUnit.Framework;
 
 namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
@@ -402,6 +403,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                 ArenaRunId.FromValue(1UL),
                 PlayerId.FromValue(2UL),
                 startPosition,
+                Health.Full(100),
                 _playerSpeed,
                 _playerRadius,
                 _arenaBounds);

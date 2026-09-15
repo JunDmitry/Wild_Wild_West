@@ -1,9 +1,11 @@
 ﻿using System;
 using Game.Arena.Domain.Aggregates.ArenaRun;
+using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Vitality;
 using NUnit.Framework;
 
 namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
@@ -32,6 +34,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                 ArenaRunId.FromValue(1UL),
                 PlayerId.FromValue(2UL),
                 Position3D.Zero,
+                Health.Full(100),
                 _playerSpeed,
                 _playerRadius,
                 _arenaBounds);
@@ -43,6 +46,8 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.That(run.Revision, Is.EqualTo(AggregateRevision.Initial));
             Assert.That(run.CurrentWaveNumber, Is.EqualTo(WaveNumber.First));
             Assert.That(run.CurrentWavePhase, Is.EqualTo(WavePhase.RegularCombat));
+            Assert.That(run.PlayerHealth, Is.EqualTo(Health.Full(100)));
+            Assert.That(run.SelectedWeapon, Is.EqualTo(WeaponKind.Ranged));
         }
 
         [Test]
@@ -55,6 +60,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         ArenaRunId.None,
                         PlayerId.FromValue(2UL),
                         Position3D.Zero,
+                        Health.Full(100),
                         _playerSpeed,
                         _playerRadius,
                         _arenaBounds);
@@ -71,6 +77,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         ArenaRunId.FromValue(1UL),
                         PlayerId.None,
                         Position3D.Zero,
+                        Health.Full(100),
                         _playerSpeed,
                         _playerRadius,
                         _arenaBounds);
@@ -87,6 +94,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         ArenaRunId.FromValue(1UL),
                         PlayerId.FromValue(2UL),
                         new Position3D(30f, 0f, 0f),
+                        Health.Full(100),
                         _playerSpeed,
                         _playerRadius,
                         _arenaBounds);
@@ -103,6 +111,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         ArenaRunId.FromValue(1UL),
                         PlayerId.FromValue(2UL),
                         new Position3D(0f, 1f, 0f),
+                        Health.Full(100),
                         _playerSpeed,
                         _playerRadius,
                         _arenaBounds);
@@ -121,9 +130,46 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         ArenaRunId.FromValue(1UL),
                         PlayerId.FromValue(2UL),
                         Position3D.Zero,
+                        Health.Full(100),
                         _playerSpeed,
                         _playerRadius,
                         smallArena);
+                });
+        }
+
+        [Test]
+        public void StartRejectsDepletedPlayerHealth()
+        {
+            Health depleted = Health.Full(10).Reduce(DamageAmount.FromPoints(10));
+
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _factory.Start(
+                        ArenaRunId.FromValue(1UL),
+                        PlayerId.FromValue(2UL),
+                        Position3D.Zero,
+                        depleted,
+                        _playerSpeed,
+                        _playerRadius,
+                        _arenaBounds);
+                });
+        }
+
+        [Test]
+        public void StartRejectsUninitializedPlayerHealth()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _factory.Start(
+                        ArenaRunId.FromValue(1UL),
+                        PlayerId.FromValue(2UL),
+                        Position3D.Zero,
+                        default,
+                        _playerSpeed,
+                        _playerRadius,
+                        _arenaBounds);
                 });
         }
     }

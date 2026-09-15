@@ -92,13 +92,21 @@ No gameplay action may alter combat progression after Victory.
 
 ### Health
 
-The current and maximum combat durability of a combatant.
+The current and maximum combat durability of a combatant, expressed in whole health points.
 
-Health reaching zero means that the combatant is defeated.
+Maximum Health is always positive. Current Health is never negative and never exceeds Maximum Health.
+
+Health is depleted when Current Health reaches zero, which means the combatant is defeated.
+
+The ratio between current and maximum Health is a presentation concern and is not part of the domain model.
 
 ### Damage
 
-A non-negative amount by which Health is reduced.
+A positive whole number of health points by which Health is reduced.
+
+Zero damage is not Damage. An attack that deals no damage is not a damage occurrence.
+
+Damage exceeding the remaining Health depletes it without producing negative Health.
 
 ### Attack
 
@@ -119,6 +127,18 @@ Each Enemy may be affected at most once by one Melee Attack.
 ### Weapon
 
 The combat capability selected by the Player.
+
+The current game has Ranged and Melee weapons.
+
+A Weapon is not an independently persisted aggregate.
+
+### Weapon Switching
+
+The Player action that changes the Selected Weapon between Ranged and Melee.
+
+A new Arena Run begins with the Ranged weapon selected.
+
+Weapon Switching changes aggregate state and advances Aggregate Revision. It does not produce a Domain Event.
 
 The current game has Ranged and Melee weapons.
 
