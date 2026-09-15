@@ -131,3 +131,19 @@ INV-081: Domain Events do not contain Unity-specific types.
 INV-082: A Domain Event cannot mutate the Arena Run.
 
 INV-083: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
+
+## Enemy Spawning
+
+INV-090: Every Wave contains exactly one Boss. A Wave with zero Regular Enemies begins in Boss Combat.
+
+INV-091: A Regular Enemy spawn is due only while the Wave is in Regular Combat and Regular Enemies remain to spawn.
+
+INV-092: A Boss spawn is due only while the Wave is in Boss Combat and the Boss has not spawned.
+
+INV-093: The Arena Run does not schedule spawns; it answers whether a spawn is due when asked.
+
+INV-094: A spawned Enemy is placed on the ground height, outside the Arena Bounds, and within the Spawn Band.
+
+INV-095: A Spawn Resolution with a None or duplicate EnemyId is rejected without side effects.
+
+INV-096: A successful spawn advances AggregateRevision once and produces exactly one EnemySpawned Domain Event.

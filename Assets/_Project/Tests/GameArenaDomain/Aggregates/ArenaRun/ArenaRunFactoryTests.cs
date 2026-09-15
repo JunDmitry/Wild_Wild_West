@@ -2,9 +2,11 @@
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
+using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Tests.Support;
 using Game.Arena.Domain.Vitality;
 using NUnit.Framework;
 
@@ -13,31 +15,18 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
     [TestFixture]
     public sealed class ArenaRunFactoryTests
     {
-        private ArenaBounds _arenaBounds;
-        private ArenaRunFactory _factory;
-        private CollisionRadius _playerRadius;
-        private MovementSpeed _playerSpeed;
+        private ArenaRunTestKit _kit;
 
         [SetUp]
         public void SetUp()
         {
-            _factory = new ArenaRunFactory();
-            _arenaBounds = new ArenaBounds(-20f, 20f, -20f, 20f, 0f);
-            _playerSpeed = MovementSpeed.FromUnitsPerSecond(5f);
-            _playerRadius = CollisionRadius.FromValue(0.5f);
+            _kit = new ArenaRunTestKit();
         }
 
         [Test]
         public void StartCreatesPlayingRunAtFirstWave()
         {
-            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = _factory.Start(
-                ArenaRunId.FromValue(1UL),
-                PlayerId.FromValue(2UL),
-                Position3D.Zero,
-                Health.Full(100),
-                _playerSpeed,
-                _playerRadius,
-                _arenaBounds);
+            Game.Arena.Domain.Aggregates.ArenaRun.ArenaRun run = _kit.StartRun();
 
             Assert.That(run.Id, Is.EqualTo(ArenaRunId.FromValue(1UL)));
             Assert.That(run.PlayerId, Is.EqualTo(PlayerId.FromValue(2UL)));
@@ -56,14 +45,13 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
+                    new ArenaRunFactory().Start(
                         ArenaRunId.None,
                         PlayerId.FromValue(2UL),
-                        Position3D.Zero,
-                        Health.Full(100),
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                        _kit.Arena,
+                        _kit.PlayerAt(Position3D.Zero),
+                        _kit.Enemies,
+                        _kit.Waves(2, 1, 1));
                 });
         }
 
@@ -73,14 +61,13 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
+                    new ArenaRunFactory().Start(
                         ArenaRunId.FromValue(1UL),
                         PlayerId.None,
-                        Position3D.Zero,
-                        Health.Full(100),
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                        _kit.Arena,
+                        _kit.PlayerAt(Position3D.Zero),
+                        _kit.Enemies,
+                        _kit.Waves(2, 1, 1));
                 });
         }
 
@@ -90,14 +77,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
-                        ArenaRunId.FromValue(1UL),
-                        PlayerId.FromValue(2UL),
-                        new Position3D(30f, 0f, 0f),
-                        Health.Full(100),
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                    _kit.StartRun(new Position3D(30f, 0f, 0f));
                 });
         }
 
@@ -107,14 +87,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
-                        ArenaRunId.FromValue(1UL),
-                        PlayerId.FromValue(2UL),
-                        new Position3D(0f, 1f, 0f),
-                        Health.Full(100),
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                    _kit.StartRun(new Position3D(0f, 1f, 0f));
                 });
         }
 
@@ -126,14 +99,13 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
-                        ArenaRunId.FromValue(1UL),
+                    new ArenaRunFactory().Start(
+                        ArenaRunId.None,
                         PlayerId.FromValue(2UL),
-                        Position3D.Zero,
-                        Health.Full(100),
-                        _playerSpeed,
-                        _playerRadius,
-                        smallArena);
+                        new ArenaDefinition(smallArena, Distance.FromValue(0.01f)),
+                        _kit.PlayerAt(Position3D.Zero),
+                        _kit.Enemies,
+                        _kit.Waves(2, 1, 1));
                 });
         }
 
@@ -145,14 +117,13 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
-                        ArenaRunId.FromValue(1UL),
+                    new ArenaRunFactory().Start(
+                        ArenaRunId.None,
                         PlayerId.FromValue(2UL),
-                        Position3D.Zero,
-                        depleted,
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                        _kit.Arena,
+                        new PlayerDefinition(Position3D.Zero, depleted, MovementSpeed.FromUnitsPerSecond(5f), CollisionRadius.FromValue(0.5f)),
+                        _kit.Enemies,
+                        _kit.Waves(2, 1, 1));
                 });
         }
 
@@ -162,14 +133,13 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.Throws<ArgumentException>(
                 () =>
                 {
-                    _factory.Start(
-                        ArenaRunId.FromValue(1UL),
+                    new ArenaRunFactory().Start(
+                        ArenaRunId.None,
                         PlayerId.FromValue(2UL),
-                        Position3D.Zero,
-                        default,
-                        _playerSpeed,
-                        _playerRadius,
-                        _arenaBounds);
+                        _kit.Arena,
+                        new PlayerDefinition(Position3D.Zero, default, MovementSpeed.FromUnitsPerSecond(5f), CollisionRadius.FromValue(0.5f)),
+                        _kit.Enemies,
+                        _kit.Waves(2, 1, 1));
                 });
         }
     }

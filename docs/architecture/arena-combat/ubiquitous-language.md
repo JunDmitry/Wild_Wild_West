@@ -230,15 +230,25 @@ A typed answer produced by Application infrastructure for a specific Interaction
 
 A resolution must correspond to the Arena Run revision and interaction that created its request.
 
-### Spawn Request
+### Enemy Spawn Request
 
-A request from the Domain to create the identity and world placement required for a new Enemy.
+A domain interaction request created when the Arena Run determines that an Enemy spawn is due. It states the Enemy kind and its Collision Radius. The Arena Run does not decide when spawns are attempted; the Application asks.
 
-### Spawn Resolution
+### Enemy Spawn Resolution
 
-The resolved Enemy identity and spawn position corresponding to a Spawn Request.
+The external world's answer containing the allocated Enemy Id and the spawn position. The position must be on the ground height, outside the Arena Bounds, and within the Spawn Band.
 
-Allocating identity and selecting a physical spawn point do not belong to the Domain.
+### Spawn Band
+
+The distance beyond the Arena Bounds within which Enemies may be placed when they spawn.
+
+### Enemy Catalog
+
+The definitions of the Regular Enemy and the Boss: initial Health, Movement Speed, Collision Radius, attack Damage, attack range, and attack cooldown.
+
+### Wave Catalog
+
+The ordered definitions of all Waves of an Arena Run. Every Wave definition states its number of Regular Enemies; every Wave has one Boss.
 
 ### Interaction Correlation
 

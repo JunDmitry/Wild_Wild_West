@@ -1,4 +1,6 @@
-﻿using Game.Arena.Domain.Geometry;
+﻿using System;
+using Game.Arena.Domain.Configuration;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Vitality;
@@ -10,27 +12,48 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public ArenaRun Start(
             ArenaRunId arenaRunId,
             PlayerId playerId,
-            Position3D playerStartPosition,
-            Health playerHealth,
-            MovementSpeed playerMovementSpeed,
-            CollisionRadius playerCollisionRadius,
-            ArenaBounds arenaBounds)
+            ArenaDefinition arenaDefinition,
+            PlayerDefinition playerDefinition,
+            EnemyCatalog enemyCatalog,
+            WaveCatalog waveCatalog)
         {
+            if (arenaDefinition == null)
+            {
+                throw new ArgumentNullException(nameof(arenaDefinition));
+            }
+
+            if (playerDefinition == null)
+            {
+                throw new ArgumentNullException(nameof(playerDefinition));
+            }
+
+            if (enemyCatalog == null)
+            {
+                throw new ArgumentNullException(nameof(enemyCatalog));
+            }
+
+            if (waveCatalog == null)
+            {
+                throw new ArgumentNullException(nameof(waveCatalog));
+            }
+
             Player player = new(
                 playerId,
-                playerStartPosition,
-                playerHealth,
+                playerDefinition.StartPosition,
+                playerDefinition.InitialHealth,
                 Combat.WeaponKind.Ranged,
-                playerMovementSpeed,
-                playerCollisionRadius);
+                playerDefinition.MovementSpeed,
+                playerDefinition.CollisionRadius);
 
-            Wave wave = new(WaveNumber.First);
+            Wave wave = new(waveCatalog.Get(WaveNumber.First));
 
             return new(
                 arenaRunId,
                 player,
                 wave,
-                arenaBounds);
+                arenaDefinition,
+                enemyCatalog,
+                waveCatalog);
         }
     }
 }
