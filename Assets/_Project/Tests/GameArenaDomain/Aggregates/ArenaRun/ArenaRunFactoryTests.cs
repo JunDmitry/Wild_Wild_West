@@ -51,6 +51,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         _kit.Arena,
                         _kit.PlayerAt(Position3D.Zero),
                         _kit.Enemies,
+                        _kit.Weapons,
                         _kit.Waves(2, 1, 1));
                 });
         }
@@ -67,6 +68,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         _kit.Arena,
                         _kit.PlayerAt(Position3D.Zero),
                         _kit.Enemies,
+                        _kit.Weapons,
                         _kit.Waves(2, 1, 1));
                 });
         }
@@ -105,6 +107,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         new ArenaDefinition(smallArena, Distance.FromValue(0.01f)),
                         _kit.PlayerAt(Position3D.Zero),
                         _kit.Enemies,
+                        _kit.Weapons,
                         _kit.Waves(2, 1, 1));
                 });
         }
@@ -123,6 +126,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         _kit.Arena,
                         new PlayerDefinition(Position3D.Zero, depleted, MovementSpeed.FromUnitsPerSecond(5f), CollisionRadius.FromValue(0.5f)),
                         _kit.Enemies,
+                        _kit.Weapons,
                         _kit.Waves(2, 1, 1));
                 });
         }
@@ -139,6 +143,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
                         _kit.Arena,
                         new PlayerDefinition(Position3D.Zero, default, MovementSpeed.FromUnitsPerSecond(5f), CollisionRadius.FromValue(0.5f)),
                         _kit.Enemies,
+                        _kit.Weapons,
                         _kit.Waves(2, 1, 1));
                 });
         }

@@ -1,9 +1,6 @@
 ﻿using System;
 using Game.Arena.Domain.Configuration;
-using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
-using Game.Arena.Domain.Interactions.Movement;
-using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
@@ -15,6 +12,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             ArenaDefinition arenaDefinition,
             PlayerDefinition playerDefinition,
             EnemyCatalog enemyCatalog,
+            WeaponCatalog weaponCatalog,
             WaveCatalog waveCatalog)
         {
             if (arenaDefinition == null)
@@ -30,6 +28,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             if (enemyCatalog == null)
             {
                 throw new ArgumentNullException(nameof(enemyCatalog));
+            }
+
+            if (weaponCatalog == null)
+            {
+                throw new ArgumentNullException(nameof(weaponCatalog));
             }
 
             if (waveCatalog == null)
@@ -52,6 +55,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 player,
                 wave,
                 arenaDefinition,
+                weaponCatalog,
                 enemyCatalog,
                 waveCatalog);
         }

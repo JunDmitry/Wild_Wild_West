@@ -150,7 +150,9 @@ The Weapon currently used when the Player attempts an Attack.
 
 ### Combat Readiness
 
-The earliest game time at which a combatant or weapon may perform its next Attack.
+The earliest Game Time at which a combatant or weapon may perform its next Attack.
+
+A successfully executed Attack sets readiness to the current Game Time plus the weapon's cooldown.
 
 ## Movement Terms
 
@@ -333,6 +335,16 @@ Domain Events describe completed domain facts and never request Unity behavior.
 An Application-level representation of committed domain facts intended for external consumers such as Presentation, audio, visual effects, analytics, and scene lifecycle.
 
 An Application Notification is not a Domain Event.
+
+### Game Time
+
+The monotonically increasing simulated time of one Arena Run, starting at zero.
+
+Game Time is advanced only by the Arena Run at the request of the Application and is the sole reference for combat readiness.
+
+### Weapon Catalog
+
+The definitions of the Ranged and Melee weapons: Damage, range, and cooldown.
 
 ## Identity Terms
 

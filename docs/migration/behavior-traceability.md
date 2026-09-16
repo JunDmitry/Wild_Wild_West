@@ -64,6 +64,7 @@ The following target tests are mandatory:
 | A state-changing command is issued after the pending interaction is resolved | `SwitchWeaponIsAllowedAfterPendingInteractionIsResolved` |
 | A resolution of another interaction kind is applied to a pending spawn | `MovementResolutionIsRejectedForPendingSpawnInteraction` |
 | A spawn resolution carries a None or duplicate EnemyId | `SpawnResolutionWithNoneEnemyIdIsRejectedWithoutSideEffects`, `DuplicateEnemyIdIsRejected` |
+| Game Time is advanced while an interaction is pending | `AdvanceTimeIsRejectedWhileInteractionIsPending` |
 
 ## Legacy Defect Migration Rule
 

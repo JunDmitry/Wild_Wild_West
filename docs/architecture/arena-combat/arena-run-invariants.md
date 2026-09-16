@@ -80,6 +80,16 @@ INV-053: Switching the selected Weapon takes effect before an Attack requested d
 
 INV-054: An Attack affects only targets belonging to the same Arena Run.
 
+## Game Time
+
+INV-055: An Arena Run holds a monotonically increasing current Game Time starting at zero.
+
+INV-056: Advancing Game Time is a state-changing operation: it advances AggregateRevision exactly once, is rejected while an Interaction is pending or the Arena Run is terminal, and produces no Domain Events.
+
+INV-057: Combat readiness is compared against the Arena Run's current Game Time, never against a caller-supplied time.
+
+INV-058: A new Arena Run starts with all weapons ready.
+
 ## External Interactions
 
 INV-060: The Domain does not allocate ArenaRunId, PlayerId, or EnemyId.

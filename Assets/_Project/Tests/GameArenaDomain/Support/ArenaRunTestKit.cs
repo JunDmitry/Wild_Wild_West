@@ -36,6 +36,18 @@ namespace Game.Arena.Domain.Tests.Support
                 Distance.FromValue(3f),
                 new GameDuration(1.1d)));
 
+        public WeaponCatalog Weapons { get; } = new WeaponCatalog(
+            new WeaponDefinition(
+                WeaponKind.Ranged,
+                DamageAmount.FromPoints(10),
+                Distance.FromValue(50f),
+                new GameDuration(0.4d)),
+            new WeaponDefinition(
+                WeaponKind.Melee,
+                DamageAmount.FromPoints(20),
+                Distance.FromValue(2f),
+                new GameDuration(0.8d)));
+
         public PlayerDefinition PlayerAt(Position3D startPosition)
         {
             return new PlayerDefinition(
@@ -77,6 +89,7 @@ namespace Game.Arena.Domain.Tests.Support
                 Arena,
                 PlayerAt(playerStart),
                 Enemies,
+                Weapons,
                 waves);
         }
     }

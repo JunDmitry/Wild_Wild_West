@@ -40,7 +40,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         public AggregateRevision Revision { get; }
         public bool HasStateChange { get; }
-
         public IReadOnlyList<IDomainEvent> DomainEvents => _eventsSnapshot;
     }
 }

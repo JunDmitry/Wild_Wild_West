@@ -19,6 +19,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private readonly ArenaDefinition _arenaDefinition;
         private readonly EnemyCatalog _enemyCatalog;
         private readonly WaveCatalog _waveCatalog;
+        private readonly WeaponCatalog _weaponCatalog;
+
         private readonly Player _player;
         private readonly Dictionary<EnemyId, Enemy> _enemies;
         private readonly PendingInteractionLedger _interactionLedger;
@@ -32,6 +34,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Player runPlayer,
             Wave runWave,
             ArenaDefinition runArenaDefinition,
+            WeaponCatalog runWeaponCatalog,
             EnemyCatalog runEnemyCatalog,
             WaveCatalog runWaveCatalog)
         {
@@ -53,6 +56,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             if (runArenaDefinition == null)
             {
                 throw new ArgumentNullException(nameof(runArenaDefinition));
+            }
+
+            if (runWeaponCatalog == null)
+            {
+                throw new ArgumentNullException(nameof(runWeaponCatalog));
             }
 
             if (runEnemyCatalog == null)
@@ -85,21 +93,25 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _player = runPlayer;
             _currentWave = runWave;
             _arenaDefinition = runArenaDefinition;
+            _weaponCatalog = runWeaponCatalog;
             _enemyCatalog = runEnemyCatalog;
             _waveCatalog = runWaveCatalog;
 
+            CurrentTime = new GameTimePoint(0);
             _currentWave.TryEnterBossCombat(0);
         }
 
         public ArenaRunId Id { get; }
         public ArenaRunStatus Status { get; private set; }
         public AggregateRevision Revision { get; private set; }
+        public GameTimePoint CurrentTime { get; private set; }
 
         public bool HasPendingInteraction => _interactionLedger.HasPending;
         public PlayerId PlayerId => _player.Id;
         public Position3D PlayerPosition => _player.Position;
         public Health PlayerHealth => _player.Health;
         public WeaponKind SelectedWeapon => _player.SelectedWeapon;
+        public bool IsSelectedWeaponReady => _player.IsWeaponReady(_player.SelectedWeapon, CurrentTime);
         public WaveNumber CurrentWaveNumber => _currentWave.Number;
         public WavePhase CurrentWavePhase => _currentWave.Phase;
         public ArenaBounds ArenaBounds => _arenaDefinition.Bounds;
@@ -175,6 +187,29 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Revision = Revision.Next();
 
             return WeaponSwitchOutcome.Switched(SelectedWeapon, CreateStateChange());
+        }
+
+        public TimeAdvanceOutcome AdvanceTime(GameDuration duration)
+        {
+            if (duration.Seconds <= 0d)
+            {
+                throw new ArgumentOutOfRangeException(nameof(duration));
+            }
+
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return TimeAdvanceOutcome.RunIsNotPlaying(CurrentTime, CreateNoChange());
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                return TimeAdvanceOutcome.InteractionPending(CurrentTime, CreateNoChange());
+            }
+
+            CurrentTime += duration;
+            Revision = Revision.Next();
+
+            return TimeAdvanceOutcome.Advanced(CurrentTime, CreateStateChange());
         }
 
         public PlayerMovementResolutionOutcome ApplyPlayerMovement(PlayerMovementResolution resolution)
@@ -309,6 +344,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             return InteractionCancellationOutcome.Cancelled(reason);
+        }
+
+        public GameTimePoint WeaponReadyAt(WeaponKind kind)
+        {
+            return _player.ReadyAt(kind);
         }
 
         private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)

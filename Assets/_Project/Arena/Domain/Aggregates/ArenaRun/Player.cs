@@ -2,12 +2,16 @@
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     internal sealed class Player
     {
+        private GameTimePoint _rangedReadyAt;
+        private GameTimePoint _meleeReadyAt;
+
         public Player(
             PlayerId id,
             Position3D position,
@@ -47,6 +51,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             SelectedWeapon = selectedWeapon;
             MovementSpeed = movementSpeed;
             CollisionRadius = collisionRadius;
+            _rangedReadyAt = new GameTimePoint(0f);
+            _meleeReadyAt = new GameTimePoint(0f);
         }
 
         public PlayerId Id { get; }
@@ -55,6 +61,34 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public WeaponKind SelectedWeapon { get; private set; }
         public MovementSpeed MovementSpeed { get; }
         public CollisionRadius CollisionRadius { get; }
+
+        public GameTimePoint ReadyAt(WeaponKind kind)
+        {
+            if (kind == WeaponKind.Ranged)
+            {
+                return _rangedReadyAt;
+            }
+
+            return _meleeReadyAt;
+        }
+
+        public bool IsWeaponReady(WeaponKind kind, GameTimePoint now)
+        {
+            return now >= ReadyAt(kind);
+        }
+
+        public void MarkWeaponUsed(WeaponKind kind, GameTimePoint now, GameDuration cooldown)
+        {
+            GameTimePoint readyAt = now + cooldown;
+
+            if (kind == WeaponKind.Ranged)
+            {
+                _rangedReadyAt = readyAt;
+                return;
+            }
+
+            _meleeReadyAt = readyAt;
+        }
 
         public bool MoveTo(Position3D position)
         {
@@ -77,6 +111,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             SelectedWeapon = WeaponKind.Ranged;
+        }
+
+        public void TakeDamage(DamageAmount damage)
+        {
+            Health = Health.Reduce(damage);
         }
     }
 }
