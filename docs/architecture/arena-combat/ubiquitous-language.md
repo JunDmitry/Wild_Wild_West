@@ -214,6 +214,14 @@ A domain interaction request created when a pending Attack reaches its Impact ti
 
 The external world's answer listing the Enemies hit. An empty list is a legitimate miss, not a protocol failure.
 
+### Enemy Attack Range
+
+The distance within which an Enemy may start an Attack, measured on the ground plane between the Enemy and the Player and extended by both Collision Radii.
+
+### Eligible Enemy
+
+An active Enemy that has no pending Attack, has reached its attack readiness, and has the Player within its Enemy Attack Range.
+
 ## Movement Terms
 
 ### Position

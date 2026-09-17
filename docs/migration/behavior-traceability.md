@@ -72,6 +72,9 @@ The following target tests are mandatory:
 | Completing a non-final wave starts the next wave in the same aggregate operation | `CompletingNonFinalWaveStartsNextWave` |
 | Completing the final wave makes the Arena Run victorious | `DefeatingFinalBossCompletesRun` |
 | Events caused by one aggregate operation share one revision | `FinalBossImpactProducesWaveAndVictoryEventsInOneRevision` |
+| An enemy in range starts an attack without dealing damage | `EnemyInRangeStartsAttack`, `StartingEnemyAttackDoesNotDamagePlayer` |
+| Enemy attack batch advances revision once | `BatchAdvancesRevisionOnceForAllStartedAttacks`, `AllBatchEventsShareResultingRevision` |
+| Enemy attacks start in deterministic order | `AttacksStartInAscendingEnemyIdOrder` |
 
 ## Legacy Defect Migration Rule
 

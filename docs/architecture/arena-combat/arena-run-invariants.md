@@ -180,6 +180,12 @@ INV-125: A rejected Attack Impact leaves the pending Attack and the pending Inte
 
 INV-126: An Enemy whose Health is depleted is removed from the active Enemy collection within the same operation that applied the lethal Damage.
 
+INV-127: An Enemy starts an Attack only while it is active, has no pending Attack, its attack readiness has been reached, and the Player is within its attack range extended by both Collision Radii.
+
+INV-128: Starting Enemy Attacks is one atomic aggregate operation processed in ascending EnemyId order; it advances AggregateRevision exactly once regardless of how many Attacks started.
+
+INV-129: If no Enemy is eligible, starting Enemy Attacks does not change state, advance AggregateRevision, or produce Domain Events.
+
 ## Domain Events
 
 INV-130: Domain Events describe facts that have already occurred.

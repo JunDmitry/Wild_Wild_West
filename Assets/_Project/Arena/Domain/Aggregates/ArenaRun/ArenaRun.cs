@@ -123,6 +123,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         public int RegularEnemiesRemainingToSpawn => _currentWave.RegularEnemiesRemainingToSpawn;
         public int ActiveEnemyCount => _enemies.Count;
+        public int PendingEnemyAttackCount
+        {
+            get
+            {
+                int count = 0;
+
+                foreach (Enemy enemy in _enemies.Values)
+                {
+                    if (enemy.HasPendingAttack)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
 
         public bool ContainsEnemy(EnemyId enemyId)
         {
@@ -525,6 +542,71 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return PlayerAttackImpactOutcome.Missed(change);
         }
 
+        public EnemyAttackStartOutcome StartEligibleEnemyAttacks()
+        {
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return EnemyAttackStartOutcome.RunIsNotPlaying(CreateNoChange());
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                return EnemyAttackStartOutcome.InteractionPending(CreateNoChange());
+            }
+
+            List<EnemyId> orderedIds = OrderedEnemyIds();
+            List<EnemyId> eligible = new();
+
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+
+                if (enemy.CanStartAttack(CurrentTime) == false)
+                {
+                    continue;
+                }
+
+                if (IsPlayerWithinEnemyAttackRange(enemy) == false)
+                {
+                    continue;
+                }
+
+                eligible.Add(enemy.Id);
+            }
+
+            if (eligible.Count == 0)
+            {
+                return EnemyAttackStartOutcome.NoEligibleEnemies(CreateNoChange());
+            }
+
+            AggregateRevision nextRevision = Revision.Next();
+            AttackId nextAttackId = _lastAttackId;
+            List<PendingEnemyAttack> startedAttacks = new();
+            List<IArenaDomainEvent> events = new();
+
+            for (int index = 0; index < eligible.Count; index++)
+            {
+                Enemy enemy = _enemies[eligible[index]];
+                nextAttackId = nextAttackId.Next();
+
+                PendingEnemyAttack attack = enemy.StartAttack(nextAttackId, CurrentTime);
+                startedAttacks.Add(attack);
+
+                events.Add(new EnemyAttackStarted(
+                    Id,
+                    nextRevision,
+                    attack.EnemyId,
+                    attack.Id,
+                    attack.StartedAt,
+                    attack.ImpactAt));
+            }
+
+            _lastAttackId = nextAttackId;
+            Revision = nextRevision;
+
+            return EnemyAttackStartOutcome.Started(startedAttacks, new ArenaRunChange(Revision, true, events));
+        }
+
         public InteractionCancellationOutcome CancelPendingInteraction(
             InteractionCorrelation correlation,
             InteractionCancellationReason reason)
@@ -590,6 +672,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             };
         }
 
+        private static int CompareEnemyIds(EnemyId left, EnemyId right)
+        {
+            return left.Value.CompareTo(right.Value);
+        }
+
         private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)
         {
             float tolerance = GeometryTolerance.MovementPathTolerance;
@@ -651,6 +738,31 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             float distance = _player.Position.GroundDistanceTo(enemy.Position);
             float limit = range.Value
                 + enemy.CollisionRadius.Value.Value
+                + GeometryTolerance.CombatRangeTolerance;
+
+            return distance <= limit;
+        }
+
+        private List<EnemyId> OrderedEnemyIds()
+        {
+            List<EnemyId> ids = new(_enemies.Count);
+
+            foreach (EnemyId enemyId in _enemies.Keys)
+            {
+                ids.Add(enemyId);
+            }
+
+            ids.Sort(CompareEnemyIds);
+
+            return ids;
+        }
+
+        private bool IsPlayerWithinEnemyAttackRange(Enemy enemy)
+        {
+            float distance = enemy.Position.GroundDistanceTo(_player.Position);
+            float limit = enemy.Definition.AttackRange.Value
+                + enemy.CollisionRadius.Value.Value
+                + _player.CollisionRadius.Value.Value
                 + GeometryTolerance.CombatRangeTolerance;
 
             return distance <= limit;
