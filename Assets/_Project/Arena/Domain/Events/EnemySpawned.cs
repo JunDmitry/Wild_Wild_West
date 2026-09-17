@@ -6,7 +6,7 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct EnemySpawned : IDomainEvent, IEquatable<EnemySpawned>
+    public readonly struct EnemySpawned : IArenaDomainEvent, IEquatable<EnemySpawned>
     {
         public EnemySpawned(
             ArenaRunId arenaRunId,

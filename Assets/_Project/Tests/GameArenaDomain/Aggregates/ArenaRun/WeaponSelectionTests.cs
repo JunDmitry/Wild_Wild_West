@@ -203,5 +203,17 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
 
             Assert.That(outcome.Request.Correlation.AggregateRevision.Value, Is.EqualTo(1UL));
         }
+
+        [Test]
+        public void SwitchWeaponIsRejectedWhileAttackIsPending()
+        {
+            ArenaRun run = _kit.StartRun();
+
+            run.StartPlayerAttack();
+            WeaponSwitchOutcome outcome = run.SwitchWeapon();
+
+            Assert.That(outcome.Status, Is.EqualTo(WeaponSwitchStatus.AttackPending));
+            Assert.That(outcome.Change.HasStateChange, Is.False);
+        }
     }
 }

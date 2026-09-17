@@ -16,7 +16,8 @@ namespace Game.Arena.Domain.Configuration
             CollisionRadius collisionRadius,
             DamageAmount attackDamage,
             Distance attackRange,
-            GameDuration attackCooldown)
+            GameDuration attackCooldown,
+            GameDuration attackWindupDuration)
         {
             if (initialHealth.IsValid == false)
             {
@@ -60,6 +61,7 @@ namespace Game.Arena.Domain.Configuration
             AttackDamage = attackDamage;
             AttackRange = attackRange;
             AttackCooldown = attackCooldown;
+            AttackWindupDuration = attackWindupDuration;
         }
 
         public EnemyKind Kind { get; }
@@ -69,5 +71,6 @@ namespace Game.Arena.Domain.Configuration
         public DamageAmount AttackDamage { get; }
         public Distance AttackRange { get; }
         public GameDuration AttackCooldown { get; }
+        public GameDuration AttackWindupDuration { get; }
     }
 }

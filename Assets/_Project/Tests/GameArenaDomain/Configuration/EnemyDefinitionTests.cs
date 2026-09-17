@@ -23,7 +23,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),
                     Distance.FromValue(5),
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -39,7 +40,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),
                     Distance.FromValue(5),
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -55,7 +57,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),
                     Distance.FromValue(5),
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -71,7 +74,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     default,
                     DamageAmount.FromPoints(10),
                     Distance.FromValue(5),
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -87,7 +91,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     default,
                     Distance.FromValue(5),
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -103,7 +108,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),
                     default,
-                    new GameDuration(.75));
+                    new GameDuration(.75),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -119,7 +125,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),
                     Distance.FromValue(5),
-                    default);
+                    default,
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -133,7 +140,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                 CollisionRadius.FromValue(.5f),
                 DamageAmount.FromPoints(10),
                 Distance.FromValue(5),
-                new GameDuration(.75));
+                new GameDuration(.75),
+                new Domain.Time.GameDuration(.4d));
 
             Assert.IsTrue(enemyDefinition.Kind == Combat.EnemyKind.Regular);
             Assert.IsTrue(enemyDefinition.InitialHealth.Equals(Health.Full(20)));

@@ -15,7 +15,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         {
             ArenaRunId runId = ArenaRunId.FromValue(1UL);
             AggregateRevision revision = AggregateRevision.Initial.Next();
-            IDomainEvent[] source =
+            IArenaDomainEvent[] source =
             {
                 new ArenaRunDefeated(runId, revision),
             };
@@ -42,7 +42,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         [Test]
         public void ConstructorRejectsNullDomainEvent()
         {
-            IDomainEvent[] events =
+            IArenaDomainEvent[] events =
             {
                 null,
             };
@@ -59,7 +59,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         [Test]
         public void ConstructorStoresStateChangeFlag()
         {
-            ArenaRunChange change = new(AggregateRevision.Initial.Next(), true, Array.Empty<IDomainEvent>());
+            ArenaRunChange change = new(AggregateRevision.Initial.Next(), true, Array.Empty<IArenaDomainEvent>());
 
             Assert.That(change.HasStateChange, Is.True);
         }

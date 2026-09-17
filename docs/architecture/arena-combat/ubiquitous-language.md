@@ -154,6 +154,32 @@ The earliest Game Time at which a combatant or weapon may perform its next Attac
 
 A successfully executed Attack sets readiness to the current Game Time plus the weapon's cooldown.
 
+### Attack Start
+
+The domain transition in which a combatant commits to an Attack.
+
+Attack Start records the used weapon or attack definition, StartedAt, ImpactAt, and moves combat readiness according to cooldown.
+
+Attack Start does not deal Damage.
+
+### Attack Impact
+
+The later domain transition in which a previously started Attack is resolved against the current Arena Run state.
+
+The target affected by an Attack Impact may differ from the target that allowed Attack Start.
+
+### Windup Duration
+
+The duration between Attack Start and Attack Impact.
+
+A zero Windup Duration represents an immediate impact that is still modeled as a separate conceptual stage.
+
+### Cooldown
+
+The minimum time between Attack Starts for the same weapon or combatant.
+
+Cooldown starts at Attack Start, not at Damage application.
+
 ## Movement Terms
 
 ### Position

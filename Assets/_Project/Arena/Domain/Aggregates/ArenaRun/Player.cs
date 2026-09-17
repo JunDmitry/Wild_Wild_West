@@ -1,4 +1,5 @@
 ﻿using Game.Arena.Domain.Combat;
+using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
@@ -11,6 +12,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
     {
         private GameTimePoint _rangedReadyAt;
         private GameTimePoint _meleeReadyAt;
+        private PendingAttack _pendingAttack;
 
         public Player(
             PlayerId id,
@@ -61,6 +63,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public WeaponKind SelectedWeapon { get; private set; }
         public MovementSpeed MovementSpeed { get; }
         public CollisionRadius CollisionRadius { get; }
+        public bool HasPendingAttack => _pendingAttack.Id.IsNone == false;
+        public PendingAttack PendingAttack => _pendingAttack;
 
         public GameTimePoint ReadyAt(WeaponKind kind)
         {
@@ -100,6 +104,51 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Position = position;
 
             return true;
+        }
+
+        public bool CanStartAttack(GameTimePoint now)
+        {
+            if (HasPendingAttack)
+            {
+                return false;
+            }
+
+            return IsWeaponReady(SelectedWeapon, now);
+        }
+
+        public PendingAttack StartAttack(AttackId attackId, WeaponDefinition weapon, GameTimePoint now)
+        {
+            if (weapon == null)
+            {
+                throw new System.ArgumentNullException(nameof(weapon));
+            }
+
+            if (weapon.Kind != SelectedWeapon)
+            {
+                throw new System.ArgumentException("Weapon does not match selected weapon.", nameof(weapon));
+            }
+
+            if (attackId.IsNone)
+            {
+                throw new System.ArgumentException("AttackId cannot be None.", nameof(attackId));
+            }
+
+            if (CanStartAttack(now) == false)
+            {
+                throw new System.InvalidOperationException("Player cannot start attack.");
+            }
+
+            PendingAttack attack = new(
+                attackId,
+                AttackActor.Player(Id),
+                SelectedWeapon,
+                now,
+                now + weapon.WindupDuration);
+
+            _pendingAttack = attack;
+            MarkWeaponUsed(SelectedWeapon, now, weapon.Cooldown);
+
+            return attack;
         }
 
         public void SwitchWeapon()

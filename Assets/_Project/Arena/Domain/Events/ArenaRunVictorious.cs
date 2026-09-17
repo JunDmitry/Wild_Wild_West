@@ -4,7 +4,7 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct ArenaRunVictorious : IDomainEvent, IEquatable<ArenaRunVictorious>
+    public readonly struct ArenaRunVictorious : IArenaDomainEvent, IEquatable<ArenaRunVictorious>
     {
         public ArenaRunVictorious(
             ArenaRunId arenaRunId,

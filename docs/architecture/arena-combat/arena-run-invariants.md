@@ -68,18 +68,6 @@ INV-044: Combat progression does not continue after Defeat or Victory.
 
 INV-045: Restarting gameplay creates a new Arena Run rather than resetting the terminal Arena Run.
 
-## Combat
-
-INV-050: Damage is non-negative.
-
-INV-051: An Attack cannot execute before its combat readiness time.
-
-INV-052: A successfully executed Attack advances the corresponding combat readiness time.
-
-INV-053: Switching the selected Weapon takes effect before an Attack requested during the same gameplay step.
-
-INV-054: An Attack affects only targets belonging to the same Arena Run.
-
 ## Game Time
 
 INV-055: An Arena Run holds a monotonically increasing current Game Time starting at zero.
@@ -132,16 +120,6 @@ INV-078: While an Interaction is pending, the Arena Run rejects state-changing c
 
 INV-079: Opening a second Interaction while one is pending is a programming error of the orchestrator and is signalled as an exception rather than a rejected command.
 
-## Domain Events
-
-INV-080: Domain Events describe facts that have already occurred.
-
-INV-081: Domain Events do not contain Unity-specific types.
-
-INV-082: A Domain Event cannot mutate the Arena Run.
-
-INV-083: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
-
 ## Enemy Spawning
 
 INV-090: Every Wave contains exactly one Boss. A Wave with zero Regular Enemies begins in Boss Combat.
@@ -157,3 +135,35 @@ INV-094: A spawned Enemy is placed on the ground height, outside the Arena Bound
 INV-095: A Spawn Resolution with a None or duplicate EnemyId is rejected without side effects.
 
 INV-096: A successful spawn advances AggregateRevision once and produces exactly one EnemySpawned Domain Event.
+
+## Combat
+
+INV-100: Damage is positive.
+
+INV-101: Health cannot be reduced below zero.
+
+INV-102: Attack Start does not deal Damage.
+
+INV-103: An attacker can have at most one pending Attack.
+
+INV-104: Cooldown is applied at Attack Start.
+
+INV-105: Attack Impact is resolved against the current Arena Run state, not the state at Attack Start.
+
+INV-106: The target hit by Attack Impact may differ from the target that allowed Attack Start.
+
+INV-107: Switching the Player weapon is rejected while the Player has a pending Attack.
+
+INV-108: A successfully started Player Attack advances AggregateRevision exactly once and produces one PlayerAttackStarted Domain Event.
+
+INV-109: A rejected Attack Start does not change state, advance AggregateRevision, or produce Domain Events.
+
+## Domain Events
+
+INV-120: Domain Events describe facts that have already occurred.
+
+INV-121: Domain Events do not contain Unity-specific types.
+
+INV-122: A Domain Event cannot mutate the Arena Run.
+
+INV-123: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.

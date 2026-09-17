@@ -1,10 +1,11 @@
 ﻿namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
-    public enum WeaponSwitchStatus
+    public enum PlayerAttackStartStatus
     {
-        Switched = 0,
+        Started = 0,
         RunIsNotPlaying = 1,
         InteractionPending = 2,
-        AttackPending = 3,
+        AttackAlreadyPending = 3,
+        WeaponNotReady = 4,
     }
 }

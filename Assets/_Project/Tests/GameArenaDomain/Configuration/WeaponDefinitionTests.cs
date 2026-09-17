@@ -18,7 +18,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     Combat.WeaponKind.Ranged,
                     default,
                     Distance.FromValue(5),
-                    new Domain.Time.GameDuration(.9));
+                    new Domain.Time.GameDuration(.9),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -31,7 +32,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     Combat.WeaponKind.Ranged,
                     DamageAmount.FromPoints(1),
                     default,
-                    new Domain.Time.GameDuration(.9));
+                    new Domain.Time.GameDuration(.9),
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -44,7 +46,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                     Combat.WeaponKind.Melee,
                     DamageAmount.FromPoints(1),
                     Distance.FromValue(5),
-                    default);
+                    default,
+                    new Domain.Time.GameDuration(.4d));
             });
         }
 
@@ -55,7 +58,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                 Combat.WeaponKind.Melee,
                 DamageAmount.FromPoints(20),
                 Distance.FromValue(5),
-                new Domain.Time.GameDuration(1.1));
+                new Domain.Time.GameDuration(1.1),
+                new Domain.Time.GameDuration(.4d));
 
             Assert.IsTrue(weaponDefinition.Kind == Combat.WeaponKind.Melee);
             Assert.IsTrue(weaponDefinition.Damage.Equals(DamageAmount.FromPoints(20)));

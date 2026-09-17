@@ -23,7 +23,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                             CollisionRadius.FromValue(.5f),
                             DamageAmount.FromPoints(5),
                             Distance.FromValue(5f),
-                            new Domain.Time.GameDuration(.75)));
+                            new Domain.Time.GameDuration(.75),
+                            new Domain.Time.GameDuration(.4d)));
             });
             Assert.Throws<ArgumentNullException>(() =>
             {
@@ -35,7 +36,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                             CollisionRadius.FromValue(.5f),
                             DamageAmount.FromPoints(5),
                             Distance.FromValue(5f),
-                            new Domain.Time.GameDuration(.75)),
+                            new Domain.Time.GameDuration(.75),
+                            new Domain.Time.GameDuration(.4d)),
                         null);
             });
         }
@@ -53,7 +55,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                         CollisionRadius.FromValue(.5f),
                         DamageAmount.FromPoints(5),
                         Distance.FromValue(5f),
-                        new Domain.Time.GameDuration(.75)),
+                        new Domain.Time.GameDuration(.75),
+                        new Domain.Time.GameDuration(.4d)),
                     new EnemyDefinition(
                         Combat.EnemyKind.Boss,
                         Health.Full(20),
@@ -61,7 +64,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                         CollisionRadius.FromValue(.5f),
                         DamageAmount.FromPoints(5),
                         Distance.FromValue(5f),
-                        new Domain.Time.GameDuration(.75)));
+                        new Domain.Time.GameDuration(.75),
+                        new Domain.Time.GameDuration(.4d)));
             });
             Assert.Throws<ArgumentException>(() =>
             {
@@ -73,7 +77,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                             CollisionRadius.FromValue(.5f),
                             DamageAmount.FromPoints(5),
                             Distance.FromValue(5f),
-                            new Domain.Time.GameDuration(.75)),
+                            new Domain.Time.GameDuration(.75),
+                            new Domain.Time.GameDuration(.4d)),
                         new EnemyDefinition(
                             Combat.EnemyKind.Regular,
                             Health.Full(100),
@@ -81,7 +86,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                             CollisionRadius.FromValue(.5f),
                             DamageAmount.FromPoints(5),
                             Distance.FromValue(5f),
-                            new Domain.Time.GameDuration(.75)));
+                            new Domain.Time.GameDuration(.75),
+                            new Domain.Time.GameDuration(.4d)));
             });
         }
 
@@ -95,7 +101,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                             CollisionRadius.FromValue(.5f),
                             DamageAmount.FromPoints(5),
                             Distance.FromValue(5f),
-                            new Domain.Time.GameDuration(.75));
+                            new Domain.Time.GameDuration(.75),
+                            new Domain.Time.GameDuration(.4d));
             EnemyDefinition boss = new EnemyDefinition(
                         Combat.EnemyKind.Boss,
                         Health.Full(20),
@@ -103,7 +110,8 @@ namespace Game.Arena.Domain.Tests.Configuration
                         CollisionRadius.FromValue(.5f),
                         DamageAmount.FromPoints(5),
                         Distance.FromValue(5f),
-                        new Domain.Time.GameDuration(.75));
+                        new Domain.Time.GameDuration(.75),
+                        new Domain.Time.GameDuration(.4d));
             EnemyCatalog catalog = new(regular, boss);
 
             Assert.AreSame(regular, catalog.Get(Combat.EnemyKind.Regular));

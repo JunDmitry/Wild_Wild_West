@@ -26,7 +26,8 @@ namespace Game.Arena.Domain.Tests.Support
                 CollisionRadius.FromValue(0.5f),
                 DamageAmount.FromPoints(8),
                 Distance.FromValue(2f),
-                new GameDuration(1d)),
+                new GameDuration(1d),
+                new GameDuration(.2d)),
             new EnemyDefinition(
                 EnemyKind.Boss,
                 Health.Full(300),
@@ -34,19 +35,22 @@ namespace Game.Arena.Domain.Tests.Support
                 CollisionRadius.FromValue(1f),
                 DamageAmount.FromPoints(25),
                 Distance.FromValue(3f),
-                new GameDuration(1.1d)));
+                new GameDuration(1.1d),
+                new GameDuration(.4d)));
 
         public WeaponCatalog Weapons { get; } = new WeaponCatalog(
             new WeaponDefinition(
                 WeaponKind.Ranged,
                 DamageAmount.FromPoints(10),
                 Distance.FromValue(50f),
-                new GameDuration(0.4d)),
+                new GameDuration(0.4d),
+                new GameDuration(0)),
             new WeaponDefinition(
                 WeaponKind.Melee,
                 DamageAmount.FromPoints(20),
                 Distance.FromValue(2f),
-                new GameDuration(0.8d)));
+                new GameDuration(0.8d),
+                new GameDuration(0.3d)));
 
         public PlayerDefinition PlayerAt(Position3D startPosition)
         {

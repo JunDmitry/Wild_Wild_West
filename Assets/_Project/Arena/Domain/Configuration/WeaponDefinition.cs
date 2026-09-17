@@ -12,7 +12,8 @@ namespace Game.Arena.Domain.Configuration
             WeaponKind kind,
             DamageAmount damage,
             Distance range,
-            GameDuration cooldown)
+            GameDuration cooldown,
+            GameDuration windupDuration)
         {
             if (damage.Points <= 0)
             {
@@ -33,14 +34,13 @@ namespace Game.Arena.Domain.Configuration
             Damage = damage;
             Range = range;
             Cooldown = cooldown;
+            WindupDuration = windupDuration;
         }
 
         public WeaponKind Kind { get; }
-
         public DamageAmount Damage { get; }
-
         public Distance Range { get; }
-
         public GameDuration Cooldown { get; }
+        public GameDuration WindupDuration { get; }
     }
 }

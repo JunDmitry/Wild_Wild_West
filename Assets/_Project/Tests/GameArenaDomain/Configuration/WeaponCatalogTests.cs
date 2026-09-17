@@ -60,12 +60,14 @@ namespace Game.Arena.Domain.Tests.Configuration
                 Combat.WeaponKind.Ranged,
                 DamageAmount.FromPoints(10),
                 Distance.FromValue(10),
-                new GameDuration(1));
+                new GameDuration(1),
+                new Domain.Time.GameDuration(.4d));
             WeaponDefinition melee = new(
                 Combat.WeaponKind.Melee,
                 DamageAmount.FromPoints(20),
                 Distance.FromValue(2),
-                new GameDuration(1.25));
+                new GameDuration(1.25),
+                new Domain.Time.GameDuration(.4d));
             WeaponCatalog catalog = new(ranged, melee);
 
             Assert.AreSame(ranged, catalog.Get(Combat.WeaponKind.Ranged));

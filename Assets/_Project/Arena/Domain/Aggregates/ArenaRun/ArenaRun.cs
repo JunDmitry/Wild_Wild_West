@@ -28,6 +28,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private Wave _currentWave;
         private PlayerMovementRequest _pendingMovementRequest;
         private EnemySpawnRequest _pendingSpawnRequest;
+        private AttackId _lastAttackId;
 
         internal ArenaRun(
             ArenaRunId id,
@@ -88,6 +89,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Id = id;
             Status = ArenaRunStatus.Playing;
             Revision = AggregateRevision.Initial;
+            _lastAttackId = AttackId.None;
             _interactionLedger = new PendingInteractionLedger(id);
             _enemies = new Dictionary<EnemyId, Enemy>();
             _player = runPlayer;
@@ -112,6 +114,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public Health PlayerHealth => _player.Health;
         public WeaponKind SelectedWeapon => _player.SelectedWeapon;
         public bool IsSelectedWeaponReady => _player.IsWeaponReady(_player.SelectedWeapon, CurrentTime);
+        public bool HasPendingPlayerAttack => _player.HasPendingAttack;
         public WaveNumber CurrentWaveNumber => _currentWave.Number;
         public WavePhase CurrentWavePhase => _currentWave.Phase;
         public ArenaBounds ArenaBounds => _arenaDefinition.Bounds;
@@ -181,6 +184,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             if (_interactionLedger.HasPending)
             {
                 return WeaponSwitchOutcome.InteractionPending(SelectedWeapon, CreateNoChange());
+            }
+
+            if (_player.HasPendingAttack)
+            {
+                return WeaponSwitchOutcome.AttackPending(SelectedWeapon, CreateNoChange());
             }
 
             _player.SwitchWeapon();
@@ -319,12 +327,56 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             Revision = Revision.Next();
 
-            IDomainEvent[] events =
+            IArenaDomainEvent[] events =
             {
                 new EnemySpawned(Id, Revision, enemy.Id, enemy.Kind, enemy.Position),
             };
 
             return EnemySpawnResolutionOutcome.Spawned(new ArenaRunChange(Revision, true, events));
+        }
+
+        public PlayerAttackStartOutcome StartPlayerAttack()
+        {
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return PlayerAttackStartOutcome.RunIsNotPlaying(CreateNoChange());
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                return PlayerAttackStartOutcome.InteractionPending(CreateNoChange());
+            }
+
+            if (_player.HasPendingAttack)
+            {
+                return PlayerAttackStartOutcome.AttackAlreadyPending(CreateNoChange());
+            }
+
+            if (_player.IsWeaponReady(SelectedWeapon, CurrentTime) == false)
+            {
+                return PlayerAttackStartOutcome.WeaponNotReady(CreateNoChange());
+            }
+
+            WeaponDefinition weapon = _weaponCatalog.Get(SelectedWeapon);
+            AttackId nextAttackId = _lastAttackId.Next();
+            PendingAttack pendingAttack = _player.StartAttack(nextAttackId, weapon, CurrentTime);
+
+            _lastAttackId = nextAttackId;
+            Revision = Revision.Next();
+
+            IArenaDomainEvent[] events =
+            {
+                new PlayerAttackStarted(
+                    Id,
+                    Revision,
+                    _player.Id,
+                    pendingAttack.Id,
+                    pendingAttack.WeaponKind,
+                    pendingAttack.StartedAt,
+                    pendingAttack.ImpactAt)
+            };
+
+            return PlayerAttackStartOutcome.Started(pendingAttack, new ArenaRunChange(Revision, true, events));
         }
 
         public InteractionCancellationOutcome CancelPendingInteraction(
@@ -399,12 +451,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private ArenaRunChange CreateNoChange()
         {
-            return new ArenaRunChange(Revision, false, Array.Empty<IDomainEvent>());
+            return new ArenaRunChange(Revision, false, Array.Empty<IArenaDomainEvent>());
         }
 
         private ArenaRunChange CreateStateChange()
         {
-            return new ArenaRunChange(Revision, true, Array.Empty<IDomainEvent>());
+            return new ArenaRunChange(Revision, true, Array.Empty<IArenaDomainEvent>());
         }
 
         private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)

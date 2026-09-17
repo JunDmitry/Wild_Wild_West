@@ -43,5 +43,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         {
             return new WeaponSwitchOutcome(WeaponSwitchStatus.InteractionPending, selectedWeapon, change);
         }
+
+        public static WeaponSwitchOutcome AttackPending(
+            WeaponKind selectedWeapon,
+            ArenaRunChange change)
+        {
+            return new WeaponSwitchOutcome(WeaponSwitchStatus.AttackPending, selectedWeapon, change);
+        }
     }
 }

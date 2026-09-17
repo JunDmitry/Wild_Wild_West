@@ -8,27 +8,27 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRunChange
     {
-        private readonly ReadOnlyCollection<IDomainEvent> _eventsSnapshot;
+        private readonly ReadOnlyCollection<IArenaDomainEvent> _eventsSnapshot;
 
         public ArenaRunChange(
             AggregateRevision revision,
-            IReadOnlyList<IDomainEvent> domainEvents)
+            IReadOnlyList<IArenaDomainEvent> domainEvents)
             : this(revision, false, domainEvents)
         {
         }
 
-        public ArenaRunChange(AggregateRevision revision, bool hasStateChange, IReadOnlyList<IDomainEvent> domainEvents)
+        public ArenaRunChange(AggregateRevision revision, bool hasStateChange, IReadOnlyList<IArenaDomainEvent> domainEvents)
         {
             if (domainEvents == null)
             {
                 throw new ArgumentNullException(nameof(domainEvents));
             }
 
-            IDomainEvent[] events = new IDomainEvent[domainEvents.Count];
+            IArenaDomainEvent[] events = new IArenaDomainEvent[domainEvents.Count];
 
             for (int index = 0; index < domainEvents.Count; index++)
             {
-                IDomainEvent domainEvent = domainEvents[index];
+                IArenaDomainEvent domainEvent = domainEvents[index];
 
                 events[index] = domainEvent ?? throw new ArgumentException("Domain events cannot contain null values.", nameof(domainEvents));
             }
@@ -40,6 +40,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         public AggregateRevision Revision { get; }
         public bool HasStateChange { get; }
-        public IReadOnlyList<IDomainEvent> DomainEvents => _eventsSnapshot;
+        public IReadOnlyList<IArenaDomainEvent> DomainEvents => _eventsSnapshot;
     }
 }
