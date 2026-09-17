@@ -11,5 +11,7 @@
         public const float BoundsTolerance = 0.0001f;
 
         public const float MovementPathTolerance = 0.001f;
+
+        public const float CombatRangeTolerance = 0.001f;
     }
 }

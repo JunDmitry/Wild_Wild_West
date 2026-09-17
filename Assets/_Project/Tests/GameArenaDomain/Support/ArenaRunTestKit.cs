@@ -18,6 +18,10 @@ namespace Game.Arena.Domain.Tests.Support
             new ArenaBounds(-20f, 20f, -20f, 20f, 0f),
             Distance.FromValue(5f));
 
+        public ArenaDefinition SmallArena { get; } = new ArenaDefinition(
+            new ArenaBounds(-2f, 2f, -2f, 2f, 0f),
+            Distance.FromValue(5f));
+
         public EnemyCatalog Enemies { get; } = new EnemyCatalog(
             new EnemyDefinition(
                 EnemyKind.Regular,
@@ -95,6 +99,18 @@ namespace Game.Arena.Domain.Tests.Support
                 Enemies,
                 Weapons,
                 waves);
+        }
+
+        public ArenaRun StartRunInSmallArena()
+        {
+            return new ArenaRunFactory().Start(
+                ArenaRunId.FromValue(1UL),
+                PlayerId.FromValue(2UL),
+                SmallArena,
+                PlayerAt(Position3D.Zero),
+                Enemies,
+                Weapons,
+                Waves(2, 1, 1));
         }
     }
 }

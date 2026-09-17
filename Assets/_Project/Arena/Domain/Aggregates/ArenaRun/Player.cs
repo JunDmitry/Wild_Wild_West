@@ -151,6 +151,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return attack;
         }
 
+        public void CompleteAttack()
+        {
+            if (HasPendingAttack == false)
+            {
+                throw new System.InvalidOperationException("Player has no pending attack.");
+            }
+
+            _pendingAttack = default;
+        }
+
         public void SwitchWeapon()
         {
             if (SelectedWeapon == WeaponKind.Ranged)

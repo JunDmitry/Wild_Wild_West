@@ -3,6 +3,7 @@ using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
+using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
@@ -36,5 +37,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public Vitality.Health Health { get; private set; }
 
         public CollisionRadius CollisionRadius { get; }
+        public bool IsDefeated => Health.IsDepleted;
+
+        public void TakeDamage(DamageAmount damage)
+        {
+            Health = Health.Reduce(damage);
+        }
     }
 }

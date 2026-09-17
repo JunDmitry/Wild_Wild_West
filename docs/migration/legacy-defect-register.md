@@ -20,7 +20,7 @@
 | LEG-016 |	GameConfig |	HasBoss допускает конфигурацию без босса, хотя game rule требует босса в каждой из трёх волн. |	Specified in target (T-1.5) |
 | LEG-017 |	WaveRules |	Спавн одного обычного врага на тик является неявной механикой без отдельной spawn policy. |	Specified in target (T-1.5) |
 | LEG-018 |	EntityId |	Общий технический идентификатор не выражает предметную роль ArenaRun, Player или Enemy. |	Planned removal |
-| LEG-019 |	WeaponRules.TryPlayerAttack |	Повторяющийся EnemyId в melee resolution наносит урон одному врагу несколько раз. |	Reproduced |
+| LEG-019 |	WeaponRules.TryPlayerAttack |	Повторяющийся EnemyId в melee resolution наносит урон одному врагу несколько раз. |	Resolved in target |
 | LEG-020 |	MovementRules.ClampToArena |	Граница учитывает центр игрока, но не PlayerRadius. | Open |
 | LEG-021 |	WaveRules |	Тип SpawnResolution не коррелирован с SpawnQueryKind. |	Planned removal |
 | LEG-022 |	WeaponRules |	AttackResolution не коррелирован с исходным AttackQuery. |	Planned removal |

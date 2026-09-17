@@ -158,6 +158,20 @@ INV-108: A successfully started Player Attack advances AggregateRevision exactly
 
 INV-109: A rejected Attack Start does not change state, advance AggregateRevision, or produce Domain Events.
 
+INV-110: An Attack Impact can be requested only when the Player has a pending Attack and the current Game Time has reached its Impact time.
+
+INV-111: Attack Impact targets must be active Enemies of the same Arena Run within the weapon range extended by the target Collision Radius.
+
+INV-112: A ranged Attack Impact affects at most one Enemy.
+
+INV-113: Repeated Enemy identifiers in a melee Attack Impact are collapsed; each Enemy is damaged at most once per Attack.
+
+INV-114: An accepted Attack Impact completes the pending Attack, advances AggregateRevision exactly once, and produces a PlayerAttackCompleted Domain Event regardless of hit or miss.
+
+INV-115: A rejected Attack Impact leaves the pending Attack and the pending Interaction untouched.
+
+INV-116: An Enemy whose Health is depleted is removed from the active Enemy collection within the same operation that applied the lethal Damage.
+
 ## Domain Events
 
 INV-120: Domain Events describe facts that have already occurred.

@@ -4,7 +4,7 @@
 - **Date:** 2026-09-16
 - **Authors:** project team
 - **Reviewers:** none
-- **Related ADRs:** [ADR-0004](ADR-0004-typed-process-wide-identity-sources.md), [ADR-0006](ADR-0006-sequential-external-interaction-protocol.md), [ADR-0010](ADR-0010-correlate-domain-interactions-with-aggregate.md), [ADR-0011](ADR-0011-domain-authority-over-movement-resolution.md)
+- **Related ADRs:** [ADR-0001](ADR-0001-Independent_identity_per_type.md), [ADR-0006](ADR-0006-sequential-external-interaction-protocol.md), [ADR-0010](ADR-0010-correlate-domain-interactions-with-aggregate.md), [ADR-0011](ADR-0011-domain-authority-over-movement-resolution.md)
 
 ## Context
 

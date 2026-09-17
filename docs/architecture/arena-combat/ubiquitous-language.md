@@ -180,6 +180,14 @@ The minimum time between Attack Starts for the same weapon or combatant.
 
 Cooldown starts at Attack Start, not at Damage application.
 
+### Attack Impact Request
+
+A domain interaction request created when a pending Attack reaches its Impact time. It carries the attacker position at impact, the current aim Direction, and the weapon range.
+
+### Attack Impact Resolution
+
+The external world's answer listing the Enemies hit. An empty list is a legitimate miss, not a protocol failure.
+
 ## Movement Terms
 
 ### Position

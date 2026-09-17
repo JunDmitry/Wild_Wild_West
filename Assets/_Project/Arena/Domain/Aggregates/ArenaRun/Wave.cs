@@ -71,5 +71,15 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Phase = WavePhase.BossCombat;
             return true;
         }
+
+        public void MarkBossDefeated()
+        {
+            if (BossStatus != BossStatus.Alive)
+            {
+                throw new InvalidOperationException("Boss is not alive.");
+            }
+
+            BossStatus = BossStatus.Defeated;
+        }
     }
 }

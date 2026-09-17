@@ -7,6 +7,7 @@ using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions;
+using Game.Arena.Domain.Interactions.Attack;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Interactions.Spawn;
 using Game.Arena.Domain.Time;
@@ -28,6 +29,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private Wave _currentWave;
         private PlayerMovementRequest _pendingMovementRequest;
         private EnemySpawnRequest _pendingSpawnRequest;
+        private PlayerAttackImpactRequest _pendingAttackImpactRequest;
         private AttackId _lastAttackId;
 
         internal ArenaRun(
@@ -379,6 +381,151 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return PlayerAttackStartOutcome.Started(pendingAttack, new ArenaRunChange(Revision, true, events));
         }
 
+        public PlayerAttackImpactRequestOutcome RequestPlayerAttackImpact(Direction3D aimDirection)
+        {
+            if (aimDirection.IsValid == false)
+            {
+                throw new ArgumentException("Direction is invalid.", nameof(aimDirection));
+            }
+
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return PlayerAttackImpactRequestOutcome.RunIsNotPlaying;
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                throw new InvalidOperationException("An interaction is already pending.");
+            }
+
+            if (_player.HasPendingAttack == false)
+            {
+                return PlayerAttackImpactRequestOutcome.NoPendingAttack;
+            }
+
+            PendingAttack attack = _player.PendingAttack;
+
+            if (attack.IsReadyToImpact(CurrentTime) == false)
+            {
+                return PlayerAttackImpactRequestOutcome.ImpactNotDue;
+            }
+
+            WeaponDefinition weapon = _weaponCatalog.Get(attack.WeaponKind);
+            InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.PlayerAttack, Revision);
+
+            _pendingAttackImpactRequest = new PlayerAttackImpactRequest(
+                correlation,
+                attack.Id,
+                attack.WeaponKind,
+                _player.Position,
+                aimDirection,
+                weapon.Range);
+
+            return PlayerAttackImpactRequestOutcome.Requested(_pendingAttackImpactRequest);
+        }
+
+        public PlayerAttackImpactOutcome ApplyPlayerAttackImpact(PlayerAttackImpactResolution resolution)
+        {
+            if (resolution == null)
+            {
+                throw new ArgumentNullException(nameof(resolution));
+            }
+
+            InteractionAdmission admission = _interactionLedger.Admit(resolution, Revision);
+
+            if (admission.IsAdmitted == false)
+            {
+                return PlayerAttackImpactOutcome.Rejected(MapAttackRejectionReason(admission.RejectionReason), CreateNoChange());
+            }
+
+            PlayerAttackImpactRequest request = _pendingAttackImpactRequest;
+
+            if (request.WeaponKind == WeaponKind.Ranged && resolution.HitEnemies.Count > 1)
+            {
+                return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TooManyTargets, CreateNoChange());
+            }
+
+            List<EnemyId> targets = new();
+
+            for (int index = 0; index < resolution.HitEnemies.Count; index++)
+            {
+                EnemyId enemyId = resolution.HitEnemies[index];
+
+                if (_enemies.TryGetValue(enemyId, out Enemy enemy) == false)
+                {
+                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.UnknownTarget, CreateNoChange());
+                }
+
+                if (IsWithinAttackRange(enemy, request.Range) == false)
+                {
+                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TargetOutOfRange, CreateNoChange());
+                }
+
+                if (targets.Contains(enemyId) == false)
+                {
+                    targets.Add(enemyId);
+                }
+            }
+
+            _interactionLedger.Complete(resolution.Correlation.InteractionId);
+
+            WeaponDefinition weapon = _weaponCatalog.Get(request.WeaponKind);
+            PendingAttack attack = _player.PendingAttack;
+            AggregateRevision nextRevision = Revision.Next();
+            List<IArenaDomainEvent> events = new();
+            List<EnemyId> defeated = new();
+
+            for (int index = 0; index < targets.Count; index++)
+            {
+                Enemy enemy = _enemies[targets[index]];
+                enemy.TakeDamage(weapon.Damage);
+
+                events.Add(new EnemyDamaged(Id, nextRevision, enemy.Id, weapon.Damage, enemy.Health));
+
+                if (enemy.IsDefeated)
+                {
+                    defeated.Add(enemy.Id);
+                    events.Add(new EnemyDefeated(Id, nextRevision, enemy.Id, enemy.Kind));
+                }
+            }
+
+            for (int index = 0; index < defeated.Count; index++)
+            {
+                Enemy enemy = _enemies[defeated[index]];
+
+                if (enemy.Kind == EnemyKind.Boss)
+                {
+                    _currentWave.MarkBossDefeated();
+                }
+
+                _enemies.Remove(defeated[index]);
+            }
+
+            _currentWave.TryEnterBossCombat(CountActiveRegularEnemies());
+            AttackOutcome outcome = targets.Count > 0 ? AttackOutcome.Hit : AttackOutcome.Miss;
+
+            events.Add(new PlayerAttackCompleted(
+                Id,
+                nextRevision,
+                _player.Id,
+                attack.Id,
+                attack.WeaponKind,
+                outcome,
+                CurrentTime));
+
+            _player.CompleteAttack();
+            Revision = nextRevision;
+
+            ArenaRunChange change = new(Revision, true, events);
+
+            if (outcome == AttackOutcome.Hit)
+            {
+                return PlayerAttackImpactOutcome.Hit(change);
+            }
+
+            return PlayerAttackImpactOutcome.Missed(change);
+        }
+
         public InteractionCancellationOutcome CancelPendingInteraction(
             InteractionCorrelation correlation,
             InteractionCancellationReason reason)
@@ -459,6 +606,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return new ArenaRunChange(Revision, true, Array.Empty<IArenaDomainEvent>());
         }
 
+        private bool IsWithinAttackRange(Enemy enemy, Distance range)
+        {
+            float distance = _player.Position.GroundDistanceTo(enemy.Position);
+            float limit = range.Value
+                + enemy.CollisionRadius.Value.Value
+                + GeometryTolerance.CombatRangeTolerance;
+
+            return distance <= limit;
+        }
+
         private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)
         {
             return reason switch
@@ -482,6 +639,20 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 InteractionRejectionReason.InteractionClosed => EnemySpawnResolutionRejectionReason.InteractionClosed,
                 InteractionRejectionReason.StaleRevision => EnemySpawnResolutionRejectionReason.StaleRevision,
                 InteractionRejectionReason.KindMismatch => EnemySpawnResolutionRejectionReason.KindMismatch,
+                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+            };
+        }
+
+        private static PlayerAttackImpactRejectionReason MapAttackRejectionReason(
+            InteractionRejectionReason reason)
+        {
+            return reason switch
+            {
+                InteractionRejectionReason.ForeignArenaRun => PlayerAttackImpactRejectionReason.ForeignArenaRun,
+                InteractionRejectionReason.UnknownInteraction => PlayerAttackImpactRejectionReason.UnknownInteraction,
+                InteractionRejectionReason.InteractionClosed => PlayerAttackImpactRejectionReason.InteractionClosed,
+                InteractionRejectionReason.StaleRevision => PlayerAttackImpactRejectionReason.StaleRevision,
+                InteractionRejectionReason.KindMismatch => PlayerAttackImpactRejectionReason.KindMismatch,
                 _ => throw new ArgumentOutOfRangeException(nameof(reason)),
             };
         }
