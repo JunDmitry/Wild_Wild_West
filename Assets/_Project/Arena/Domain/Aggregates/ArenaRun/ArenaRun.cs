@@ -102,7 +102,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _waveCatalog = runWaveCatalog;
 
             CurrentTime = new GameTimePoint(0);
-            _currentWave.TryEnterBossCombat(0);
         }
 
         public ArenaRunId Id { get; }
@@ -501,7 +500,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 _enemies.Remove(defeated[index]);
             }
 
-            _currentWave.TryEnterBossCombat(CountActiveRegularEnemies());
+            ProcessWaveProgressionAfterEnemyDeaths(nextRevision, events);
             AttackOutcome outcome = targets.Count > 0 ? AttackOutcome.Hit : AttackOutcome.Miss;
 
             events.Add(new PlayerAttackCompleted(
@@ -548,6 +547,47 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public GameTimePoint WeaponReadyAt(WeaponKind kind)
         {
             return _player.ReadyAt(kind);
+        }
+
+        private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)
+        {
+            return reason switch
+            {
+                InteractionRejectionReason.ForeignArenaRun => PlayerMovementResolutionRejectionReason.ForeignArenaRun,
+                InteractionRejectionReason.UnknownInteraction => PlayerMovementResolutionRejectionReason.UnknownInteraction,
+                InteractionRejectionReason.InteractionClosed => PlayerMovementResolutionRejectionReason.InteractionClosed,
+                InteractionRejectionReason.StaleRevision => PlayerMovementResolutionRejectionReason.StaleRevision,
+                InteractionRejectionReason.KindMismatch => PlayerMovementResolutionRejectionReason.KindMismatch,
+                InteractionRejectionReason.None => throw new ArgumentOutOfRangeException(nameof(reason)),
+                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+            };
+        }
+
+        private static EnemySpawnResolutionRejectionReason MapSpawnRejectionReason(InteractionRejectionReason reason)
+        {
+            return reason switch
+            {
+                InteractionRejectionReason.ForeignArenaRun => EnemySpawnResolutionRejectionReason.ForeignArenaRun,
+                InteractionRejectionReason.UnknownInteraction => EnemySpawnResolutionRejectionReason.UnknownInteraction,
+                InteractionRejectionReason.InteractionClosed => EnemySpawnResolutionRejectionReason.InteractionClosed,
+                InteractionRejectionReason.StaleRevision => EnemySpawnResolutionRejectionReason.StaleRevision,
+                InteractionRejectionReason.KindMismatch => EnemySpawnResolutionRejectionReason.KindMismatch,
+                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+            };
+        }
+
+        private static PlayerAttackImpactRejectionReason MapAttackRejectionReason(
+            InteractionRejectionReason reason)
+        {
+            return reason switch
+            {
+                InteractionRejectionReason.ForeignArenaRun => PlayerAttackImpactRejectionReason.ForeignArenaRun,
+                InteractionRejectionReason.UnknownInteraction => PlayerAttackImpactRejectionReason.UnknownInteraction,
+                InteractionRejectionReason.InteractionClosed => PlayerAttackImpactRejectionReason.InteractionClosed,
+                InteractionRejectionReason.StaleRevision => PlayerAttackImpactRejectionReason.StaleRevision,
+                InteractionRejectionReason.KindMismatch => PlayerAttackImpactRejectionReason.KindMismatch,
+                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+            };
         }
 
         private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)
@@ -616,45 +656,62 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return distance <= limit;
         }
 
-        private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)
+        private void ProcessWaveProgressionAfterEnemyDeaths(AggregateRevision nextRevision, List<IArenaDomainEvent> events)
         {
-            return reason switch
+            WavePhase previousPhase = _currentWave.Phase;
+
+            bool enteredBossCombat = _currentWave.TryEnterBossCombat(CountActiveRegularEnemies());
+
+            if (enteredBossCombat)
             {
-                InteractionRejectionReason.ForeignArenaRun => PlayerMovementResolutionRejectionReason.ForeignArenaRun,
-                InteractionRejectionReason.UnknownInteraction => PlayerMovementResolutionRejectionReason.UnknownInteraction,
-                InteractionRejectionReason.InteractionClosed => PlayerMovementResolutionRejectionReason.InteractionClosed,
-                InteractionRejectionReason.StaleRevision => PlayerMovementResolutionRejectionReason.StaleRevision,
-                InteractionRejectionReason.KindMismatch => PlayerMovementResolutionRejectionReason.KindMismatch,
-                InteractionRejectionReason.None => throw new ArgumentOutOfRangeException(nameof(reason)),
-                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
-            };
+                events.Add(new WavePhaseChanged(
+                    Id,
+                    nextRevision,
+                    _currentWave.Number,
+                    previousPhase,
+                    _currentWave.Phase));
+            }
+
+            previousPhase = _currentWave.Phase;
+            bool completed = _currentWave.TryCompleteAfterBossDefeated();
+
+            if (completed == false)
+            {
+                return;
+            }
+
+            events.Add(new WavePhaseChanged(
+                Id,
+                nextRevision,
+                _currentWave.Number,
+                previousPhase,
+                _currentWave.Phase));
+
+            events.Add(new WaveCompleted(Id, nextRevision, _currentWave.Number));
+
+            if (_waveCatalog.IsLast(_currentWave.Number))
+            {
+                Status = ArenaRunStatus.Victory;
+                events.Add(new ArenaRunVictorious(Id, nextRevision));
+
+                return;
+            }
+
+            StartNextWave(nextRevision, events);
         }
 
-        private static EnemySpawnResolutionRejectionReason MapSpawnRejectionReason(InteractionRejectionReason reason)
+        private void StartNextWave(
+            AggregateRevision nextRevision,
+            List<IArenaDomainEvent> events)
         {
-            return reason switch
-            {
-                InteractionRejectionReason.ForeignArenaRun => EnemySpawnResolutionRejectionReason.ForeignArenaRun,
-                InteractionRejectionReason.UnknownInteraction => EnemySpawnResolutionRejectionReason.UnknownInteraction,
-                InteractionRejectionReason.InteractionClosed => EnemySpawnResolutionRejectionReason.InteractionClosed,
-                InteractionRejectionReason.StaleRevision => EnemySpawnResolutionRejectionReason.StaleRevision,
-                InteractionRejectionReason.KindMismatch => EnemySpawnResolutionRejectionReason.KindMismatch,
-                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
-            };
-        }
+            WaveNumber nextNumber = _currentWave.Number.Next();
+            _currentWave = new Wave(_waveCatalog.Get(nextNumber));
 
-        private static PlayerAttackImpactRejectionReason MapAttackRejectionReason(
-            InteractionRejectionReason reason)
-        {
-            return reason switch
-            {
-                InteractionRejectionReason.ForeignArenaRun => PlayerAttackImpactRejectionReason.ForeignArenaRun,
-                InteractionRejectionReason.UnknownInteraction => PlayerAttackImpactRejectionReason.UnknownInteraction,
-                InteractionRejectionReason.InteractionClosed => PlayerAttackImpactRejectionReason.InteractionClosed,
-                InteractionRejectionReason.StaleRevision => PlayerAttackImpactRejectionReason.StaleRevision,
-                InteractionRejectionReason.KindMismatch => PlayerAttackImpactRejectionReason.KindMismatch,
-                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
-            };
+            events.Add(new WaveStarted(
+                Id,
+                nextRevision,
+                _currentWave.Number,
+                _currentWave.Phase));
         }
     }
 }

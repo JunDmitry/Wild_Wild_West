@@ -54,130 +54,142 @@ INV-036: Completion of a non-final Wave begins the next Wave.
 
 INV-037: Completion of the final Wave results in Arena Run Victory.
 
+INV-038: A Wave with zero Regular Enemies begins in Boss Combat.
+
+INV-039: Defeating the Boss completes the current Wave.
+
+INV-040: Completing a non-final Wave immediately starts the next Wave within the same aggregate operation.
+
+INV-041: Completing the final Wave transitions the Arena Run to Victory within the same aggregate operation.
+
 ## Arena Run Lifecycle
 
-INV-040: An Arena Run starts according to its initial lifecycle state and can enter Playing only through a valid lifecycle transition.
+INV-050: An Arena Run starts according to its initial lifecycle state and can enter Playing only through a valid lifecycle transition.
 
-INV-041: Defeat and Victory are terminal domain states.
+INV-051: Defeat and Victory are terminal domain states.
 
-INV-042: Player defeat results in Arena Run Defeat.
+INV-052: Player defeat results in Arena Run Defeat.
 
-INV-043: An Arena Run cannot be both defeated and victorious.
+INV-053: An Arena Run cannot be both defeated and victorious.
 
-INV-044: Combat progression does not continue after Defeat or Victory.
+INV-054: Combat progression does not continue after Defeat or Victory.
 
-INV-045: Restarting gameplay creates a new Arena Run rather than resetting the terminal Arena Run.
+INV-055: Restarting gameplay creates a new Arena Run rather than resetting the terminal Arena Run.
 
 ## Game Time
 
-INV-055: An Arena Run holds a monotonically increasing current Game Time starting at zero.
+INV-065: An Arena Run holds a monotonically increasing current Game Time starting at zero.
 
-INV-056: Advancing Game Time is a state-changing operation: it advances AggregateRevision exactly once, is rejected while an Interaction is pending or the Arena Run is terminal, and produces no Domain Events.
+INV-066: Advancing Game Time is a state-changing operation: it advances AggregateRevision exactly once, is rejected while an Interaction is pending or the Arena Run is terminal, and produces no Domain Events.
 
-INV-057: Combat readiness is compared against the Arena Run's current Game Time, never against a caller-supplied time.
+INV-067: Combat readiness is compared against the Arena Run's current Game Time, never against a caller-supplied time.
 
-INV-058: A new Arena Run starts with all weapons ready.
+INV-068: A new Arena Run starts with all weapons ready.
 
 ## External Interactions
 
-INV-060: The Domain does not allocate ArenaRunId, PlayerId, or EnemyId.
+INV-070: The Domain does not allocate ArenaRunId, PlayerId, or EnemyId.
 
-INV-061: The Domain does not determine Unity collision, navigation, or physical spawn placement results.
+INV-071: The Domain does not determine Unity collision, navigation, or physical spawn placement results.
 
-INV-062: Every external Interaction Request is identified by its ArenaRunId, InteractionId, and AggregateRevision.
+INV-072: Every external Interaction Request is identified by its ArenaRunId, InteractionId, and AggregateRevision.
 
-INV-063: An Interaction Resolution is accepted only when ArenaRunId, InteractionId, AggregateRevision, interaction type, and expected interaction stage match the pending Interaction Request.
+INV-073: An Interaction Resolution is accepted only when ArenaRunId, InteractionId, AggregateRevision, interaction type, and expected interaction stage match the pending Interaction Request.
 
-INV-064: An Interaction Resolution created for an older AggregateRevision cannot mutate a newer Arena Run revision.
+INV-074: An Interaction Resolution created for an older AggregateRevision cannot mutate a newer Arena Run revision.
 
-INV-065: An accepted state-changing aggregate operation advances AggregateRevision exactly once.
+INV-075: An accepted state-changing aggregate operation advances AggregateRevision exactly once.
 
-INV-066: A read-only operation, a rejected operation, and creation of an Interaction Request without a state change do not advance AggregateRevision.
+INV-076: A read-only operation, a rejected operation, and creation of an Interaction Request without a state change do not advance AggregateRevision.
 
-INV-067: A rejected or stale Interaction Resolution does not change aggregate state, advance AggregateRevision, or produce Domain Events.
+INV-077: A rejected or stale Interaction Resolution does not change aggregate state, advance AggregateRevision, or produce Domain Events.
 
-INV-068: Applying the same Interaction Resolution more than once cannot duplicate a domain transition.
+INV-078: Applying the same Interaction Resolution more than once cannot duplicate a domain transition.
 
-INV-069: InteractionId is allocated by ArenaRun from a monotonically increasing sequence local to that Arena Run.
+INV-079: InteractionId is allocated by ArenaRun from a monotonically increasing sequence local to that Arena Run.
 
-INV-070: One Enemy Movement Batch is one Interaction and therefore has one InteractionId; individual batch entries are correlated by EnemyId.
+INV-080: One Enemy Movement Batch is one Interaction and therefore has one InteractionId; individual batch entries are correlated by EnemyId.
 
-INV-071: At most one Interaction is pending for an Arena Run at any moment.
+INV-081: At most one Interaction is pending for an Arena Run at any moment.
 
-INV-072: A pending Interaction is closed only by successful application of its resolution or by explicit cancellation through the Arena Run API.
+INV-082: A pending Interaction is closed only by successful application of its resolution or by explicit cancellation through the Arena Run API.
 
-INV-073: Resolutions are validated in a fixed order: foreign Arena Run, unknown Interaction, closed Interaction, stale revision, kind mismatch.
+INV-083: Resolutions are validated in a fixed order: foreign Arena Run, unknown Interaction, closed Interaction, stale revision, kind mismatch.
 
-INV-074: A rejected Interaction Resolution, including a resolution with an invalid payload, does not close the pending Interaction.
+INV-084: A rejected Interaction Resolution, including a resolution with an invalid payload, does not close the pending Interaction.
 
-INV-075: Cancelling a pending Interaction does not advance AggregateRevision and does not produce Domain Events.
+INV-085: Cancelling a pending Interaction does not advance AggregateRevision and does not produce Domain Events.
 
-INV-076: An accepted Player position must lie on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance.
+INV-086: An accepted Player position must lie on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance.
 
-INV-077: The external world may shorten a requested movement but cannot extend, redirect, or relocate it.
+INV-087: The external world may shorten a requested movement but cannot extend, redirect, or relocate it.
 
-INV-078: While an Interaction is pending, the Arena Run rejects state-changing commands other than applying or cancelling that Interaction.
+INV-088: While an Interaction is pending, the Arena Run rejects state-changing commands other than applying or cancelling that Interaction.
 
-INV-079: Opening a second Interaction while one is pending is a programming error of the orchestrator and is signalled as an exception rather than a rejected command.
+INV-089: Opening a second Interaction while one is pending is a programming error of the orchestrator and is signalled as an exception rather than a rejected command.
 
 ## Enemy Spawning
 
-INV-090: Every Wave contains exactly one Boss. A Wave with zero Regular Enemies begins in Boss Combat.
+INV-100: Every Wave contains exactly one Boss. A Wave with zero Regular Enemies begins in Boss Combat.
 
-INV-091: A Regular Enemy spawn is due only while the Wave is in Regular Combat and Regular Enemies remain to spawn.
+INV-101: A Regular Enemy spawn is due only while the Wave is in Regular Combat and Regular Enemies remain to spawn.
 
-INV-092: A Boss spawn is due only while the Wave is in Boss Combat and the Boss has not spawned.
+INV-102: A Boss spawn is due only while the Wave is in Boss Combat and the Boss has not spawned.
 
-INV-093: The Arena Run does not schedule spawns; it answers whether a spawn is due when asked.
+INV-103: The Arena Run does not schedule spawns; it answers whether a spawn is due when asked.
 
-INV-094: A spawned Enemy is placed on the ground height, outside the Arena Bounds, and within the Spawn Band.
+INV-104: A spawned Enemy is placed on the ground height, outside the Arena Bounds, and within the Spawn Band.
 
-INV-095: A Spawn Resolution with a None or duplicate EnemyId is rejected without side effects.
+INV-105: A Spawn Resolution with a None or duplicate EnemyId is rejected without side effects.
 
-INV-096: A successful spawn advances AggregateRevision once and produces exactly one EnemySpawned Domain Event.
+INV-106: A successful spawn advances AggregateRevision once and produces exactly one EnemySpawned Domain Event.
 
 ## Combat
 
-INV-100: Damage is positive.
+INV-110: Damage is positive.
 
-INV-101: Health cannot be reduced below zero.
+INV-111: Health cannot be reduced below zero.
 
-INV-102: Attack Start does not deal Damage.
+INV-112: Attack Start does not deal Damage.
 
-INV-103: An attacker can have at most one pending Attack.
+INV-113: An attacker can have at most one pending Attack.
 
-INV-104: Cooldown is applied at Attack Start.
+INV-114: Cooldown is applied at Attack Start.
 
-INV-105: Attack Impact is resolved against the current Arena Run state, not the state at Attack Start.
+INV-115: Attack Impact is resolved against the current Arena Run state, not the state at Attack Start.
 
-INV-106: The target hit by Attack Impact may differ from the target that allowed Attack Start.
+INV-116: The target hit by Attack Impact may differ from the target that allowed Attack Start.
 
-INV-107: Switching the Player weapon is rejected while the Player has a pending Attack.
+INV-117: Switching the Player weapon is rejected while the Player has a pending Attack.
 
-INV-108: A successfully started Player Attack advances AggregateRevision exactly once and produces one PlayerAttackStarted Domain Event.
+INV-118: A successfully started Player Attack advances AggregateRevision exactly once and produces one PlayerAttackStarted Domain Event.
 
-INV-109: A rejected Attack Start does not change state, advance AggregateRevision, or produce Domain Events.
+INV-119: A rejected Attack Start does not change state, advance AggregateRevision, or produce Domain Events.
 
-INV-110: An Attack Impact can be requested only when the Player has a pending Attack and the current Game Time has reached its Impact time.
+INV-120: An Attack Impact can be requested only when the Player has a pending Attack and the current Game Time has reached its Impact time.
 
-INV-111: Attack Impact targets must be active Enemies of the same Arena Run within the weapon range extended by the target Collision Radius.
+INV-121: Attack Impact targets must be active Enemies of the same Arena Run within the weapon range extended by the target Collision Radius.
 
-INV-112: A ranged Attack Impact affects at most one Enemy.
+INV-122: A ranged Attack Impact affects at most one Enemy.
 
-INV-113: Repeated Enemy identifiers in a melee Attack Impact are collapsed; each Enemy is damaged at most once per Attack.
+INV-123: Repeated Enemy identifiers in a melee Attack Impact are collapsed; each Enemy is damaged at most once per Attack.
 
-INV-114: An accepted Attack Impact completes the pending Attack, advances AggregateRevision exactly once, and produces a PlayerAttackCompleted Domain Event regardless of hit or miss.
+INV-124: An accepted Attack Impact completes the pending Attack, advances AggregateRevision exactly once, and produces a PlayerAttackCompleted Domain Event regardless of hit or miss.
 
-INV-115: A rejected Attack Impact leaves the pending Attack and the pending Interaction untouched.
+INV-125: A rejected Attack Impact leaves the pending Attack and the pending Interaction untouched.
 
-INV-116: An Enemy whose Health is depleted is removed from the active Enemy collection within the same operation that applied the lethal Damage.
+INV-126: An Enemy whose Health is depleted is removed from the active Enemy collection within the same operation that applied the lethal Damage.
 
 ## Domain Events
 
-INV-120: Domain Events describe facts that have already occurred.
+INV-130: Domain Events describe facts that have already occurred.
 
-INV-121: Domain Events do not contain Unity-specific types.
+INV-131: Domain Events do not contain Unity-specific types.
 
-INV-122: A Domain Event cannot mutate the Arena Run.
+INV-132: A Domain Event cannot mutate the Arena Run.
 
-INV-123: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
+INV-133: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
+
+INV-134: All Domain Events produced by one atomic aggregate operation carry the same resulting AggregateRevision.
+
+INV-135: PlayerAttackCompleted is produced after direct attack consequences such as damage, enemy defeat, wave completion, next wave start, or victory.

@@ -43,6 +43,7 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 | ADR-0010 | Correlate domain interactions with aggregate revision | Accepted | 2026-09-14 | [ADR-0010](ADR-0010-correlate-domain-interactions-with-aggregate.md) |
 | ADR-0011 | Domain authority over movement resolution and explicit cancellation | Accepted | 2026-09-15 | [ADR-0011](ADR-0011-domain-authority-over-movement-resolution.md) |
 | ADR-0012 | Domain authority over spawn placement and schedule | Accepted | 2026-09-16 | [ADR-0012](ADR-0012-domain-authority-over-spawn-placement-and-schedule.md) |
+| ADR-0013 | Stage attacks into start and impact | Accepted | YYYY-MM-DD | [ADR-0013](ADR-0013-stage-attacks-into-start-and-impact.md) |
 
 ## New ADR Template
 

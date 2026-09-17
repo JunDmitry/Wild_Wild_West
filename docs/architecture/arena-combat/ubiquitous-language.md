@@ -88,6 +88,26 @@ The terminal state of an Arena Run reached after the final Wave is completed.
 
 No gameplay action may alter combat progression after Victory.
 
+### Wave Completion
+
+The domain transition caused by defeating the Boss of the current Wave.
+
+Completing a non-final Wave immediately starts the next Wave.
+
+Completing the final Wave immediately makes the Arena Run victorious.
+
+### Wave Started
+
+A domain fact stating that a new Wave became the current Wave of the Arena Run.
+
+### Wave Phase Changed
+
+A domain fact stating that the current Wave changed its phase.
+
+### Arena Run Victorious
+
+A domain fact stating that the final Wave has been completed and the Arena Run reached Victory.
+
 ## Combat Terms
 
 ### Health

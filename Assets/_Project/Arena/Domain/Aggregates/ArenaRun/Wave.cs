@@ -14,9 +14,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Number = definition.Number;
-            Phase = WavePhase.RegularCombat;
             RegularEnemiesRemainingToSpawn = definition.RegularEnemyCount;
             BossStatus = BossStatus.NotSpawned;
+
+            if (definition.RegularEnemyCount > 0)
+            {
+                Phase = WavePhase.RegularCombat;
+            }
+            else
+            {
+                Phase = WavePhase.BossCombat;
+            }
         }
 
         public WaveNumber Number { get; }
@@ -69,6 +77,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Phase = WavePhase.BossCombat;
+            return true;
+        }
+
+        public bool TryCompleteAfterBossDefeated()
+        {
+            if (Phase != WavePhase.BossCombat)
+            {
+                return false;
+            }
+
+            if (BossStatus != BossStatus.Defeated)
+            {
+                return false;
+            }
+
+            Phase = WavePhase.Completed;
+
             return true;
         }
 
