@@ -1,10 +1,12 @@
 # ADR-0004: Use typed process-wide monotonic identity sources
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0001
 - **Date:** 2026-09-12
 - **Authors:** project team
 - **Reviewers:** none
 - **Related ADRs:** [ADR-0002](ADR-0002-adopt-iddd-arena-combat.md), [ADR-0003](ADR-0003-arena-run-aggregate-and-repository.md)
+
+> **Superseded.** This record duplicated a decision already made in ADR-0001 and resolved it differently by proposing a single process-wide sequence shared by all identity types. The project uses an independent monotonic sequence per identity type as decided in ADR-0001. The typed identity value objects and the separate identity source contracts described here remain in force through ADR-0001.
 
 ## Context
 
