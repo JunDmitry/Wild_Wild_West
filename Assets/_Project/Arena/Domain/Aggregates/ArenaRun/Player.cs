@@ -12,7 +12,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
     {
         private GameTimePoint _rangedReadyAt;
         private GameTimePoint _meleeReadyAt;
-        private PendingAttack _pendingAttack;
+        private PendingPlayerAttack _pendingAttack;
 
         public Player(
             PlayerId id,
@@ -64,7 +64,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public MovementSpeed MovementSpeed { get; }
         public CollisionRadius CollisionRadius { get; }
         public bool HasPendingAttack => _pendingAttack.Id.IsNone == false;
-        public PendingAttack PendingAttack => _pendingAttack;
+        public PendingPlayerAttack PendingAttack => _pendingAttack;
 
         public GameTimePoint ReadyAt(WeaponKind kind)
         {
@@ -116,7 +116,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return IsWeaponReady(SelectedWeapon, now);
         }
 
-        public PendingAttack StartAttack(AttackId attackId, WeaponDefinition weapon, GameTimePoint now)
+        public PendingPlayerAttack StartAttack(AttackId attackId, WeaponDefinition weapon, GameTimePoint now)
         {
             if (weapon == null)
             {
@@ -138,9 +138,9 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new System.InvalidOperationException("Player cannot start attack.");
             }
 
-            PendingAttack attack = new(
+            PendingPlayerAttack attack = new(
                 attackId,
-                AttackActor.Player(Id),
+                Id,
                 SelectedWeapon,
                 now,
                 now + weapon.WindupDuration);

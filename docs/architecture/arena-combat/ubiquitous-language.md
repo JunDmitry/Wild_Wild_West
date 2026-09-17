@@ -174,13 +174,19 @@ The earliest Game Time at which a combatant or weapon may perform its next Attac
 
 A successfully executed Attack sets readiness to the current Game Time plus the weapon's cooldown.
 
-### Attack Start
+### Pending Player Attack
 
-The domain transition in which a combatant commits to an Attack.
+A Player Attack that has started but whose impact has not yet been completed.
 
-Attack Start records the used weapon or attack definition, StartedAt, ImpactAt, and moves combat readiness according to cooldown.
+It records Attack Id, Player Id, selected Weapon kind, StartedAt, and ImpactAt.
 
-Attack Start does not deal Damage.
+### Pending Enemy Attack
+
+An Enemy Attack that has started but whose impact has not yet been completed.
+
+It records Attack Id, Enemy Id, StartedAt, and ImpactAt.
+
+Player and Enemy pending attacks are separate domain concepts because only Player attacks use a selected Weapon kind.
 
 ### Attack Impact
 

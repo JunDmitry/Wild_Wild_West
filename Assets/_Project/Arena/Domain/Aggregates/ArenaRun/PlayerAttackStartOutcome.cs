@@ -6,7 +6,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
     {
         private PlayerAttackStartOutcome(
             PlayerAttackStartStatus status,
-            PendingAttack attack,
+            PendingPlayerAttack attack,
             ArenaRunChange change)
         {
             Status = status;
@@ -15,12 +15,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         }
 
         public PlayerAttackStartStatus Status { get; }
-        public PendingAttack Attack { get; }
+        public PendingPlayerAttack Attack { get; }
         public ArenaRunChange Change { get; }
 
         public bool IsStarted => Status == PlayerAttackStartStatus.Started;
 
-        public static PlayerAttackStartOutcome Started(PendingAttack attack, ArenaRunChange change)
+        public static PlayerAttackStartOutcome Started(PendingPlayerAttack attack, ArenaRunChange change)
         {
             return new PlayerAttackStartOutcome(PlayerAttackStartStatus.Started, attack, change);
         }

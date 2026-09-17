@@ -360,7 +360,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             WeaponDefinition weapon = _weaponCatalog.Get(SelectedWeapon);
             AttackId nextAttackId = _lastAttackId.Next();
-            PendingAttack pendingAttack = _player.StartAttack(nextAttackId, weapon, CurrentTime);
+            PendingPlayerAttack pendingAttack = _player.StartAttack(nextAttackId, weapon, CurrentTime);
 
             _lastAttackId = nextAttackId;
             Revision = Revision.Next();
@@ -402,7 +402,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return PlayerAttackImpactRequestOutcome.NoPendingAttack;
             }
 
-            PendingAttack attack = _player.PendingAttack;
+            PendingPlayerAttack attack = _player.PendingAttack;
 
             if (attack.IsReadyToImpact(CurrentTime) == false)
             {
@@ -469,7 +469,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
 
             WeaponDefinition weapon = _weaponCatalog.Get(request.WeaponKind);
-            PendingAttack attack = _player.PendingAttack;
+            PendingPlayerAttack attack = _player.PendingAttack;
             AggregateRevision nextRevision = Revision.Next();
             List<IArenaDomainEvent> events = new();
             List<EnemyId> defeated = new();
