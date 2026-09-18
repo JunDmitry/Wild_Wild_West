@@ -1,145 +1,184 @@
-# Arena combat behavior baseline
+# Arena Combat Behavior Baseline
 
-## B-001. Новый запуск
+## B-001. New Arena Run
 
-### Given:
-   - новая ArenaRun attempt
+Given:
 
-### Then:
-   - игра находится в Playing
-   - активна волна 1
-   - волна находится в RegularCombat
-   - у игрока полное здоровье
-   - у игрока выбрано дальнее оружие
-   - список активных врагов пуст
-	
-## B-002. Движение игрока
+- a new ArenaRun is created;
 
-### Given:
-   - игра находится в Playing
-   - игрок предоставляет направление движения
+Then:
 
-### Then:
-   - движение рассчитывается в мировой системе координат XZ
-   - Y не изменяется правилами планарной локомоции
-   - игрок не выходит за логические границы арены
-   - внешняя система определяет фактический результат столкновения
-	
-## B-003. Переключение оружия
+- ArenaRun status is Playing;
+- Wave 1 is current;
+- Wave 1 is in Regular Combat unless it has zero Regular Enemies;
+- Player has full Health;
+- Player has Ranged weapon selected;
+- there are no active Enemies.
 
-### Given:
-   - у игрока выбрано дальнее оружие
+## B-002. Player Movement
 
-### When:
-   - игрок отправляет команду смены оружия
+Given:
 
-### Then:
-   - выбранным оружием становится ближнее
+- ArenaRun is Playing;
+- Player provides planar movement input;
 
-### When:
-   - команда повторяется
+Then:
 
-### Then:
-   - выбранным оружием снова становится дальнее
-	
-## B-004. `Q + LMB` в одном тике
+- movement uses the Arena XZ plane;
+- Player remains on Arena ground height;
+- Player cannot leave logical Arena Bounds;
+- the external world resolves collisions;
+- the Domain validates that accepted movement does not extend, redirect, or teleport Player.
 
-### Given:
-   - выбрано дальнее оружие
-   - оба cooldown завершены
+## B-003. Weapon Switching
 
-### When:
-   - в одном тике нажаты Q и LMB
+Given:
 
-### Then:
-   - сначала применяется смена оружия
-   - затем атака выполняется ближним оружием
-   - внешний запрос является melee overlap
-   - ranged raycast не выполняется
-   - cooldown дальнего оружия не изменяется
-   - cooldown ближнего оружия применяется
-	
-## B-005. Дальняя атака
+- Player selected Ranged weapon;
 
-### Given:
-   - выбрано дальнее оружие
-   - оружие готово
-   - внешний слой вернул попадание по существующему врагу
+When:
 
-### Then:
-   - враг получает урон
-   - cooldown дальнего оружия применяется
-   - Domain фиксирует значимый факт попадания или урона
-	
-## B-006. Ближняя атака
+- Player switches weapon;
 
-### Given:
-   - выбрано ближнее оружие
-   - оружие готово
-   - внешний слой вернул несколько EnemyId
+Then:
 
-### Then:
-   - каждый существующий активный враг получает урон не более одного раза
-   - cooldown ближнего оружия применяется
-	
-## B-007. Смерть врага
+- Player selects Melee weapon.
 
-### Given:
-   - враг получает урон, уменьшающий здоровье до нуля или ниже
+When:
 
-### Then:
-   - враг больше не является активным
-   - формируется EnemyDefeated domain event
-   - если враг обычный, уменьшается количество обычных врагов волны
-   - если враг является боссом, BossStatus становится Defeated
-	
-## B-008. Переход волны
+- Player switches weapon again;
 
-### Given:
-   - RegularToSpawn == 0
-   - RegularAlive == 0
-   - босс текущей волны ещё не появился
+Then:
 
-### Then:
-   - волна переходит в BossCombat
-   - создаётся запрос спавна босса
+- Player selects Ranged weapon.
 
-### Given:
-   - босс побеждён
+## B-004. Switch and Attack in One Gameplay Step
 
-### Then:
-   - волна переходит в Completed
-	
-## B-009. Победа
+Given:
 
-### Given:
-   - завершена третья волна
-   - босс третьей волны побеждён
+- Player selected Ranged weapon;
+- both weapons are ready;
 
-### Then:
-   - ArenaRun переходит в Victory
-   - игровые команды больше не изменяют ArenaRun
-   - создаётся ArenaRunVictorious domain event
-	
-## B-010. Поражение
+When:
 
-### Given:
-   - здоровье игрока достигает нуля
+- weapon switch and attack start are requested in one gameplay step;
 
-### Then:
-   - ArenaRun переходит в Defeat
-   - дальнейшие команды боя не изменяют ArenaRun
-   - создаётся PlayerDefeated domain event
-	
-## B-011. Рестарт
+Then:
 
-### Given:
-   - ArenaRun находится в Defeat
-   - прошло RestartDelay игрового lifecycle-времени
+- weapon switching is processed before Player Attack Start;
+- Player Attack uses Melee weapon;
+- Player Attack cooldown is applied to Melee weapon only;
+- later Player Attack Impact uses melee overlap targeting.
 
-### Then:
-   - Application инициирует reload ArenaScene
-   - создаётся новый ArenaRun
-   - новый игрок получает новый PlayerId
-   - новая попытка начинается с первой волны
-   - старый ArenaRun больше не является активной попыткой
+## B-005. Ranged Attack
+
+Given:
+
+- Player selected Ranged weapon;
+- Player weapon is ready;
+- Player Attack reaches ImpactAt;
+- external targeting resolves one active Enemy within range;
+
+Then:
+
+- the Enemy receives Damage;
+- ranged cooldown started at Attack Start;
+- PlayerAttackCompleted and EnemyDamaged are recorded;
+- a lethal impact records EnemyDefeated.
+
+## B-006. Melee Attack
+
+Given:
+
+- Player selected Melee weapon;
+- Player weapon is ready;
+- Player Attack reaches ImpactAt;
+- external targeting resolves active EnemyId values;
+
+Then:
+
+- each valid Enemy receives Damage at most once;
+- duplicate EnemyId values are collapsed;
+- melee cooldown started at Attack Start;
+- target selection uses Player position at impact time.
+
+## B-007. Enemy Defeat
+
+Given:
+
+- an Enemy receives lethal Damage;
+
+Then:
+
+- the Enemy is removed from active Enemies;
+- EnemyDefeated is recorded;
+- pending Enemy Attack is cancelled before Enemy removal;
+- defeating a Regular Enemy contributes to Boss Combat eligibility;
+- defeating a Boss updates current Wave progression.
+
+## B-008. Wave Progression
+
+Given:
+
+- all required Regular Enemies were spawned and defeated;
+
+Then:
+
+- Wave enters Boss Combat;
+- Application may request Boss spawn.
+
+Given:
+
+- current Wave Boss is defeated;
+
+Then:
+
+- current Wave completes.
+
+Given:
+
+- a non-final Wave completes;
+
+Then:
+
+- the next Wave starts in the same aggregate operation.
+
+## B-009. Victory
+
+Given:
+
+- final Wave Boss is defeated;
+
+Then:
+
+- ArenaRun enters Victory;
+- combat progression stops;
+- ArenaRunVictorious is recorded.
+
+## B-010. Defeat
+
+Given:
+
+- Player Health reaches zero after Enemy Attack Impact;
+
+Then:
+
+- ArenaRun enters Defeat;
+- combat progression stops;
+- remaining pending attacks are cancelled;
+- PlayerDefeated and ArenaRunDefeated are recorded.
+
+## B-011. Restart
+
+Given:
+
+- ArenaRun is in Defeat;
+- Application lifecycle delay elapsed;
+
+Then:
+
+- Application reloads ArenaScene;
+- Application creates a new ArenaRun;
+- the new run has new ArenaRunId and PlayerId;
+- the new run starts at Wave 1;
+- the defeated run is not reset.

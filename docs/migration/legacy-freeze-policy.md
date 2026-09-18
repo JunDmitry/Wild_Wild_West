@@ -1,35 +1,34 @@
 # Legacy Freeze Policy
 
----
+## Prohibited Changes
 
-## Banned in the legacy code
+The following changes are prohibited in legacy gameplay assemblies:
 
-- New functionality.
-- Refactoring for the sake of quality.
-- Correction of defects from the `defect register`.
-- Performance optimization.
-- Renaming and moving files between builds.
-- Adding new public `API`s.
-- New dependencies.
+- new gameplay features;
+- architecture refactoring;
+- quality-only cleanup;
+- defect fixes without approved hotfix procedure;
+- performance optimization;
+- public API expansion;
+- new dependencies;
+- moving legacy source files between assemblies.
 
----
+## Allowed Changes
 
-## Allowed in the legacy code
+The following changes are allowed:
 
-- A `hotfix` that blocks the launch of the current game.
-- A `hotfix` that blocks migration or `CI`.
-- The change required for compilation when updating `Unity`.
+- a hotfix that blocks the current shipped game;
+- a hotfix that blocks migration;
+- a hotfix that blocks CI;
+- a change required to compile after a Unity upgrade.
 
----
+## Hotfix Procedure
 
-## The hotfix procedure
+1. Add or update an entry in the legacy defect register.
+2. Add a regression test before changing production code.
+3. Keep the code diff minimal.
+4. Update characterization tests if observed behavior changed.
+5. Update behavior traceability if a baseline scenario is affected.
+6. Record the reason for the hotfix in the pull request.
 
-1. An entry is being created in the defective register with the `Hotfix` status.
-2. A regression test is added before the correction.
-3. The fix is minimal by diff.
-4. Characterization-the tests are updated if the fixed behavior has changed.
-5. The traceability matrix has an impact on baseline scenarios.
-
-Any legacy change without this procedure is rejected for review.
-
----
+Any legacy production change that does not follow this procedure must be rejected during review.

@@ -1,34 +1,65 @@
 # Migration Boundary
 
----
+## Dependency Direction During Migration
 
-## Dependency directions during migration
+```text
+Legacy production
+    does not reference Game.Arena.*
 
-- Legacy production        → does not see the `Game.Arena.*`
-- Game.Arena.*             → does not see the `legacy`
-- Game.Legacy.*.Tests      → sees the `legacy`
-- Game.Architecture.Tests  → does not refer to anyone, checks the graph
+Game.Arena.Domain
+    does not reference legacy assemblies
 
----
+Game.Arena.Application
+    does not reference legacy assemblies
 
-## Where is the transition code allowed
+Game.Arena.Infrastructure
+    does not reference legacy assemblies
 
-The only potential place where the two worlds connect is the Composition Root, and only at the stage of switching production flow (T-10). Before:
+Game.Arena.Presentation
+    does not reference legacy assemblies
 
-- `Game.CompositionRoot` does not reference legacy;
-- there is no shared "common" assembly between legacy and `Game.Arena.*`;
-- there is no copying legacy types to Domain "for a while".
+Game.Legacy.Characterization.Tests
+    may reference legacy assemblies
 
----
+Game.Architecture.Tests
+    validates the assembly graph
+```
 
-## Intermediate check of the new model without switching
+## Production Cut-Over Boundary
 
-So that the new model is tested not only by unit tests up to T-10:
+The legacy and target gameplay models do not exchange runtime state.
 
-- A separate `ArenaSandbox` `dev-scene` (not included in the `build`).
-- The new model's own `Composition Root`.
-- `Smoke` scenarios: launch, movement, attack, wave, victory, defeat.
+No adapter translates legacy GameState into ArenaRun.
 
-The main game scene continues to run on legacy until the switch criteria is completed.
+No adapter translates ArenaRun into legacy GameState.
 
----
+The main gameplay scene remains legacy-driven until T-9.
+
+The new Arena Combat implementation is validated through Domain tests, Application tests, Infrastructure tests, Presentation tests, and ArenaSandbox.
+
+## CompositionRoot Rule
+
+Before T-9:
+
+- Game.CompositionRoot does not reference legacy gameplay assemblies;
+- ArenaSandbox may use a dedicated new CompositionRoot;
+- main gameplay continues to use the legacy bootstrap path.
+
+During T-9:
+
+- main gameplay is switched to the new CompositionRoot;
+- legacy gameplay remains in the repository but is not part of the active production path.
+
+During T-10:
+
+- legacy references are removed;
+- legacy assemblies and tests are retired.
+
+## Forbidden Migration Shortcuts
+
+- sharing a common assembly between legacy and Game.Arena;
+- importing legacy Domain types into Game.Arena.Domain;
+- exposing legacy state through new Presentation;
+- exposing ArenaRun to legacy Presentation;
+- synchronizing both gameplay models during one frame;
+- maintaining two sources of gameplay truth.

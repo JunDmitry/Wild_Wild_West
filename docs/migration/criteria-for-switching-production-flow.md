@@ -1,27 +1,48 @@
-# Criteries
+# Production Flow Cut-Over Criteria
 
-## Functional equivalence
+## Functional Equivalence
 
-- Each scenario is `B-001`..`B-011` is covered by the new model test.
-- Each `LEG` defect with the `Reproduced` status has a test of new correct behavior in the `Arena` model.
-- `Traceability matrix` does not contain empty cells in the `Future test` column.
+- B-001 through B-011 are covered by target tests.
+- Every legacy defect has a documented target status.
+- Every defect marked as implemented in target has corresponding green tests.
+- Application restart lifecycle covers B-011.
+- Unity adapters support player movement, ranged targeting, melee targeting, enemy movement, spawning, defeat, and victory.
 
 ## Quality
 
-- `Architecture tests` are green.
-- `Domain` and `Application` tests of the new model are green.
-- `PlayMode smoke` on `ArenaSandbox` green:
-   - Launch → Wave 1 → boss → Wave 2 → Wave 3 → `Victory`
-   - launch → death → delay → `reload` → wave 1
-   
+- Architecture tests are green.
+- Domain tests are green.
+- Application tests are green.
+- Infrastructure tests are green.
+- Presentation tests are green.
+- ArenaSandbox PlayMode smoke tests are green.
+
+## Required ArenaSandbox Smoke Scenarios
+
+- Start → Wave 1 → Boss → Wave 2 → Wave 3 → Victory.
+- Start → Player damage → Defeat → delay → ArenaScene reload → Wave 1.
+- Player movement against Arena boundaries.
+- Ranged attack hit and miss.
+- Melee attack against multiple Enemies.
+- Enemy movement toward Player.
+- Enemy windup followed by Player evasion.
+- Enemy windup followed by Player defeat.
+
 ## Performance
 
-> Frame metering on the target scene with the maximum number of enemies
-> from `WaveCatalog`: the new model is no worse than `legacy` by more than an
-> agreed threshold. The threshold is fixed before `T-10`.
+Before T-9, define measurable thresholds for:
 
-## Procedure
+- average frame time;
+- worst frame time;
+- GC allocations per frame;
+- maximum active Enemy count;
+- physics query count per frame.
 
-1. The main stage is transferred to the new `Composition Root`.
-2. `Legacy`-the path remains in the repository for one release cycle.
-3. After confirmation — `T-11`: delete `legacy` builds, `legacy` tests, `characterization/defect` tests, updating the `defect register` to `Resolved by migration`.
+The target implementation must not exceed agreed thresholds compared with legacy without an accepted performance ADR.
+
+## Cut-Over Procedure
+
+1. Switch the main gameplay scene to the new CompositionRoot.
+2. Keep legacy code for one release cycle.
+3. Monitor errors, performance, and behavior regressions.
+4. Execute T-10 only after validation.
