@@ -84,14 +84,5 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 0,
                 change);
         }
-
-        public static EnemyAttackImpactOutcome DefeatNotSupported(ArenaRunChange change)
-        {
-            return new EnemyAttackImpactOutcome(
-                EnemyAttackImpactStatus.DefeatNotSupported,
-                0,
-                0,
-                change);
-        }
     }
 }

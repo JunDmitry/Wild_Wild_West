@@ -113,6 +113,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _pendingAttack = default;
         }
 
+        public void CancelAttack()
+        {
+            if (HasPendingAttack == false)
+            {
+                throw new InvalidOperationException("Player has no pending attack.");
+            }
+
+            _pendingAttack = default;
+        }
+
         public bool MoveTo(Position3D position)
         {
             if (Position == position)

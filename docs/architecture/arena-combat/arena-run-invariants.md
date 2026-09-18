@@ -224,6 +224,16 @@ INV-149: Each Enemy Attack Impact hit produces one PlayerDamaged event followed 
 
 INV-150: A missed Enemy Attack Impact completes the Attack and does not restore attack readiness.
 
+INV-151: Player Health reaching zero transitions the Arena Run to Defeat within the same aggregate operation.
+
+INV-152: After the lethal hit of an Enemy Attack Impact batch, remaining pending Attacks do not deal Damage and are cancelled.
+
+INV-153: Defeat cancels the Player pending Attack with AttackerDefeated and remaining Enemy pending Attacks with ArenaRunTerminated.
+
+INV-154: ArenaRunDefeated is the last Domain Event of the operation that defeats the Arena Run.
+
+INV-155: A defeated Enemy's pending Attack is cancelled with AttackerDefeated before the Enemy is removed from the active collection.
+
 ## Domain Events
 
 INV-160: Domain Events describe facts that have already occurred.

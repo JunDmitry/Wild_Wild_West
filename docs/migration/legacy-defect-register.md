@@ -10,7 +10,7 @@
 | LEG-006 |	SimulationPlan |	Flat-plan строит melee query до применения движения игрока. |	Specified |
 | LEG-007 |	SimulationPlan |	Spawn query планируется до проверки итогового поражения игрока. |	Open |
 | LEG-008 |	EnemyRules |	Движение врагов игнорирует стены, препятствия и реальные 3D-collision constraints Unity. |	Open |
-| LEG-009 |	EnemyRules |	После смерти игрока обработка оставшихся врагов текущего тика не остановлена явно. |	Open |
+| LEG-009 |	EnemyRules |	После смерти игрока обработка оставшихся врагов текущего тика не остановлена явно. |	Resolved in target |
 | LEG-010 |	GameState |	IReadOnlyDictionary не обеспечивает глубокую неизменяемость при передаче реализации Dictionary. |	Open |
 | LEG-011 |	GameConfig |	IReadOnlyList поверх массива не исключает mutation через alias или cast. |	Open |
 | LEG-012 |	SimulationResult |	Результат построен из boolean flags и primitive state encoding. |	Planned removal |

@@ -6,6 +6,5 @@
         NoAttacksDue = 1,
         RunIsNotPlaying = 2,
         InteractionPending = 3,
-        DefeatNotSupported = 4,
     }
 }

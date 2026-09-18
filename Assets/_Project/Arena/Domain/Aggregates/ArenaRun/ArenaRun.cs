@@ -541,14 +541,35 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             for (int index = 0; index < targets.Count; index++)
             {
                 Enemy enemy = _enemies[targets[index]];
-                enemy.TakeDamage(weapon.Damage);
+                DamageApplication application = enemy.TakeDamage(weapon.Damage);
 
-                events.Add(new EnemyDamaged(Id, nextRevision, enemy.Id, weapon.Damage, enemy.Health));
+                events.Add(new EnemyDamaged(
+                    Id,
+                    nextRevision,
+                    enemy.Id,
+                    application.AppliedDamage,
+                    application.RemainingHealth));
 
                 if (enemy.IsDefeated)
                 {
                     defeated.Add(enemy.Id);
-                    events.Add(new EnemyDefeated(Id, nextRevision, enemy.Id, enemy.Kind));
+                    events.Add(new EnemyDefeated(
+                        Id,
+                        nextRevision,
+                        enemy.Id,
+                        enemy.Kind));
+
+                    if (enemy.HasPendingAttack)
+                    {
+                        PendingEnemyAttack pendingEnemyAttack = enemy.PendingAttack;
+                        enemy.CancelAttack();
+                        events.Add(new EnemyAttackCancelled(
+                            Id,
+                            nextRevision,
+                            enemy.Id,
+                            pendingEnemyAttack.Id,
+                            AttackCancellationCause.AttackerDefeated));
+                    }
                 }
             }
 
@@ -669,6 +690,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             List<EnemyId> orderedIds = OrderedEnemyIds();
             List<EnemyAttackImpactPlanEntry> plan = new();
             Health projectedHealth = _player.Health;
+            bool playerWillBeDefeated = false;
 
             for (int index = 0; index < orderedIds.Count; index++)
             {
@@ -686,6 +708,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     continue;
                 }
 
+                if (playerWillBeDefeated)
+                {
+                    continue;
+                }
+
                 if (IsPlayerWithinEnemyAttackRange(enemy) == false)
                 {
                     plan.Add(EnemyAttackImpactPlanEntry.Miss(enemy.Id, attack.Id, projectedHealth));
@@ -694,17 +721,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
                 DamageApplication application = projectedHealth.ApplyDamage(enemy.Definition.AttackDamage);
 
-                if (application.IsLethal)
-                {
-                    return EnemyAttackImpactOutcome.DefeatNotSupported(CreateNoChange());
-                }
-
                 projectedHealth = application.RemainingHealth;
                 plan.Add(EnemyAttackImpactPlanEntry.Hit(
                     enemy.Id,
                     attack.Id,
                     application.AppliedDamage,
                     application.RemainingHealth));
+
+                if (application.IsLethal)
+                {
+                    playerWillBeDefeated = true;
+                }
             }
 
             if (plan.Count == 0)
@@ -715,6 +742,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             AggregateRevision nextRevision = Revision.Next();
             List<IArenaDomainEvent> events = new();
             int hitCount = 0;
+            bool actualDefeatedPlayer = false;
 
             for (int index = 0; index < plan.Count; index++)
             {
@@ -724,7 +752,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 if (entry.IsHit)
                 {
                     hitCount++;
-                    _player.TakeDamage(enemy.Definition.AttackDamage);
+                    DamageApplication application = _player.TakeDamage(enemy.Definition.AttackDamage);
 
                     events.Add(new PlayerDamaged(
                         Id,
@@ -732,8 +760,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                         _player.Id,
                         entry.EnemyId,
                         entry.AttackId,
-                        entry.AppliedDamage,
-                        entry.RemainingHealth));
+                        application.AppliedDamage,
+                        application.RemainingHealth));
+
+                    if (application.IsLethal)
+                    {
+                        events.Add(new PlayerDefeated(
+                            Id,
+                            nextRevision,
+                            _player.Id));
+                        actualDefeatedPlayer = true;
+                    }
                 }
 
                 enemy.CompleteAttack();
@@ -744,6 +781,13 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     entry.AttackId,
                     entry.Outcome,
                     CurrentTime));
+            }
+
+            if (playerWillBeDefeated && actualDefeatedPlayer)
+            {
+                Status = ArenaRunStatus.Defeat;
+                CancelRemainingAttacksOnDefeat(orderedIds, nextRevision, events);
+                events.Add(new ArenaRunDefeated(Id, nextRevision));
             }
 
             Revision = nextRevision;
@@ -1062,6 +1106,43 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             return EnemyMovementBatchRejectionReason.None;
+        }
+
+        private void CancelRemainingAttacksOnDefeat(
+            List<EnemyId> orderedIds,
+            AggregateRevision nextRevision,
+            List<IArenaDomainEvent> events)
+        {
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+
+                if (enemy.HasPendingAttack == false)
+                {
+                    continue;
+                }
+
+                PendingEnemyAttack attack = enemy.PendingAttack;
+                enemy.CancelAttack();
+                events.Add(new EnemyAttackCancelled(
+                    Id,
+                    nextRevision,
+                    enemy.Id,
+                    attack.Id,
+                    AttackCancellationCause.ArenaRunTerminated));
+            }
+
+            if (_player.HasPendingAttack)
+            {
+                PendingPlayerAttack attack = _player.PendingAttack;
+                _player.CancelAttack();
+                events.Add(new PlayerAttackCancelled(
+                    Id,
+                    nextRevision,
+                    _player.Id,
+                    attack.Id,
+                    AttackCancellationCause.AttackerDefeated));
+            }
         }
 
         private int CountActiveRegularEnemies()

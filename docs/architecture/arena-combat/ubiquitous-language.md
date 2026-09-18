@@ -76,11 +76,15 @@ The phase of a Wave in which the Boss is waiting to be spawned or is alive.
 
 A Wave whose required combat has finished.
 
-### Defeat
+### Player Defeated
 
-The terminal state of an Arena Run reached when the Player is defeated.
+A domain fact stating that Player Health has been depleted.
 
-No gameplay action may alter combat progression after Defeat.
+### Arena Run Defeated
+
+A domain fact stating that the Arena Run reached Defeat after the Player was defeated.
+
+Defeat is terminal. Restarting gameplay creates a new Arena Run.
 
 ### Victory
 

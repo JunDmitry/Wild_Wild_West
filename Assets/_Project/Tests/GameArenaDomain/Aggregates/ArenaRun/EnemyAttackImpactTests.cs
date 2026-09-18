@@ -213,35 +213,6 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.That(run.PendingEnemyAttackCount, Is.EqualTo(1));
         }
 
-        [Test]
-        public void LethalEnemyAttackIsNotSupportedYet()
-        {
-            ArenaRun run = _kit.StartRunInCompactArena();
-            Spawn(run, 10UL, s_eastInRange);
-            run.StartEligibleEnemyAttacks();
-            run.AdvanceTime(new GameDuration(0.2d));
-
-            for (int hit = 0; hit < 12; hit++)
-            {
-                if (run.PlayerHealth.Current <= 8)
-                {
-                    break;
-                }
-
-                run.ResolveDueEnemyAttackImpacts();
-                run.AdvanceTime(new GameDuration(1d));
-                run.StartEligibleEnemyAttacks();
-                run.AdvanceTime(new GameDuration(0.2d));
-            }
-
-            EnemyAttackImpactOutcome outcome = run.ResolveDueEnemyAttackImpacts();
-
-            Assert.That(outcome.Status, Is.EqualTo(EnemyAttackImpactStatus.DefeatNotSupported));
-            Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Playing));
-            Assert.That(run.PlayerHealth.IsDepleted, Is.False);
-            Assert.That(run.PendingEnemyAttackCount, Is.EqualTo(1));
-        }
-
         private void MovePlayerAway(ArenaRun run)
         {
             MovementInput input = MovementInput.FromVector(new Displacement3D(-1f, 0f, 0f));
