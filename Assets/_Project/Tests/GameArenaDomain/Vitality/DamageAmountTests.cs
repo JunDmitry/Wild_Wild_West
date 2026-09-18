@@ -91,7 +91,7 @@ namespace Game.Arena.Domain.Tests.Vitality
         [Test]
         public void ReducedSubtractsDamagePoints()
         {
-            Health health = Health.Full(100).Reduce(DamageAmount.FromPoints(30));
+            Health health = Health.Full(100).ApplyDamage(DamageAmount.FromPoints(30)).RemainingHealth;
 
             Assert.That(health.Current, Is.EqualTo(70));
             Assert.That(health.Maximum, Is.EqualTo(100));
@@ -101,7 +101,7 @@ namespace Game.Arena.Domain.Tests.Vitality
         [Test]
         public void ExactLethalDamageDepletesHealth()
         {
-            Health health = Health.Full(25).Reduce(DamageAmount.FromPoints(25));
+            Health health = Health.Full(25).ApplyDamage(DamageAmount.FromPoints(25)).RemainingHealth;
 
             Assert.That(health.Current, Is.EqualTo(0));
             Assert.That(health.IsDepleted, Is.True);
@@ -110,7 +110,7 @@ namespace Game.Arena.Domain.Tests.Vitality
         [Test]
         public void ExcessiveDamageClampsAtZero()
         {
-            Health health = Health.Full(25).Reduce(DamageAmount.FromPoints(400));
+            Health health = Health.Full(25).ApplyDamage(DamageAmount.FromPoints(400)).RemainingHealth;
 
             Assert.That(health.Current, Is.EqualTo(0));
             Assert.That(health.Maximum, Is.EqualTo(25));
@@ -121,8 +121,8 @@ namespace Game.Arena.Domain.Tests.Vitality
         public void DamageDoesNotChangeMaximum()
         {
             Health health = Health.Full(80)
-                .Reduce(DamageAmount.FromPoints(10))
-                .Reduce(DamageAmount.FromPoints(10));
+                .ApplyDamage(DamageAmount.FromPoints(10)).RemainingHealth
+                .ApplyDamage(DamageAmount.FromPoints(10)).RemainingHealth;
 
             Assert.That(health.Current, Is.EqualTo(60));
             Assert.That(health.Maximum, Is.EqualTo(80));
@@ -144,15 +144,15 @@ namespace Game.Arena.Domain.Tests.Vitality
             Assert.Throws<InvalidOperationException>(
                 () =>
                 {
-                    health.Reduce(DamageAmount.FromPoints(1));
+                    health.ApplyDamage(DamageAmount.FromPoints(1));
                 });
         }
 
         [Test]
         public void EqualityIsBasedOnCurrentAndMaximum()
         {
-            Health left = Health.Full(50).Reduce(DamageAmount.FromPoints(10));
-            Health right = Health.Full(50).Reduce(DamageAmount.FromPoints(10));
+            Health left = Health.Full(50).ApplyDamage(DamageAmount.FromPoints(10)).RemainingHealth;
+            Health right = Health.Full(50).ApplyDamage(DamageAmount.FromPoints(10)).RemainingHealth;
             Health other = Health.Full(50);
 
             Assert.That(left == right, Is.True);

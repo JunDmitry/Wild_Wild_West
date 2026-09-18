@@ -31,21 +31,33 @@ namespace Game.Arena.Domain.Vitality
             return new Health(maximum, maximum);
         }
 
-        public Health Reduce(DamageAmount damage)
+        public DamageApplication ApplyDamage(DamageAmount damage)
         {
             if (IsValid == false)
             {
                 throw new InvalidOperationException("Health is not initialized.");
             }
 
-            int reduced = _current - damage.Points;
-
-            if (reduced < 0)
+            if (IsDepleted)
             {
-                reduced = 0;
+                throw new InvalidOperationException("Health is already depleted.");
             }
 
-            return new Health(reduced, _maximum);
+            int appliedPoints = damage.Points;
+
+            if (appliedPoints > _current)
+            {
+                appliedPoints = _current;
+            }
+
+            DamageAmount appliedDamage = DamageAmount.FromPoints(appliedPoints);
+            Health remaining = new(_current - appliedPoints, _maximum);
+
+            return new(
+                this,
+                damage,
+                appliedDamage,
+                remaining);
         }
 
         public bool Equals(Health other)

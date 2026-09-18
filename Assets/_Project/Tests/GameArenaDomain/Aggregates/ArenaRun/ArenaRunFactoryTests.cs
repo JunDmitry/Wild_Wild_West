@@ -115,7 +115,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         [Test]
         public void StartRejectsDepletedPlayerHealth()
         {
-            Health depleted = Health.Full(10).Reduce(DamageAmount.FromPoints(10));
+            Health depleted = Health.Full(10).ApplyDamage(DamageAmount.FromPoints(10)).RemainingHealth;
 
             Assert.Throws<ArgumentException>(
                 () =>

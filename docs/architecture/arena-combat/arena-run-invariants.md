@@ -202,16 +202,28 @@ INV-138: Starting Enemy Attacks is one atomic aggregate operation processed in a
 
 INV-139: If no Enemy is eligible, starting Enemy Attacks does not change state, advance AggregateRevision, or produce Domain Events.
 
+INV-140: Applied Damage cannot exceed Requested Damage.
+
+INV-141: Applied Damage equals the actual reduction of Health.
+
+INV-142: Damage applied to depleted Health is rejected.
+
+INV-143: A pending Attack of a defeated attacker is cancelled before the attacker is removed or the Arena Run becomes terminal.
+
+INV-144: Attack cancellation produces a typed Domain Event and does not produce an AttackCompleted event.
+
+INV-145: All events produced by one enemy impact batch share one resulting AggregateRevision.
+
 ## Domain Events
 
-INV-140: Domain Events describe facts that have already occurred.
+INV-160: Domain Events describe facts that have already occurred.
 
-INV-141: Domain Events do not contain Unity-specific types.
+INV-161: Domain Events do not contain Unity-specific types.
 
-INV-142: A Domain Event cannot mutate the Arena Run.
+INV-162: A Domain Event cannot mutate the Arena Run.
 
-INV-143: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
+INV-163: Continuous visual synchronization such as movement rendering is not represented by mandatory per-frame Domain Events.
 
-INV-144: All Domain Events produced by one atomic aggregate operation carry the same resulting AggregateRevision.
+INV-164: All Domain Events produced by one atomic aggregate operation carry the same resulting AggregateRevision.
 
-INV-145: PlayerAttackCompleted is produced after direct attack consequences such as damage, enemy defeat, wave completion, next wave start, or victory.
+INV-165: PlayerAttackCompleted is produced after direct attack consequences such as damage, enemy defeat, wave completion, next wave start, or victory.

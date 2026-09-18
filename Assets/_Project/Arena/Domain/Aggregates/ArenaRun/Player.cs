@@ -172,9 +172,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             SelectedWeapon = WeaponKind.Ranged;
         }
 
-        public void TakeDamage(DamageAmount damage)
+        public DamageApplication TakeDamage(DamageAmount damage)
         {
-            Health = Health.Reduce(damage);
+            DamageApplication application = Health.ApplyDamage(damage);
+            Health = application.RemainingHealth;
+
+            return application;
         }
     }
 }

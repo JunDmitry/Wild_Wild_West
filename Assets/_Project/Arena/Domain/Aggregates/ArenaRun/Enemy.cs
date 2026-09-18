@@ -51,9 +51,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public PendingEnemyAttack PendingAttack => _pendingAttack;
         public bool IsDefeated => Health.IsDepleted;
 
-        public void TakeDamage(DamageAmount damage)
+        public DamageApplication TakeDamage(DamageAmount damage)
         {
-            Health = Health.Reduce(damage);
+            DamageApplication application = Health.ApplyDamage(damage);
+            Health = application.RemainingHealth;
+
+            return application;
         }
 
         public bool IsAttackReady(GameTimePoint now)

@@ -35,7 +35,7 @@ namespace Game.Arena.Domain.Tests.Configuration
             {
                 _ = new EnemyDefinition(
                     Combat.EnemyKind.Regular,
-                    Health.Full(20).Reduce(DamageAmount.FromPoints(20)),
+                    Health.Full(20).ApplyDamage(DamageAmount.FromPoints(20)).RemainingHealth,
                     MovementSpeed.FromUnitsPerSecond(5),
                     CollisionRadius.FromValue(.5f),
                     DamageAmount.FromPoints(10),

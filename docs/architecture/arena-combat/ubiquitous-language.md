@@ -222,6 +222,22 @@ The distance within which an Enemy may start an Attack, measured on the ground p
 
 An active Enemy that has no pending Attack, has reached its attack readiness, and has the Player within its Enemy Attack Range.
 
+### Damage Application
+
+The result of applying requested Damage to Health.
+
+It contains the requested Damage, the actually applied Damage, and the Remaining Health.
+
+Applied Damage may be lower than requested Damage because Health cannot become negative.
+
+### Attack Cancellation Cause
+
+The domain reason why a pending Attack did not reach Impact.
+
+Current causes are Attacker Defeated and Arena Run Terminated.
+
+Attack Cancellation Cause is distinct from Interaction Cancellation Reason.
+
 ## Movement Terms
 
 ### Position
