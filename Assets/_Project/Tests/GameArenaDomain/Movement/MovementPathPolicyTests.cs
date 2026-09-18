@@ -1,8 +1,9 @@
 ﻿using System;
 using Game.Arena.Domain.Geometry;
+using Game.Arena.Domain.Movement;
 using NUnit.Framework;
 
-namespace Game.Arena.Domain.Movement
+namespace Game.Arena.Domain.Tests.Movement
 {
 
     [TestFixture]

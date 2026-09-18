@@ -168,5 +168,17 @@ namespace Game.Arena.Domain.Tests.Support
                 Weapons,
                 Waves(2, 1, 1));
         }
+
+        public ArenaRun StartRunWithSameId(ArenaRunId arenaRunId)
+        {
+            return new ArenaRunFactory(MovementPath).Start(
+                arenaRunId,
+                PlayerId.FromValue(777UL),
+                Arena,
+                PlayerAt(Position3D.Zero),
+                Enemies,
+                Weapons,
+                Waves(2, 1, 1));
+        }
     }
 }

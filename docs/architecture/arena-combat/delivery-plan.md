@@ -78,7 +78,7 @@ Delivered:
 
 ### T-2. Repository and Application Identity Integration
 
-Status: Planned
+Status: In Progress
 
 Goal:
 
@@ -86,11 +86,11 @@ Introduce repository-backed aggregate ownership and typed identity sources witho
 
 Substages:
 
-- T-2.1: Define IArenaRunRepository in Domain.
-- T-2.2: Define IArenaRunIdSource, IPlayerIdSource, and IEnemyIdSource in Application.
-- T-2.3: Implement InMemoryArenaRunRepository in Infrastructure.
-- T-2.4: Implement ArenaRunSession in Application.
-- T-2.5: Add repository and session tests.
+- T-2.1: Define IArenaRunRepository in Domain. — Completed
+- T-2.2: Define IArenaRunIdSource, IPlayerIdSource, and IEnemyIdSource in Application. — Planned
+- T-2.3: Implement InMemoryArenaRunRepository in Infrastructure. — Planned
+- T-2.4: Implement ArenaRunSession in Application. — Planned
+- T-2.5: Add repository and session tests. — Planned
 
 Exit criteria:
 

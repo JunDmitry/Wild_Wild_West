@@ -260,6 +260,12 @@ The identity of Enemy.
 
 Domain identities are allocated outside Domain.
 
+### Arena Run Repository
+
+The Domain-owned collection abstraction over active ArenaRun aggregate roots.
+
+The repository allows adding, retrieving by ArenaRunId, and removing an ArenaRun. It is not an object-relational mapping abstraction and does not expose update or query operations beyond retrieval by identity.
+
 ## Terms Outside the Domain
 
 - GameObject
