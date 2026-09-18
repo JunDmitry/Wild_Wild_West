@@ -248,23 +248,35 @@ An Application-level representation of committed Domain Events for Presentation,
 
 ### ArenaRunId
 
-The identity of ArenaRun.
+The domain identity of ArenaRun.
 
 ### PlayerId
 
-The identity of Player.
+The domain identity of Player.
 
 ### EnemyId
 
-The identity of Enemy.
+The domain identity of Enemy.
 
-Domain identities are allocated outside Domain.
+### Identity Source
 
-### Arena Run Repository
+An Application service that allocates identities of one specific domain identity type.
 
-The Domain-owned collection abstraction over active ArenaRun aggregate roots.
+ArenaRunId, PlayerId, and EnemyId use independent identity sources.
 
-The repository allows adding, retrieving by ArenaRunId, and removing an ArenaRun. It is not an object-relational mapping abstraction and does not expose update or query operations beyond retrieval by identity.
+### Identity Allocation
+
+The Application operation that obtains a new typed identity before creating a Domain object.
+
+### Identity Lifetime
+
+Identity sources are process-lifetime services within the application root scope.
+
+They survive ArenaScene reloads and never reset or reuse allocated values.
+
+Domain identities are allocated outside Domain and supplied when Domain objects are created.
+
+Unity InstanceID and pooled GameObject identity are not domain identities.
 
 ## Terms Outside the Domain
 
