@@ -99,6 +99,10 @@ The following target tests are mandatory:
 | Depleted Health rejects further damage | `ApplyingDamageToDepletedHealthThrows` |
 | Player attack cancellation has typed cause | `PlayerAttackCancelledRejectsNonePlayerId` |
 | Enemy attack cancellation has typed cause | `EnemyAttackCancelledRejectsNoneEnemyId` |
+| Enemy attack impact damages the player | `EnemyAttackImpactInRangeDamagesPlayer` |
+| Player evades during enemy windup | `EnemyAttackImpactOutOfRangeMisses` |
+| Enemy attack impacts resolve deterministically | `DueEnemyAttacksResolveInEnemyIdOrder` |
+| Enemy attack impact batch advances revision once | `MultipleEnemyImpactsAdvanceRevisionOnce`, `MultipleEnemyImpactsShareResultingRevision` |
 
 ## Legacy Defect Migration Rule
 

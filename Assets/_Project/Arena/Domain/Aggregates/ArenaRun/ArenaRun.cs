@@ -133,6 +133,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         public int RegularEnemiesRemainingToSpawn => _currentWave.RegularEnemiesRemainingToSpawn;
         public int ActiveEnemyCount => _enemies.Count;
+
         public int PendingEnemyAttackCount
         {
             get
@@ -142,6 +143,28 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 foreach (Enemy enemy in _enemies.Values)
                 {
                     if (enemy.HasPendingAttack)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
+        public int DueEnemyAttackCount
+        {
+            get
+            {
+                int count = 0;
+
+                foreach (Enemy enemy in _enemies.Values)
+                {
+                    if (enemy.HasPendingAttack == false)
+                    {
+                        continue;
+                    }
+
+                    if (enemy.PendingAttack.IsReadyToImpact(CurrentTime))
                     {
                         count++;
                     }
@@ -629,6 +652,103 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Revision = nextRevision;
 
             return EnemyAttackStartOutcome.Started(startedAttacks, new ArenaRunChange(Revision, true, events));
+        }
+
+        public EnemyAttackImpactOutcome ResolveDueEnemyAttackImpacts()
+        {
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return EnemyAttackImpactOutcome.RunIsNotPlaying(CreateNoChange());
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                return EnemyAttackImpactOutcome.InteractionPending(CreateNoChange());
+            }
+
+            List<EnemyId> orderedIds = OrderedEnemyIds();
+            List<EnemyAttackImpactPlanEntry> plan = new();
+            Health projectedHealth = _player.Health;
+
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+
+                if (enemy.HasPendingAttack == false)
+                {
+                    continue;
+                }
+
+                PendingEnemyAttack attack = enemy.PendingAttack;
+
+                if (attack.IsReadyToImpact(CurrentTime) == false)
+                {
+                    continue;
+                }
+
+                if (IsPlayerWithinEnemyAttackRange(enemy) == false)
+                {
+                    plan.Add(EnemyAttackImpactPlanEntry.Miss(enemy.Id, attack.Id, projectedHealth));
+                    continue;
+                }
+
+                DamageApplication application = projectedHealth.ApplyDamage(enemy.Definition.AttackDamage);
+
+                if (application.IsLethal)
+                {
+                    return EnemyAttackImpactOutcome.DefeatNotSupported(CreateNoChange());
+                }
+
+                projectedHealth = application.RemainingHealth;
+                plan.Add(EnemyAttackImpactPlanEntry.Hit(
+                    enemy.Id,
+                    attack.Id,
+                    application.AppliedDamage,
+                    application.RemainingHealth));
+            }
+
+            if (plan.Count == 0)
+            {
+                return EnemyAttackImpactOutcome.NoAttacksDue(CreateNoChange());
+            }
+
+            AggregateRevision nextRevision = Revision.Next();
+            List<IArenaDomainEvent> events = new();
+            int hitCount = 0;
+
+            for (int index = 0; index < plan.Count; index++)
+            {
+                EnemyAttackImpactPlanEntry entry = plan[index];
+                Enemy enemy = _enemies[entry.EnemyId];
+
+                if (entry.IsHit)
+                {
+                    hitCount++;
+                    _player.TakeDamage(enemy.Definition.AttackDamage);
+
+                    events.Add(new PlayerDamaged(
+                        Id,
+                        nextRevision,
+                        _player.Id,
+                        entry.EnemyId,
+                        entry.AttackId,
+                        entry.AppliedDamage,
+                        entry.RemainingHealth));
+                }
+
+                enemy.CompleteAttack();
+                events.Add(new EnemyAttackCompleted(
+                    Id,
+                    nextRevision,
+                    entry.EnemyId,
+                    entry.AttackId,
+                    entry.Outcome,
+                    CurrentTime));
+            }
+
+            Revision = nextRevision;
+
+            return EnemyAttackImpactOutcome.Resolved(plan.Count, hitCount, new ArenaRunChange(Revision, true, events));
         }
 
         public EnemyMovementBatchRequestOutcome RequestEnemyMovementBatch(GameDuration duration)

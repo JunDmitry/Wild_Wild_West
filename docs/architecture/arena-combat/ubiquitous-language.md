@@ -238,6 +238,14 @@ Current causes are Attacker Defeated and Arena Run Terminated.
 
 Attack Cancellation Cause is distinct from Interaction Cancellation Reason.
 
+### Due Attack
+
+A pending Attack whose Impact time has been reached according to the current Game Time.
+
+### Enemy Attack Impact Batch
+
+The atomic aggregate operation that resolves all due Enemy Attacks in ascending EnemyId order.
+
 ## Movement Terms
 
 ### Position

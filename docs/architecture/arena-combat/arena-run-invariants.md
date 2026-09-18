@@ -214,6 +214,16 @@ INV-144: Attack cancellation produces a typed Domain Event and does not produce 
 
 INV-145: All events produced by one enemy impact batch share one resulting AggregateRevision.
 
+INV-146: An Enemy Attack Impact is resolved only when its Impact time has been reached.
+
+INV-147: An Enemy Attack Impact hits only when the Player is within the attacker's Enemy Attack Range at impact time.
+
+INV-148: Resolving due Enemy Attack Impacts is one atomic aggregate operation processed in ascending EnemyId order that advances AggregateRevision exactly once when at least one Attack is resolved.
+
+INV-149: Each Enemy Attack Impact hit produces one PlayerDamaged event followed by an EnemyAttackCompleted event.
+
+INV-150: A missed Enemy Attack Impact completes the Attack and does not restore attack readiness.
+
 ## Domain Events
 
 INV-160: Domain Events describe facts that have already occurred.

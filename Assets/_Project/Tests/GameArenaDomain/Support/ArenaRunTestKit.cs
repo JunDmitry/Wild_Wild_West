@@ -63,6 +63,26 @@ namespace Game.Arena.Domain.Tests.Support
 
         public MovementPathPolicy MovementPath { get; } = new MovementPathPolicy();
 
+        public EnemyCatalog WeakEnemies { get; } = new EnemyCatalog(
+            new EnemyDefinition(
+                EnemyKind.Regular,
+                Health.Full(50),
+                MovementSpeed.FromUnitsPerSecond(2f),
+                CollisionRadius.FromValue(0.5f),
+                DamageAmount.FromPoints(5),
+                Distance.FromValue(2f),
+                new GameDuration(1d),
+                new GameDuration(0.2d)),
+            new EnemyDefinition(
+                EnemyKind.Boss,
+                Health.Full(300),
+                MovementSpeed.FromUnitsPerSecond(1.75f),
+                CollisionRadius.FromValue(1f),
+                DamageAmount.FromPoints(9),
+                Distance.FromValue(3f),
+                new GameDuration(1.1d),
+                new GameDuration(0.4d)));
+
         public PlayerDefinition PlayerAt(Position3D startPosition)
         {
             return new PlayerDefinition(
@@ -135,6 +155,18 @@ namespace Game.Arena.Domain.Tests.Support
                 Enemies,
                 Weapons,
                 waves);
+        }
+
+        public ArenaRun StartRunInCompactArenaWithWeakEnemies()
+        {
+            return new ArenaRunFactory(MovementPath).Start(
+                ArenaRunId.FromValue(1UL),
+                PlayerId.FromValue(2UL),
+                CompactArena,
+                PlayerAt(Position3D.Zero),
+                WeakEnemies,
+                Weapons,
+                Waves(2, 1, 1));
         }
     }
 }
