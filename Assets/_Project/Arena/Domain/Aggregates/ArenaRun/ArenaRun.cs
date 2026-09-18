@@ -32,6 +32,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private PlayerMovementRequest _pendingMovementRequest;
         private EnemySpawnRequest _pendingSpawnRequest;
         private PlayerAttackImpactRequest _pendingAttackImpactRequest;
+        private EnemyMovementBatchRequest _pendingEnemyMovementBatchRequest;
         private AttackId _lastAttackId;
 
         internal ArenaRun(
@@ -615,6 +616,83 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Revision = nextRevision;
 
             return EnemyAttackStartOutcome.Started(startedAttacks, new ArenaRunChange(Revision, true, events));
+        }
+
+        public EnemyMovementBatchRequestOutcome RequestEnemyMovementBatch(GameDuration duration)
+        {
+            if (Status != ArenaRunStatus.Playing)
+            {
+                return EnemyMovementBatchRequestOutcome.RunIsNotPlaying;
+            }
+
+            if (_interactionLedger.HasPending)
+            {
+                throw new InvalidOperationException("An interaction is already pending.");
+            }
+
+            if (duration.Seconds <= 0d)
+            {
+                return EnemyMovementBatchRequestOutcome.NoEligibleEnemies;
+            }
+
+            List<EnemyId> orderedIds = OrderedEnemyIds();
+            List<EnemyMovementIntent> intents = new();
+
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+
+                if (enemy.HasPendingAttack)
+                {
+                    continue;
+                }
+
+                if (IsPlayerWithinEnemyAttackRange(enemy))
+                {
+                    continue;
+                }
+
+                Displacement3D toPlayer = new(
+                    _player.Position.X - enemy.Position.X,
+                    0f,
+                    _player.Position.Z - enemy.Position.Z);
+
+                bool hasDirection = toPlayer.TryToDirection(out Direction3D direction);
+
+                if (hasDirection == false)
+                {
+                    continue;
+                }
+
+                Distance requestedDistance = enemy.Definition.MovementSpeed.DistanceOver(duration);
+
+                if (requestedDistance.IsZero)
+                {
+                    continue;
+                }
+
+                PlanarMovementIntent movementIntent = new(
+                    enemy.Position,
+                    direction,
+                    requestedDistance);
+
+                EnemyMovementIntent enemyIntent = new(
+                    enemy.Id,
+                    movementIntent,
+                    enemy.CollisionRadius);
+
+                intents.Add(enemyIntent);
+            }
+
+            if (intents.Count == 0)
+            {
+                return EnemyMovementBatchRequestOutcome.NoEligibleEnemies;
+            }
+
+            InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.EnemyMovementBatch, Revision);
+            _pendingEnemyMovementBatchRequest = new EnemyMovementBatchRequest(correlation, intents);
+
+            return EnemyMovementBatchRequestOutcome.Requested(_pendingEnemyMovementBatchRequest);
         }
 
         public InteractionCancellationOutcome CancelPendingInteraction(

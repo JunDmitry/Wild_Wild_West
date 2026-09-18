@@ -36,6 +36,14 @@ INV-023: A defeated Enemy is not part of the active Enemy collection.
 
 INV-024: One Melee Attack can damage a specific Enemy at most once.
 
+INV-025: An Enemy with a pending Attack does not receive a movement intent.
+
+INV-026: An Enemy already within its attack range does not receive a movement intent.
+
+INV-027: Enemy movement intents are created in ascending EnemyId order.
+
+INV-028: Creating an Enemy Movement Batch Request does not change state, advance AggregateRevision, or produce Domain Events.
+
 ## Wave
 
 INV-030: Exactly one Wave is current while an Arena Run is active.

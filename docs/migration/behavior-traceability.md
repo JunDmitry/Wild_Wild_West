@@ -77,6 +77,12 @@ The following target tests are mandatory:
 | Enemy attacks start in deterministic order | `AttacksStartInAscendingEnemyIdOrder` |
 | An accepted position leaves the ground plane | `TravelOffGroundPlaneIsRejected`, `AcceptedPositionOffGroundPlaneIsRejected` |
 | Path validation is shared by all movement intents | `MovementPathPolicyTests` |
+| Enemy outside attack range receives movement intent | `EnemyOutsideAttackRangeReceivesMovementIntent` |
+| Enemy inside attack range does not receive movement intent | `EnemyInsideAttackRangeDoesNotReceiveMovementIntent` |
+| Enemy with pending attack does not receive movement intent | `EnemyWithPendingAttackDoesNotReceiveMovementIntent` |
+| Enemy movement intents are ordered by EnemyId | `EnemyMovementIntentsAreOrderedByEnemyId` |
+| Enemy movement batch request does not advance revision | `EnemyMovementBatchRequestDoesNotAdvanceRevision` |
+| Enemy movement batch request opens one interaction | `EnemyMovementBatchRequestOpensOnePendingInteraction` |
 
 ## Legacy Defect Migration Rule
 

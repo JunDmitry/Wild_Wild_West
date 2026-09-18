@@ -296,6 +296,20 @@ The non-zero horizontal radius used when validating a combatant position against
 
 The non-zero maximum distance per second that a combatant may request through movement behavior.
 
+### Enemy Movement Intent
+
+A movement intent for one active Enemy, expressed as Enemy Id, Planar Movement Intent, and Collision Radius.
+
+Enemy Movement Intent is created only for an Enemy that is active, has no pending Attack, and is outside its Enemy Attack Range.
+
+### Enemy Movement Batch
+
+A set of Enemy Movement Intents produced by the Arena Run in deterministic Enemy Id order.
+
+One Enemy Movement Batch is one external Interaction and therefore carries one Interaction Id.
+
+Creating an Enemy Movement Batch Request does not advance Aggregate Revision and does not produce Domain Events.
+
 ## External Interaction Terms
 
 ### Interaction Request
