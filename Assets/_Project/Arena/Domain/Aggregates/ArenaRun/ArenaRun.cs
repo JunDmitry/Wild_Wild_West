@@ -156,6 +156,19 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return _enemies.ContainsKey(enemyId);
         }
 
+        public bool TryGetEnemyPosition(EnemyId enemyId, out Position3D position)
+        {
+            if (_enemies.TryGetValue(enemyId, out Enemy enemy))
+            {
+                position = enemy.Position;
+                return true;
+            }
+
+            position = default;
+
+            return false;
+        }
+
         public PlayerMovementRequestOutcome RequestPlayerMovement(MovementInput movementInput, GameDuration duration)
         {
             if (Status != ArenaRunStatus.Playing)
@@ -695,6 +708,57 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return EnemyMovementBatchRequestOutcome.Requested(_pendingEnemyMovementBatchRequest);
         }
 
+        public EnemyMovementBatchResolutionOutcome ApplyEnemyMovementBatch(EnemyMovementBatchResolution resolution)
+        {
+            if (resolution == null)
+            {
+                throw new ArgumentNullException(nameof(resolution));
+            }
+
+            InteractionAdmission admission = _interactionLedger.Admit(resolution, Revision);
+
+            if (admission.IsAdmitted == false)
+            {
+                return EnemyMovementBatchResolutionOutcome.Rejected(MapEnemyMovementRejectionReason(admission.RejectionReason), CreateNoChange());
+            }
+
+            EnemyMovementBatchRejectionReason validation = ValidateEnemyMovementBatchResolution(resolution, out Dictionary<EnemyId, Position3D> acceptedPositions);
+
+            if (validation != EnemyMovementBatchRejectionReason.None)
+            {
+                return EnemyMovementBatchResolutionOutcome.Rejected(validation, CreateNoChange());
+            }
+
+            _interactionLedger.Complete(resolution.Correlation.InteractionId);
+            bool anyMoved = false;
+
+            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            {
+                Enemy enemy = _enemies[intent.EnemyId];
+                Position3D acceptedPosition = acceptedPositions[intent.EnemyId];
+
+                if (enemy.Position != acceptedPosition)
+                {
+                    anyMoved = true;
+                }
+            }
+
+            if (anyMoved == false)
+            {
+                return EnemyMovementBatchResolutionOutcome.AcceptedWithoutStateChange(CreateNoChange());
+            }
+
+            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            {
+                Enemy enemy = _enemies[intent.EnemyId];
+                enemy.MoveTo(acceptedPositions[intent.EnemyId]);
+            }
+
+            Revision = Revision.Next();
+
+            return EnemyMovementBatchResolutionOutcome.Applied(CreateStateChange());
+        }
+
         public InteractionCancellationOutcome CancelPendingInteraction(
             InteractionCorrelation correlation,
             InteractionCancellationReason reason)
@@ -760,6 +824,32 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             };
         }
 
+        private static EnemyMovementBatchRejectionReason MapEnemyMovementPathVerdict(MovementPathVerdict verdict)
+        {
+            return verdict switch
+            {
+                MovementPathVerdict.Accepted => EnemyMovementBatchRejectionReason.None,
+                MovementPathVerdict.OffGroundPlane => EnemyMovementBatchRejectionReason.AcceptedPositionOffGroundPlane,
+                MovementPathVerdict.BehindOrigin => EnemyMovementBatchRejectionReason.AcceptedPositionBehindRequest,
+                MovementPathVerdict.BeyondRequestedDistance => EnemyMovementBatchRejectionReason.AcceptedPositionBeyondRequestedDistance,
+                MovementPathVerdict.OffMovementPath => EnemyMovementBatchRejectionReason.AcceptedPositionOffMovementPath,
+                _ => throw new ArgumentOutOfRangeException(nameof(verdict)),
+            };
+        }
+
+        private static EnemyMovementBatchRejectionReason MapEnemyMovementRejectionReason(InteractionRejectionReason reason)
+        {
+            return reason switch
+            {
+                InteractionRejectionReason.ForeignArenaRun => EnemyMovementBatchRejectionReason.ForeignArenaRun,
+                InteractionRejectionReason.UnknownInteraction => EnemyMovementBatchRejectionReason.UnknownInteraction,
+                InteractionRejectionReason.InteractionClosed => EnemyMovementBatchRejectionReason.InteractionClosed,
+                InteractionRejectionReason.StaleRevision => EnemyMovementBatchRejectionReason.StaleRevision,
+                InteractionRejectionReason.KindMismatch => EnemyMovementBatchRejectionReason.KindMismatch,
+                _ => throw new ArgumentOutOfRangeException(nameof(reason)),
+            };
+        }
+
         private static int CompareEnemyIds(EnemyId left, EnemyId right)
         {
             return left.Value.CompareTo(right.Value);
@@ -796,6 +886,62 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             return PlayerMovementResolutionRejectionReason.None;
+        }
+
+        private EnemyMovementBatchRejectionReason ValidateEnemyMovementBatchResolution(EnemyMovementBatchResolution resolution, out Dictionary<EnemyId, Position3D> acceptedPositions)
+        {
+            acceptedPositions = new Dictionary<EnemyId, Position3D>();
+            HashSet<EnemyId> expectedIds = new();
+
+            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            {
+                expectedIds.Add(intent.EnemyId);
+            }
+
+            for (int index = 0; index < resolution.Entries.Count; index++)
+            {
+                EnemyMovementBatchResolutionEntry entry = resolution.Entries[index];
+
+                if (entry.EnemyId.IsNone)
+                {
+                    return EnemyMovementBatchRejectionReason.EnemyIdIsNone;
+                }
+
+                if (expectedIds.Contains(entry.EnemyId) == false)
+                {
+                    return EnemyMovementBatchRejectionReason.UnexpectedEnemyId;
+                }
+
+                if (acceptedPositions.ContainsKey(entry.EnemyId))
+                {
+                    return EnemyMovementBatchRejectionReason.DuplicateEnemyId;
+                }
+
+                acceptedPositions.Add(entry.EnemyId, entry.AcceptedPosition);
+            }
+
+            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            {
+                if (acceptedPositions.ContainsKey(intent.EnemyId) == false)
+                {
+                    return EnemyMovementBatchRejectionReason.MissingEnemyId;
+                }
+
+                if (_enemies.ContainsKey(intent.EnemyId) == false)
+                {
+                    return EnemyMovementBatchRejectionReason.EnemyNoLongerActive;
+                }
+
+                MovementPathVerdict verdict = _movementPathPolicy.Validate(intent.Intent, acceptedPositions[intent.EnemyId]);
+                EnemyMovementBatchRejectionReason pathReason = MapEnemyMovementPathVerdict(verdict);
+
+                if (pathReason != EnemyMovementBatchRejectionReason.None)
+                {
+                    return pathReason;
+                }
+            }
+
+            return EnemyMovementBatchRejectionReason.None;
         }
 
         private int CountActiveRegularEnemies()

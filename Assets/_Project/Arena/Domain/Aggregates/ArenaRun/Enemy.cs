@@ -109,5 +109,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             _pendingAttack = default;
         }
+
+        public bool MoveTo(Position3D position)
+        {
+            if (Position == position)
+            {
+                return false;
+            }
+
+            Position = position;
+
+            return true;
+        }
     }
 }

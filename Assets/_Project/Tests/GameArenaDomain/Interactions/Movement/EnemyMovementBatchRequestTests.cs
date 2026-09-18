@@ -75,6 +75,25 @@ namespace Game.Arena.Domain.Tests.Interactions.Movement
             Assert.That(request.Kind, Is.EqualTo(InteractionKind.EnemyMovementBatch));
         }
 
+        [Test]
+        public void ConstructorRejectsDuplicateEnemyIds()
+        {
+            InteractionCorrelation correlation = CreateCorrelation();
+            EnemyMovementIntent intent = CreateIntent(1UL);
+
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    EnemyMovementBatchRequest unused = new EnemyMovementBatchRequest(
+                        correlation,
+                        new[]
+                        {
+                            intent,
+                            intent,
+                        });
+                });
+        }
+
         private InteractionCorrelation CreateCorrelation()
         {
             return new InteractionCorrelation(

@@ -310,6 +310,16 @@ One Enemy Movement Batch is one external Interaction and therefore carries one I
 
 Creating an Enemy Movement Batch Request does not advance Aggregate Revision and does not produce Domain Events.
 
+### Enemy Movement Batch Resolution
+
+The external world's answer to an Enemy Movement Batch Request.
+
+It contains one accepted position for every Enemy Movement Intent in the request.
+
+The Arena Run accepts the batch only when the resolution has exactly the same Enemy Id set as the request and each accepted position follows its corresponding Planar Movement Intent.
+
+A valid batch resolution may shorten movement or keep enemies in place. It cannot extend, reverse, or laterally redirect movement.
+
 ## External Interaction Terms
 
 ### Interaction Request

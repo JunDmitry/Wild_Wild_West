@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Contracts;
 
 namespace Game.Arena.Domain.Interactions.Movement
@@ -33,6 +34,7 @@ namespace Game.Arena.Domain.Interactions.Movement
                 throw new ArgumentException("At least one movement intent is required.", nameof(intents));
             }
 
+            HashSet<EnemyId> ids = new();
             EnemyMovementIntent[] copied = new EnemyMovementIntent[intents.Count];
 
             for (int index = 0; index < intents.Count; index++)
@@ -47,6 +49,11 @@ namespace Game.Arena.Domain.Interactions.Movement
                 if (intent.Intent.IsValid == false)
                 {
                     throw new ArgumentException("EnemyMovementIntent contains invalid movement intent.", nameof(intents));
+                }
+
+                if (ids.Add(intent.EnemyId) == false)
+                {
+                    throw new ArgumentException("EnemyMovementIntent contains duplicate EnemyId.", nameof(intents));
                 }
 
                 copied[index] = intent;
