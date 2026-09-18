@@ -379,6 +379,19 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             Assert.That(second.Correlation.AggregateRevision.Value, Is.EqualTo(1UL));
         }
 
+        [Test]
+        public void AcceptedPositionOffGroundPlaneIsRejected()
+        {
+            ArenaRun run = CreateRun();
+            PlayerMovementRequest request = RequestRight(run, 1d).Request;
+
+            PlayerMovementResolutionOutcome outcome = run.ApplyPlayerMovement(
+                new PlayerMovementResolution(request.Correlation, new Position3D(2f, 1f, 0f)));
+
+            Assert.That(outcome.RejectionReason, Is.EqualTo(PlayerMovementResolutionRejectionReason.AcceptedPositionOffGroundPlane));
+            Assert.That(run.HasPendingInteraction, Is.True);
+        }
+
         private PlayerMovementRequestOutcome RequestRight(ArenaRun run, double seconds)
         {
             MovementInput input = MovementInput.FromVector(new Displacement3D(1f, 0f, 0f));

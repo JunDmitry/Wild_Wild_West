@@ -75,6 +75,8 @@ The following target tests are mandatory:
 | An enemy in range starts an attack without dealing damage | `EnemyInRangeStartsAttack`, `StartingEnemyAttackDoesNotDamagePlayer` |
 | Enemy attack batch advances revision once | `BatchAdvancesRevisionOnceForAllStartedAttacks`, `AllBatchEventsShareResultingRevision` |
 | Enemy attacks start in deterministic order | `AttacksStartInAscendingEnemyIdOrder` |
+| An accepted position leaves the ground plane | `TravelOffGroundPlaneIsRejected`, `AcceptedPositionOffGroundPlaneIsRejected` |
+| Path validation is shared by all movement intents | `MovementPathPolicyTests` |
 
 ## Legacy Defect Migration Rule
 

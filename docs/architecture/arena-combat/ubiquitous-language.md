@@ -230,11 +230,19 @@ A three-dimensional domain position expressed in the Arena coordinate system.
 
 The current Arena uses Y as the vertical axis.
 
-### Movement Intent
+### Planar Movement Intent
 
-A desired movement produced by domain behavior before the external world resolves collisions or navigation.
+A desired planar movement expressed as source position, Direction, and requested Distance.
 
-Movement Intent is not a guarantee that movement occurred.
+The requested position is derived from these values and is never stored separately.
+
+Player movement and Enemy movement use the same Planar Movement Intent.
+
+### Movement Path Policy
+
+The domain rule that decides whether an externally accepted position lies on a Planar Movement Intent: on the ground plane, not behind the origin, not beyond the requested distance, and not laterally displaced beyond tolerance.
+
+The policy is shared by Player and Enemy movement. Actor-specific limits such as Arena Bounds are applied separately by the Arena Run.
 
 ### Movement Resolution
 

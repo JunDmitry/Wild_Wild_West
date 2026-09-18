@@ -5,6 +5,7 @@ using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Movement;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
 
@@ -59,6 +60,8 @@ namespace Game.Arena.Domain.Tests.Support
                 Distance.FromValue(2f),
                 new GameDuration(0.8d),
                 new GameDuration(0.3d)));
+
+        public MovementPathPolicy MovementPath { get; } = new MovementPathPolicy();
 
         public PlayerDefinition PlayerAt(Position3D startPosition)
         {

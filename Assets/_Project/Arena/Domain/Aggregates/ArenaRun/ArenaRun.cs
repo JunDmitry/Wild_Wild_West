@@ -10,6 +10,7 @@ using Game.Arena.Domain.Interactions;
 using Game.Arena.Domain.Interactions.Attack;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Interactions.Spawn;
+using Game.Arena.Domain.Movement;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
 
@@ -21,6 +22,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private readonly EnemyCatalog _enemyCatalog;
         private readonly WaveCatalog _waveCatalog;
         private readonly WeaponCatalog _weaponCatalog;
+        private readonly MovementPathPolicy _movementPathPolicy;
 
         private readonly Player _player;
         private readonly Dictionary<EnemyId, Enemy> _enemies;
@@ -39,7 +41,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             ArenaDefinition runArenaDefinition,
             WeaponCatalog runWeaponCatalog,
             EnemyCatalog runEnemyCatalog,
-            WaveCatalog runWaveCatalog)
+            WaveCatalog runWaveCatalog,
+            MovementPathPolicy runMovementPathPolicy)
         {
             if (id.IsNone)
             {
@@ -76,6 +79,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new ArgumentNullException(nameof(runWaveCatalog));
             }
 
+            if (runMovementPathPolicy == null)
+            {
+                throw new ArgumentNullException(nameof(runMovementPathPolicy));
+            }
+
             ArenaBounds bounds = runArenaDefinition.Bounds;
 
             if (bounds.CanContain(runPlayer.CollisionRadius) == false)
@@ -100,6 +108,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _weaponCatalog = runWeaponCatalog;
             _enemyCatalog = runEnemyCatalog;
             _waveCatalog = runWaveCatalog;
+            _movementPathPolicy = runMovementPathPolicy;
 
             CurrentTime = new GameTimePoint(0);
         }
@@ -186,8 +195,9 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return PlayerMovementRequestOutcome.PositionUnchanged;
             }
 
+            PlanarMovementIntent intent = new(_player.Position, direction, pemittedDistance);
             InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.PlayerMovement, Revision);
-            _pendingMovementRequest = new(correlation, _player.Position, direction, pemittedDistance, _player.CollisionRadius);
+            _pendingMovementRequest = new(correlation, intent, _player.CollisionRadius);
 
             return PlayerMovementRequestOutcome.Requested(_pendingMovementRequest);
         }
@@ -679,25 +689,27 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)
         {
-            float tolerance = GeometryTolerance.MovementPathTolerance;
-            Displacement3D travel = acceptedPosition - pendingMovementRequest.From;
-            float along = travel.Dot(pendingMovementRequest.Direction);
+            MovementPathVerdict verdict = _movementPathPolicy.Validate(pendingMovementRequest.Intent, acceptedPosition);
 
-            if (along < -tolerance)
+            switch (verdict)
             {
-                return PlayerMovementResolutionRejectionReason.AcceptedPositionBehindRequest;
-            }
+                case MovementPathVerdict.Accepted:
+                    break;
 
-            if (along > pendingMovementRequest.RequestedDistance.Value + tolerance)
-            {
-                return PlayerMovementResolutionRejectionReason.AcceptedPositionBeyondRequestedDistance;
-            }
+                case MovementPathVerdict.OffGroundPlane:
+                    return PlayerMovementResolutionRejectionReason.AcceptedPositionOffGroundPlane;
 
-            float lateralSquared = travel.LengthSquared - (along * along);
+                case MovementPathVerdict.BehindOrigin:
+                    return PlayerMovementResolutionRejectionReason.AcceptedPositionBehindRequest;
 
-            if (lateralSquared > tolerance * tolerance)
-            {
-                return PlayerMovementResolutionRejectionReason.AcceptedPositionOffMovementPath;
+                case MovementPathVerdict.BeyondRequestedDistance:
+                    return PlayerMovementResolutionRejectionReason.AcceptedPositionBeyondRequestedDistance;
+
+                case MovementPathVerdict.OffMovementPath:
+                    return PlayerMovementResolutionRejectionReason.AcceptedPositionOffMovementPath;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(verdict));
             }
 
             if (_arenaDefinition.Bounds.Contains(acceptedPosition, _player.CollisionRadius) == false)

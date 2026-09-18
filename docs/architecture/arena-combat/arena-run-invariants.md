@@ -120,7 +120,7 @@ INV-084: A rejected Interaction Resolution, including a resolution with an inval
 
 INV-085: Cancelling a pending Interaction does not advance AggregateRevision and does not produce Domain Events.
 
-INV-086: An accepted Player position must lie on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance.
+INV-076: An accepted position for any Planar Movement Intent must lie on the ground plane and on the requested movement path: not behind the origin, not beyond the requested distance, and not laterally displaced beyond geometric tolerance. This rule is owned by the Movement Path Policy and applies to Player and Enemy movement alike.
 
 INV-087: The external world may shorten a requested movement but cannot extend, redirect, or relocate it.
 

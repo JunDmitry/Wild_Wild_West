@@ -1,6 +1,7 @@
 ﻿using System;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Interactions.Contracts;
+using Game.Arena.Domain.Movement;
 
 namespace Game.Arena.Domain.Interactions.Movement
 {
@@ -8,9 +9,7 @@ namespace Game.Arena.Domain.Interactions.Movement
     {
         public PlayerMovementRequest(
             InteractionCorrelation correlation,
-            Position3D from,
-            Direction3D direction,
-            Distance requestedDistance,
+            PlanarMovementIntent intent,
             CollisionRadius collisionRadius)
         {
             if (correlation.ArenaRunId.IsNone)
@@ -23,19 +22,9 @@ namespace Game.Arena.Domain.Interactions.Movement
                 throw new ArgumentException("InteractionId cannot be None.", nameof(correlation));
             }
 
-            if (direction.IsValid == false)
+            if (intent.IsValid == false)
             {
-                throw new ArgumentException("Direction is invalid.", nameof(direction));
-            }
-
-            if (direction.Y != 0f)
-            {
-                throw new ArgumentException("Player movement is planar.", nameof(direction));
-            }
-
-            if (requestedDistance.IsZero)
-            {
-                throw new ArgumentOutOfRangeException(nameof(requestedDistance));
+                throw new ArgumentException("Movement intent is invalid.", nameof(intent));
             }
 
             if (collisionRadius.IsValid == false)
@@ -44,26 +33,24 @@ namespace Game.Arena.Domain.Interactions.Movement
             }
 
             Correlation = correlation;
-            From = from;
-            Direction = direction;
-            RequestedDistance = requestedDistance;
+            Intent = intent;
             CollisionRadius = collisionRadius;
         }
 
         public InteractionCorrelation Correlation { get; }
-        public InteractionKind Kind => InteractionKind.PlayerMovement;
-        public Position3D From { get; }
-        public Direction3D Direction { get; }
-        public Distance RequestedDistance { get; }
-        public Position3D RequestedPosition => From.MovedAlong(Direction, RequestedDistance);
+        public PlanarMovementIntent Intent { get; }
         public CollisionRadius CollisionRadius { get; }
+
+        public InteractionKind Kind => InteractionKind.PlayerMovement;
+        public Position3D From => Intent.From;
+        public Direction3D Direction => Intent.Direction;
+        public Distance RequestedDistance => Intent.RequestedDistance;
+        public Position3D RequestedPosition => Intent.RequestedPosition;
 
         public bool Equals(PlayerMovementRequest other)
         {
             return Correlation.Equals(other.Correlation)
-                && From.Equals(other.From)
-                && Direction.Equals(other.Direction)
-                && RequestedDistance.Equals(other.RequestedDistance)
+                && Intent.Equals(other.Intent)
                 && CollisionRadius.Equals(other.CollisionRadius);
         }
 
@@ -76,9 +63,7 @@ namespace Game.Arena.Domain.Interactions.Movement
         {
             return HashCode.Combine(
                 Correlation,
-                From,
-                Direction,
-                RequestedDistance,
+                Intent,
                 CollisionRadius);
         }
 

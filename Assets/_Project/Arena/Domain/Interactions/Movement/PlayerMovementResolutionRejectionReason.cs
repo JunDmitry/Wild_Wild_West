@@ -12,5 +12,6 @@
         AcceptedPositionBeyondRequestedDistance = 7,
         AcceptedPositionOffMovementPath = 8,
         AcceptedPositionOutsideArena = 9,
+        AcceptedPositionOffGroundPlane = 10,
     }
 }

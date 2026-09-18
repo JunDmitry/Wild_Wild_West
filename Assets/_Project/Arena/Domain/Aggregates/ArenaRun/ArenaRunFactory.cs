@@ -1,11 +1,19 @@
 ﻿using System;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Identity;
+using Game.Arena.Domain.Movement;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRunFactory
     {
+        private readonly MovementPathPolicy _movementPathPolicy;
+
+        public ArenaRunFactory(MovementPathPolicy movementPathPolicy = null)
+        {
+            _movementPathPolicy = movementPathPolicy ?? new MovementPathPolicy();
+        }
+
         public ArenaRun Start(
             ArenaRunId arenaRunId,
             PlayerId playerId,
@@ -57,7 +65,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 arenaDefinition,
                 weaponCatalog,
                 enemyCatalog,
-                waveCatalog);
+                waveCatalog,
+                _movementPathPolicy);
         }
     }
 }
