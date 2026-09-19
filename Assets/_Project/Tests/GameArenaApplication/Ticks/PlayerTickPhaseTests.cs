@@ -30,7 +30,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit = new TickTestKit();
             _movement = new ScriptedPlayerMovementResolver();
             _targeting = new ScriptedTargetingResolver();
-            _phase = new PlayerTickPhase(_movement, _targeting);
+            _phase = new PlayerTickPhase(_movement, _targeting, new PendingInteractionTracker());
             _recorder = new ArenaRunTickRecorder();
         }
 

@@ -103,7 +103,9 @@ A rejected external resolution stops further processing of the step and leaves i
 
 The next-step cancellation procedure is implemented in T-3.4.
 
-Adapter exceptions propagate. Preservation of already produced events across an exceptional exit must be addressed in T-3.4 before the coordinator is considered production-ready.
+Adapter exceptions propagate as ArenaRunTickFailedException. The exception carries a partial tick result containing Domain Events produced before the failure. Callers must deliver the partial result to notification consumers before handling the failure.
+
+An interaction left pending by a failed or rejected step is cancelled at the beginning of the next step with the SupersededByLifecycle reason.
 
 ## Deferred Work
 

@@ -13,15 +13,18 @@ namespace Game.Arena.Application.Ticks.Stages
         private readonly IEnemySpawnPlacementResolver _placementResolver;
         private readonly IEnemyIdSource _enemyIdSource;
         private readonly IEnemySpawnPacingPolicy _enemySpawnPacing;
+        private readonly PendingInteractionTracker _interactionTracker;
 
         public EnemySpawnStage(
             IEnemySpawnPlacementResolver placementResolver,
             IEnemyIdSource enemyIdSource,
-            IEnemySpawnPacingPolicy enemySpawnPacing)
+            IEnemySpawnPacingPolicy enemySpawnPacing,
+            PendingInteractionTracker interactionTracker)
         {
             _placementResolver = placementResolver ?? throw new System.ArgumentNullException(nameof(placementResolver));
             _enemyIdSource = enemyIdSource ?? throw new System.ArgumentNullException(nameof(enemyIdSource));
             _enemySpawnPacing = enemySpawnPacing ?? throw new System.ArgumentNullException(nameof(enemySpawnPacing));
+            _interactionTracker = interactionTracker ?? throw new System.ArgumentNullException(nameof(interactionTracker));
         }
 
         public StageExecutionStatus Execute(
@@ -42,6 +45,7 @@ namespace Game.Arena.Application.Ticks.Stages
             }
 
             EnemySpawnRequest request = requestOutcome.Request;
+            _interactionTracker.Track(request.Correlation);
             Position3D spawnPosition = _placementResolver.ResolveSpawnPosition(request);
             EnemyId enemyId = _enemyIdSource.Allocate();
             EnemySpawnResolution spawnResolution = new(
@@ -57,6 +61,7 @@ namespace Game.Arena.Application.Ticks.Stages
                 return StageExecutionStatus.InteractionLeftPending;
             }
 
+            _interactionTracker.Clear();
             _enemySpawnPacing.RecordSuccessfulSpawn(run.CurrentTime);
 
             return StageExecutionStatus.Completed;

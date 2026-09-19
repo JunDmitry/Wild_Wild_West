@@ -44,7 +44,8 @@ namespace Game.Arena.Application.Tests.Ticks
                 _movement,
                 _spawnPlacement,
                 _enemyIdSource,
-                _pacing);
+                _pacing,
+                new PendingInteractionTracker());
         }
 
         [Test]

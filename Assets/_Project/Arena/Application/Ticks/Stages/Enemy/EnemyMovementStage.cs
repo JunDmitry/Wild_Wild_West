@@ -9,10 +9,12 @@ namespace Game.Arena.Application.Ticks.Stages
     internal sealed class EnemyMovementStage
     {
         private readonly IEnemyMovementResolver _resolver;
+        private readonly PendingInteractionTracker _interactionTracker;
 
-        public EnemyMovementStage(IEnemyMovementResolver resolver)
+        public EnemyMovementStage(IEnemyMovementResolver resolver, PendingInteractionTracker interactionTracker)
         {
             _resolver = resolver ?? throw new System.ArgumentNullException(nameof(resolver));
+            _interactionTracker = interactionTracker ?? throw new System.ArgumentNullException(nameof(interactionTracker));
         }
 
         public StageExecutionStatus Execute(
@@ -30,6 +32,7 @@ namespace Game.Arena.Application.Ticks.Stages
             }
 
             EnemyMovementBatchRequest request = requestOutcome.Request;
+            _interactionTracker.Track(request.Correlation);
             IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = _resolver.Resolve(request);
 
             if (entries == null)
@@ -46,6 +49,8 @@ namespace Game.Arena.Application.Ticks.Stages
             {
                 return StageExecutionStatus.InteractionLeftPending;
             }
+
+            _interactionTracker.Clear();
 
             return StageExecutionStatus.Completed;
         }

@@ -17,12 +17,13 @@ namespace Game.Arena.Application.Ticks.Stages
             IEnemyMovementResolver enemyMovementResolver,
             IEnemySpawnPlacementResolver placementResolver,
             IEnemyIdSource enemyIdSource,
-            IEnemySpawnPacingPolicy spawnPacingPolicy)
+            IEnemySpawnPacingPolicy spawnPacingPolicy,
+            PendingInteractionTracker interactionTracker)
         {
-            _movementStage = new(enemyMovementResolver);
+            _movementStage = new(enemyMovementResolver, interactionTracker);
             _enemyAttackStartStage = new();
             _enemyAttackImpactStage = new();
-            _enemySpawnStage = new(placementResolver, enemyIdSource, spawnPacingPolicy);
+            _enemySpawnStage = new(placementResolver, enemyIdSource, spawnPacingPolicy, interactionTracker);
         }
 
         public StageExecutionStatus Execute(

@@ -295,3 +295,13 @@ INV-206: Enemy identity is allocated only after ArenaRun reports a due spawn and
 INV-207: Spawn is skipped when the pacing policy does not permit an attempt and when ArenaRun became terminal during enemy attack impacts.
 
 INV-208: A successful spawn is recorded in the pacing policy; a rejected spawn does not consume the interval.
+
+INV-209: A gameplay step begins with pending interaction recovery; an interaction left pending by a previous step is cancelled with SupersededByLifecycle before any gameplay stage runs.
+
+INV-210: Application tracks the correlation of the last opened interaction request and clears it when the resolution is accepted or the interaction is cancelled.
+
+INV-211: A pending interaction without a tracked correlation, or a correlation that the aggregate rejects, is an Application error and propagates as an exception.
+
+INV-212: When a stage fails, Domain Events already produced during the step are preserved and delivered as a partial tick result.
+
+INV-213: Time advance is skipped for a non-positive delta and for a terminal ArenaRun; a zero delta is never passed to AdvanceTime.

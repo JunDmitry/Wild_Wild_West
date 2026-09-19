@@ -292,6 +292,16 @@ The Application sequence of enemy movement, enemy attack start, enemy attack imp
 
 The Application rule that decides whether a spawn attempt is permitted at the current Game Time. It observes the schedule without consuming an opportunity and records only successful spawns.
 
+### Pending Interaction Recovery
+
+The first stage of a gameplay step. It cancels an interaction left pending by a previous step so that the aggregate can accept new requests.
+
+Recovery produces no Domain Events and does not advance Aggregate Revision.
+
+### Partial Tick Result
+
+The tick result built from Domain Events produced before a step failed. It is carried by the tick failure and must still be delivered to notification consumers.
+
 ## Identity Terms
 
 ### ArenaRunId

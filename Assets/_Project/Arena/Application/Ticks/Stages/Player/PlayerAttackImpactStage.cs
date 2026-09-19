@@ -11,10 +11,12 @@ namespace Game.Arena.Application.Ticks.Stages
     internal sealed class PlayerAttackImpactStage
     {
         private readonly IPlayerAttackTargetingResolver _resolver;
+        private readonly PendingInteractionTracker _interactionTracker;
 
-        public PlayerAttackImpactStage(IPlayerAttackTargetingResolver resolver)
+        public PlayerAttackImpactStage(IPlayerAttackTargetingResolver resolver, PendingInteractionTracker interactionTracker)
         {
             _resolver = resolver ?? throw new System.ArgumentNullException(nameof(resolver));
+            _interactionTracker = interactionTracker ?? throw new System.ArgumentNullException(nameof(interactionTracker));
         }
 
         public StageExecutionStatus Execute(
@@ -32,6 +34,7 @@ namespace Game.Arena.Application.Ticks.Stages
             }
 
             PlayerAttackImpactRequest request = impactRequestOutcome.Request;
+            _interactionTracker.Track(request.Correlation);
             IReadOnlyList<EnemyId> hitEnemies = _resolver.Resolve(request);
 
             if (hitEnemies == null)
@@ -48,6 +51,8 @@ namespace Game.Arena.Application.Ticks.Stages
             {
                 return StageExecutionStatus.InteractionLeftPending;
             }
+
+            _interactionTracker.Clear();
 
             return StageExecutionStatus.Completed;
         }

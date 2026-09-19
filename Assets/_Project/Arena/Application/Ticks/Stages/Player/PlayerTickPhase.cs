@@ -13,12 +13,12 @@ namespace Game.Arena.Application.Ticks
         private readonly PlayerAttackStartStage _attackStart;
         private readonly PlayerAttackImpactStage _attackImpact;
 
-        public PlayerTickPhase(IPlayerMovementResolver movementResolver, IPlayerAttackTargetingResolver targetingResolver)
+        public PlayerTickPhase(IPlayerMovementResolver movementResolver, IPlayerAttackTargetingResolver targetingResolver, PendingInteractionTracker interactionTracker)
         {
             _weaponSwitch = new();
-            _movement = new(movementResolver);
+            _movement = new(movementResolver, interactionTracker);
             _attackStart = new();
-            _attackImpact = new(targetingResolver);
+            _attackImpact = new(targetingResolver, interactionTracker);
         }
 
         public StageExecutionStatus Execute(

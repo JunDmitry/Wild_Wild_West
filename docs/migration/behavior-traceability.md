@@ -44,6 +44,10 @@
 | Spawned enemy does not act in the same tick | `SpawnedEnemyDoesNotActInTheSameTick` |
 | Enemy identity is allocated only for a requested spawn | `SpawnAllocatesIdentityOnlyAfterDomainRequest` |
 | Defeat during impacts skips spawn | `SpawnIsSkippedWhenPlayerIsDefeatedDuringImpacts` |
+| Pending interaction is cancelled at next step start | `PendingInteractionIsCancelledAndStageIsRecorded` |
+| Recovery produces no events and no revision change | `CancellationProducesNoEventsAndNoRevisionChange` |
+| Events before an adapter failure are retained | `EventsBeforeFailureAreRetainedInRecorder` |
+| Adapter failure leaves interaction for next-step recovery | `FailureLeavesInteractionPendingForNextStepRecovery` |
 
 ## Legacy Defect Migration Rule
 
