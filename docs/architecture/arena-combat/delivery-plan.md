@@ -78,7 +78,7 @@ Delivered:
 
 ### T-2. Repository and Application Identity Integration
 
-Status: In Progress
+Status: Completed
 
 Goal:
 
@@ -89,8 +89,8 @@ Substages:
 - T-2.1: Define IArenaRunRepository in Domain. — Completed
 - T-2.2: Define IArenaRunIdSource, IPlayerIdSource, and IEnemyIdSource in Application. — Completed
 - T-2.3: Implement InMemoryArenaRunRepository in Infrastructure. — Completed
-- T-2.4: Implement ArenaRunSession in Application. — In Progress
-- T-2.5: Add repository and session tests. — Planned
+- T-2.4: Implement ArenaRunSession in Application. — Completed
+- T-2.5: Add repository and session tests. — Completed
 
 Exit criteria:
 
@@ -228,7 +228,7 @@ Connect BootstrapScene, ArenaScene, Application Session, Repository, Unity adapt
 
 Substages:
 
-- T-8.1: Bootstrap Composition Root.
+- T-8.1: Bootstrap Composition Root with VContainer LifetimeScope.
 - T-8.2: ArenaScene binder.
 - T-8.3: ArenaRun creation flow.
 - T-8.4: Defeat delay and ArenaScene reload.

@@ -12,7 +12,7 @@
 | B-008 Wave Progression | Implemented in Domain | `DefeatingLastRegularEnemyRaisesWavePhaseChangedToBossCombat`, `DefeatingBossCompletesWave`, `CompletingNonFinalWaveStartsNextWave` |
 | B-009 Victory | Implemented in Domain | `DefeatingFinalBossCompletesRun`, `VictoriousRunRejectsFurtherCombatProgression` |
 | B-010 Defeat | Implemented in Domain | `LethalEnemyAttackDefeatsPlayer`, `LethalEnemyAttackDefeatsArenaRun`, `DefeatedRunRejectsFurtherCombatProgression` |
-| B-011 Restart | Planned in Application | `DefeatDelayRequestsArenaReload`, `ReloadCreatesNewArenaRunAtFirstWave` |
+| B-011 Restart | Planned in Application | `RestartOfDefeatedRunAllocatesNewIdentities`, `RestartOfDefeatedRunRemovesOldAggregate`, `RestartOfDefeatedRunAddsNewAggregate`, `RestartOfDefeatedRunChangesActiveArenaRunId`, `ReloadCreatesNewArenaRunAtFirstWave` |
 
 ## Interaction Correlation Coverage
 

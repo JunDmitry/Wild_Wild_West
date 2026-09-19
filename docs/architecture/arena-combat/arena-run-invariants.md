@@ -265,3 +265,13 @@ INV-180: A rejected initial run start does not allocate ArenaRunId or PlayerId.
 INV-181: A successfully started initial run is added to the repository before it becomes the active run.
 
 INV-182: The active ArenaRun is accessible only to Application collaborators through an internal accessor; it is not part of the public Application API.
+
+INV-183: Restarting a run requires the active ArenaRun to exist and have status Defeat. Restart is rejected if the active run is Playing or Victorious.
+
+INV-184: A successful restart allocates new ArenaRunId and PlayerId, adds the new ArenaRun to the repository, removes the previous ArenaRun from the repository, and updates ActiveArenaRunId.
+
+INV-185: If adding the new ArenaRun fails, the previous ArenaRun remains in the repository and ActiveArenaRunId remains unchanged.
+
+INV-186: If removing the previous ArenaRun fails after the new ArenaRun was added, the new ArenaRun is removed as a compensating action, an exception is thrown, and ActiveArenaRunId remains unchanged.
+
+INV-187: Allocated identities are never reused, even after a failed restart attempt.

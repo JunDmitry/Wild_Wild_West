@@ -268,6 +268,14 @@ The session exposes only ActiveArenaRunId and HasActiveRun publicly. Access to t
 
 The Application operation that creates the first ArenaRun of a session. It is rejected if an active ArenaRun already exists.
 
+### Defeated Run Restart
+
+The Application operation that replaces a defeated ArenaRun with a new one at Wave 1.
+
+The previous defeated run is removed from the repository, and new ArenaRunId and PlayerId are allocated.
+
+Defeated Run Restart is rejected if the active run is still Playing or has reached Victory.
+
 ## Identity Terms
 
 ### ArenaRunId

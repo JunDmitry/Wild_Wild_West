@@ -10,8 +10,19 @@ namespace Game.Arena.Application.Tests.Sessions
     {
         private readonly Dictionary<ArenaRunId, ArenaRun> _runs = new();
 
+        public bool FailOnAdd { get; set; }
+
+        public bool FailOnRemove { get; set; }
+
+        public bool NextFail { get; set; }
+
         public void Add(ArenaRun arenaRun)
         {
+            if (FailOnAdd)
+            {
+                throw new InvalidOperationException("Simulated repository Add failure.");
+            }
+
             if (arenaRun == null)
             {
                 throw new ArgumentNullException(nameof(arenaRun));
@@ -32,6 +43,12 @@ namespace Game.Arena.Application.Tests.Sessions
 
         public bool Remove(ArenaRunId id)
         {
+            if (FailOnRemove || NextFail)
+            {
+                NextFail = false;
+                return false;
+            }
+
             return _runs.Remove(id);
         }
     }
