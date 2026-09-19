@@ -275,3 +275,15 @@ INV-185: If adding the new ArenaRun fails, the previous ArenaRun remains in the 
 INV-186: If removing the previous ArenaRun fails after the new ArenaRun was added, the new ArenaRun is removed as a compensating action, an exception is thrown, and ActiveArenaRunId remains unchanged.
 
 INV-187: Allocated identities are never reused, even after a failed restart attempt.
+
+## Application Tick
+
+INV-200: Application constructs each Interaction Resolution from the correlation of the Domain request it resolves; adapters never construct resolutions.
+
+INV-201: Player stages execute in the order weapon switch, movement, attack start, attack impact; a rejected external resolution stops the remaining player stages of the step.
+
+INV-202: Application does not decide whether movement or attack impact is needed; it always asks ArenaRun and acts only on a returned request.
+
+INV-203: A null result from an external resolver is an adapter failure and propagates as an exception; it is never interpreted as a miss or blocked movement.
+
+INV-204: Player stages are skipped entirely when ArenaRun is terminal.

@@ -111,7 +111,7 @@ Coordinate existing ArenaRun operations and resolve external interactions withou
 Substages:
 
 - T-3.1: PlayerFrameInput, granular ports, spawn pacing contract, tick result contract, and stage order. — Completed
-- T-3.2: Player movement and Player attack stages. — Planned
+- T-3.2: Player movement and Player attack stages. — Completed
 - T-3.3: Enemy movement and spawn stages; FixedIntervalSpawnPacingPolicy. — Planned
 - T-3.4: Interrupted-step recovery, interaction cancellation, and error handling. — Planned
 - T-3.5: Complete ArenaRunTickCoordinator and ordered-step tests. — Planned

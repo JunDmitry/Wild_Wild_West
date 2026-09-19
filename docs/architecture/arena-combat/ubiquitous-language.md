@@ -276,6 +276,14 @@ The previous defeated run is removed from the repository, and new ArenaRunId and
 
 Defeated Run Restart is rejected if the active run is still Playing or has reached Victory.
 
+### Player Tick Phase
+
+The Application sequence of weapon switch, movement, attack start, and attack impact stages executed for the Player within one gameplay step.
+
+### Tick Recorder
+
+The Application collector of Domain Events and executed stages of one gameplay step, from which the tick result is built.
+
 ## Identity Terms
 
 ### ArenaRunId

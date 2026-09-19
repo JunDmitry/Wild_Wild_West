@@ -62,6 +62,8 @@ An empty targeting result is a legitimate miss.
 
 An adapter failure must not be converted silently into a miss or successful blocked movement.
 
+Player stages are implemented as internal Application collaborators composed by PlayerTickPhase. They are not public API and are not invoked by Presentation or CompositionRoot directly.
+
 ## Spawn Pacing
 
 IEnemySpawnPacingPolicy belongs to Application.
