@@ -256,6 +256,18 @@ It is not an ORM, persistence session, unit of work, query engine, or snapshot s
 
 The repository returns the managed aggregate reference. Aggregate mutations are performed only through ArenaRun's public API.
 
+### Arena Run Session
+
+The Application service that owns which ArenaRunId is currently active.
+
+The session does not own Player, Enemy, or Wave state directly; it delegates aggregate state to the repository.
+
+The session exposes only ActiveArenaRunId and HasActiveRun publicly. Access to the mutable ArenaRun aggregate is internal to the Application layer.
+
+### Initial Run Start
+
+The Application operation that creates the first ArenaRun of a session. It is rejected if an active ArenaRun already exists.
+
 ## Identity Terms
 
 ### ArenaRunId

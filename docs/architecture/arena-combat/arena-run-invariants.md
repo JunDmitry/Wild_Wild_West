@@ -255,3 +255,13 @@ INV-170: IArenaRunRepository is a collection-like contract for ArenaRun aggregat
 INV-171: Adding an ArenaRun with an already present ArenaRunId is an orchestrator programming error and is signalled as an exception rather than a rejected operation.
 
 INV-172: Mutations applied to an ArenaRun retrieved from the repository are visible through any other reference to the same instance without a separate write operation.
+
+## Application Session
+
+INV-180: An initial ArenaRun cannot be started while an active ArenaRun already exists for the session.
+
+INV-180: A rejected initial run start does not allocate ArenaRunId or PlayerId.
+
+INV-181: A successfully started initial run is added to the repository before it becomes the active run.
+
+INV-182: The active ArenaRun is accessible only to Application collaborators through an internal accessor; it is not part of the public Application API.
