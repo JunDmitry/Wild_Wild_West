@@ -39,6 +39,11 @@
 | Application builds resolutions from the saved request correlation | `ResolutionIsBuiltFromTheSavedRequestCorrelation` |
 | Rejected player resolution stops remaining player stages | `RejectedMovementResolutionLeavesInteractionPendingAndStopsPhase` |
 | Null adapter result propagates as failure | `NullTargetingResultThrows` |
+| Enemy movement precedes enemy attack start | `EnemyMovementPrecedesEnemyAttackStart`, `EnemyReachingRangeStartsAttackInSameTick` |
+| Spawn respects Application pacing | `SpawnIsSkippedWhenPacingPolicyBlocks`, `SpawnResumesAfterIntervalElapsed` |
+| Spawned enemy does not act in the same tick | `SpawnedEnemyDoesNotActInTheSameTick` |
+| Enemy identity is allocated only for a requested spawn | `SpawnAllocatesIdentityOnlyAfterDomainRequest` |
+| Defeat during impacts skips spawn | `SpawnIsSkippedWhenPlayerIsDefeatedDuringImpacts` |
 
 ## Legacy Defect Migration Rule
 

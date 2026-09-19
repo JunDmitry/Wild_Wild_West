@@ -284,6 +284,14 @@ The Application sequence of weapon switch, movement, attack start, and attack im
 
 The Application collector of Domain Events and executed stages of one gameplay step, from which the tick result is built.
 
+### Enemy Tick Phase
+
+The Application sequence of enemy movement, enemy attack start, enemy attack impact, and enemy spawn stages executed within one gameplay step.
+
+### Spawn Pacing Policy
+
+The Application rule that decides whether a spawn attempt is permitted at the current Game Time. It observes the schedule without consuming an opportunity and records only successful spawns.
+
 ## Identity Terms
 
 ### ArenaRunId

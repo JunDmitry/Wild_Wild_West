@@ -78,6 +78,25 @@ namespace Game.Arena.Application.Tests.Ticks
             run.ResolveDueEnemyAttackImpacts();
         }
 
+        public ArenaRun StartCompactRun(int playerHealth, int regularEnemiesInFirstWave)
+        {
+            ArenaRunCreationParameters compact = new(
+                new ArenaDefinition(
+                    new ArenaBounds(-1f, 1f, -1f, 1f, 0f),
+                    Distance.FromValue(5f)),
+                _standardParameters.PlayerDefinition,
+                _standardParameters.WeaponCatalog,
+                _standardParameters.EnemyCatalog,
+                new WaveCatalog(
+                    new[]
+                    {
+                        new WaveDefinition(WaveNumber.First, regularEnemiesInFirstWave),
+                        new WaveDefinition(WaveNumber.First.Next(), 1),
+                    }));
+
+            return Start(compact, playerHealth);
+        }
+
         private ArenaRun Start(ArenaRunCreationParameters parameters, int playerHealth)
         {
             PlayerDefinition player = new(

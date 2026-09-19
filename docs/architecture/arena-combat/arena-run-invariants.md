@@ -287,3 +287,11 @@ INV-202: Application does not decide whether movement or attack impact is needed
 INV-203: A null result from an external resolver is an adapter failure and propagates as an exception; it is never interpreted as a miss or blocked movement.
 
 INV-204: Player stages are skipped entirely when ArenaRun is terminal.
+
+INV-205: Enemy stages execute in the order movement, attack start, attack impact, spawn; a rejected movement batch stops the remaining enemy stages of the step.
+
+INV-206: Enemy identity is allocated only after ArenaRun reports a due spawn and after the placement resolver returns a position.
+
+INV-207: Spawn is skipped when the pacing policy does not permit an attempt and when ArenaRun became terminal during enemy attack impacts.
+
+INV-208: A successful spawn is recorded in the pacing policy; a rejected spawn does not consume the interval.
