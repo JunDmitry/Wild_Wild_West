@@ -244,6 +244,18 @@ An immutable statement that a meaningful Arena Combat fact already occurred.
 
 An Application-level representation of committed Domain Events for Presentation, audio, VFX, analytics, or lifecycle handling.
 
+### Arena Run Repository
+
+The Domain-owned collection abstraction over ArenaRun aggregate roots.
+
+The current runtime implementation is an in-memory Infrastructure adapter.
+
+The repository supports adding an ArenaRun, retrieving one by ArenaRunId, and removing one by ArenaRunId.
+
+It is not an ORM, persistence session, unit of work, query engine, or snapshot store.
+
+The repository returns the managed aggregate reference. Aggregate mutations are performed only through ArenaRun's public API.
+
 ## Identity Terms
 
 ### ArenaRunId
