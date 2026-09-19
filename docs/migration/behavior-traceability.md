@@ -48,6 +48,14 @@
 | Recovery produces no events and no revision change | `CancellationProducesNoEventsAndNoRevisionChange` |
 | Events before an adapter failure are retained | `EventsBeforeFailureAreRetainedInRecorder` |
 | Adapter failure leaves interaction for next-step recovery | `FailureLeavesInteractionPendingForNextStepRecovery` |
+| Tick advances time before gameplay stages | `TickAdvancesGameTimeFirst` |
+| Tick result preserves event order | `TickContainsEventsInOccurrenceOrder` |
+| Tick result revision equals aggregate revision | `TickResultRevisionMatchesAggregateRevision` |
+| Terminal run skips combat stages | `TerminalRunDoesNotExecuteCombatStages` |
+| Rejected resolution stops remaining player stages | `RejectedMovementResolutionStopsTickBeforeAttackStart` |
+| Pending interaction is recovered at next tick | `PendingInteractionIsRecoveredAtBeginningOfNextTick` |
+| Adapter exception carries partial tick result | `NullTargetingResultProducesTickFailure` |
+| Player stages run before enemy stages | `PlayerAttackStartsBeforeEnemyStages` |
 
 ## Legacy Defect Migration Rule
 

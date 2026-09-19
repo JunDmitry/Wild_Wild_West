@@ -305,3 +305,13 @@ INV-211: A pending interaction without a tracked correlation, or a correlation t
 INV-212: When a stage fails, Domain Events already produced during the step are preserved and delivered as a partial tick result.
 
 INV-213: Time advance is skipped for a non-positive delta and for a terminal ArenaRun; a zero delta is never passed to AdvanceTime.
+
+INV-214: A successful tick executes recovery, time advance, Player phase, and Enemy phase in the fixed Application order.
+
+INV-215: A tick result contains all Domain Events produced by completed aggregate operations in their occurrence order.
+
+INV-216: ArenaRunTickCoordinator does not publish Domain Events or Application Notifications.
+
+INV-217: A terminal ArenaRun stops remaining combat stages of the current tick.
+
+INV-218: An adapter exception is exposed as ArenaRunTickFailedException with the partial tick result and original exception.

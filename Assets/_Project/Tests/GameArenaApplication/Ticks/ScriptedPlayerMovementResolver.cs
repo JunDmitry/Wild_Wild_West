@@ -11,6 +11,7 @@ namespace Game.Arena.Application.Tests.Ticks
             AcceptRequested = 0,
             StayAtOrigin = 1,
             ReturnFixed = 2,
+            ThrowError = 3,
         }
 
         public ResolveMode Mode { get; set; }
@@ -34,6 +35,11 @@ namespace Game.Arena.Application.Tests.Ticks
             if (Mode == ResolveMode.ReturnFixed)
             {
                 return FixedPosition;
+            }
+
+            if (Mode == ResolveMode.ThrowError)
+            {
+                throw new System.ArgumentException();
             }
 
             return request.Intent.RequestedPosition;

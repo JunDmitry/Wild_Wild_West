@@ -25,25 +25,25 @@ A zero delta must not be passed to ArenaRun.AdvanceTime.
 
 ## Stage Order
 
-Before normal gameplay stages, the coordinator handles an unfinished interaction from a previously interrupted step according to the cancellation policy.
+Before every normal tick, Pending Interaction Recovery runs.
 
 Normal gameplay order:
 
 1. Advance Game Time.
-2. Apply the Player weapon-switch request.
-3. Request, resolve, and apply Player movement.
-4. Apply the Player attack-start request.
-5. Request, resolve, and apply Player attack impact when Domain reports it due.
-6. Request, resolve, and apply the Enemy movement batch.
+2. Apply Player weapon switching.
+3. Resolve and apply Player movement.
+4. Start a requested Player attack.
+5. Resolve a due Player attack impact.
+6. Resolve and apply Enemy movement batch.
 7. Start eligible Enemy attacks.
 8. Resolve due Enemy attack impacts.
-9. Attempt Enemy spawn when Application pacing permits it.
+9. Attempt Enemy spawn according to Application pacing.
 
-The coordinator stops further combat stages when ArenaRun becomes terminal.
+A rejected interaction resolution ends the current tick after recording the operation result.
 
-An Enemy spawned at stage 9 does not move or attack earlier in the same tick.
+A terminal ArenaRun ends the current tick before later combat stages.
 
-No Player input does not imply an idle simulation.
+ArenaRunTickCoordinator returns a tick result and does not publish notifications.
 
 ## External Resolution Boundary
 
