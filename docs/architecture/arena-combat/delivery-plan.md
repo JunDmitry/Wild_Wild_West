@@ -102,34 +102,53 @@ Exit criteria:
 
 ### T-3. Application Interaction Orchestration
 
-Status: Planned
+Status: In progress
 
 Goal:
 
-Translate input and external interaction resolutions into ordered ArenaRun operations.
+Coordinate existing ArenaRun operations and resolve external interactions without duplicating Domain rules.
 
 Substages:
 
-- T-3.1: Define Application commands and operation requests.
-- T-3.2: Define narrow ports for time, input, movement, attack targeting, enemy movement, spawn placement, and scene lifecycle.
-- T-3.3: Implement sequential interaction coordinator.
-- T-3.4: Implement interaction timeout and cancellation policy.
-- T-3.5: Add Application orchestration tests.
+- T-3.1: PlayerFrameInput, granular ports, spawn pacing contract, tick result contract, and stage order. — Completed
+- T-3.2: Player movement and Player attack stages. — Planned
+- T-3.3: Enemy movement and spawn stages; FixedIntervalSpawnPacingPolicy. — Planned
+- T-3.4: Interrupted-step recovery, interaction cancellation, and error handling. — Planned
+- T-3.5: Complete ArenaRunTickCoordinator and ordered-step tests. — Planned
 
-Expected gameplay order:
+Gameplay order:
 
 1. Advance Game Time.
-2. Resolve due Player attack impacts.
-3. Resolve due Enemy attack impacts.
-4. Request and resolve Player movement.
-5. Request and resolve Player attack impact.
-6. Request and resolve Enemy movement batch.
+2. Apply Player weapon switching.
+3. Resolve and apply Player movement.
+4. Start a requested Player attack.
+5. Resolve a due Player attack impact.
+6. Resolve and apply Enemy movement.
 7. Start eligible Enemy attacks.
-8. Request enemy spawn according to Application pacing policy.
-9. Dispatch committed Domain Events.
-10. Publish a new ArenaRun snapshot.
+8. Resolve due Enemy attack impacts.
+9. Attempt Enemy spawn according to Application pacing.
 
-The exact order may be refined only through an explicit planning update or ADR.
+Interrupted-interaction recovery precedes normal gameplay stages.
+
+Terminal ArenaRun status stops further combat stages.
+
+The coordinator returns Domain Events and the final revision; it does not dispatch notifications.
+
+A tick is not a transaction over all executed aggregate operations.
+
+Detailed contract:
+
+application-tick-contract.md
+
+Exit criteria:
+
+- Application does not duplicate readiness, damage, target validity, or wave progression rules.
+- Resolutions are constructed from the matching Domain request.
+- Pending interactions cannot leak indefinitely after an interrupted step.
+- Previously committed Domain Events are not lost on an exceptional exit.
+- Spawn pacing resets for a new attempt while identity sources remain unchanged.
+- Tests verify the accepted stage order, terminal short-circuiting, rejection, and recovery behavior.
+- Domain, Application, and architecture tests are green.
 
 ### T-4. Read Models and Application Notifications
 
