@@ -947,6 +947,52 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return _player.ReadyAt(kind);
         }
 
+        public ArenaRunStateSnapshot CreateSnapshot()
+        {
+            List<EnemyStateSnapshot> enemies = new(_enemies.Count);
+            List<EnemyId> orderedIds = OrderedEnemyIds();
+
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+
+                enemies.Add(
+                    new EnemyStateSnapshot(
+                        enemy.Id,
+                        enemy.Kind,
+                        enemy.Position,
+                        enemy.Health,
+                        enemy.CollisionRadius,
+                        enemy.AttackReadyAt,
+                        enemy.PendingAttack));
+            }
+
+            PlayerStateSnapshot player = new(
+                _player.Id,
+                _player.Position,
+                _player.Health,
+                _player.SelectedWeapon,
+                _player.ReadyAt(WeaponKind.Ranged),
+                _player.ReadyAt(WeaponKind.Melee),
+                _player.PendingAttack);
+
+            WaveStateSnapshot wave = new(
+                _currentWave.Number,
+                _currentWave.Phase,
+                _currentWave.RegularEnemiesRemainingToSpawn,
+                _currentWave.BossStatus);
+
+            return new ArenaRunStateSnapshot(
+                Id,
+                Revision,
+                Status,
+                CurrentTime,
+                _arenaDefinition.Bounds,
+                player,
+                enemies,
+                wave);
+        }
+
         private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)
         {
             return reason switch

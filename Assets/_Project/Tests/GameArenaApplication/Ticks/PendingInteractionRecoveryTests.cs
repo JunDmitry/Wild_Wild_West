@@ -30,7 +30,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void NoPendingInteractionRecordsNoStage()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
 
             StageExecutionStatus status = _stage.Execute(run, _recorder);
             ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
@@ -42,7 +42,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void PendingInteractionIsCancelledAndStageIsRecorded()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerMovementRequest request = OpenMovementInteraction(run);
             _tracker.Track(request.Correlation);
 
@@ -56,7 +56,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void CancellationProducesNoEventsAndNoRevisionChange()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerMovementRequest request = OpenMovementInteraction(run);
             _tracker.Track(request.Correlation);
             AggregateRevision revisionBeforeRecovery = run.Revision;
@@ -71,7 +71,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void PendingInteractionWithoutTrackedCorrelationThrows()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             OpenMovementInteraction(run);
 
             Assert.Throws<InvalidOperationException>(
@@ -84,7 +84,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void MismatchedCorrelationThrowsAndKeepsInteractionPending()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerMovementRequest request = OpenMovementInteraction(run);
 
             _tracker.Track(
@@ -105,7 +105,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void StaleTrackerIsClearedWhenNoInteractionIsPending()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerMovementRequest request = OpenMovementInteraction(run);
             _tracker.Track(request.Correlation);
 
@@ -122,7 +122,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void RecoveredRunAcceptsNewInteractionInSameStep()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerMovementRequest first = OpenMovementInteraction(run);
             _tracker.Track(first.Correlation);
 

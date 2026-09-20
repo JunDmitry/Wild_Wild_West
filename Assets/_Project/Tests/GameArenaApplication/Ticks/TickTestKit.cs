@@ -24,7 +24,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _standardParameters = new ArenaRunCreationParametersFactory().Create();
         }
 
-        public ArenaRun StartStandardRun()
+        public ArenaRun StartStandartRun()
         {
             return Start(_standardParameters, 100);
         }

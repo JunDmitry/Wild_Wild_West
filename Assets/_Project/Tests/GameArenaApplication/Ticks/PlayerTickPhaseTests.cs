@@ -37,7 +37,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void WeaponSwitchIsAppliedBeforeAttackStart()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, true);
 
             _phase.Execute(run, input, s_delta, _recorder);
@@ -58,7 +58,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void PlayerMovementRequestIsResolvedAndApplied()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, false, false);
 
             StageExecutionStatus status = _phase.Execute(run, input, s_delta, _recorder);
@@ -72,7 +72,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void ResolutionIsBuiltFromTheSavedRequestCorrelation()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, false, false);
 
             _phase.Execute(run, input, s_delta, _recorder);
@@ -85,7 +85,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void ZeroMovementInputDoesNotCallResolver()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
 
             _phase.Execute(run, _kit.Idle(), s_delta, _recorder);
 
@@ -96,7 +96,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void BlockedMovementKeepsPositionAndClosesInteraction()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _movement.Mode = ScriptedPlayerMovementResolver.ResolveMode.StayAtOrigin;
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, false, false);
 
@@ -111,7 +111,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void RejectedMovementResolutionLeavesInteractionPendingAndStopsPhase()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _movement.Mode = ScriptedPlayerMovementResolver.ResolveMode.ReturnFixed;
             _movement.FixedPosition = new Position3D(10f, 0f, 0f);
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, true, false);
@@ -129,7 +129,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void RangedAttackStartedThisTickIsResolvedInSameTick()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             EnemyId enemyId = _kit.Spawn(run, 10UL, new Position3D(22f, 0f, 0f));
             _targeting.SetHits(enemyId);
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
@@ -148,7 +148,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void MeleeAttackImpactIsNotRequestedBeforeWindup()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, true);
 
             _phase.Execute(run, input, s_delta, _recorder);
@@ -161,7 +161,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void DueImpactUsesCurrentAimWithoutNewAttackRequest()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _phase.Execute(
                 run,
                 _kit.Input(Displacement3D.Zero, Direction3D.Right, true, true),
@@ -185,7 +185,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void MissResolutionCompletesAttack()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
 
             _phase.Execute(run, input, s_delta, _recorder);
@@ -199,7 +199,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void NullTargetingResultThrows()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _targeting.ReturnNull = true;
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
 
@@ -215,7 +215,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void RejectedImpactResolutionLeavesInteractionPending()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _targeting.SetHits(EnemyId.FromValue(777UL));
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
 
@@ -247,7 +247,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void RejectedAttackImpactLeavesInteractionPending()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
 
             _targeting.SetHits(EnemyId.FromValue(777UL));
 

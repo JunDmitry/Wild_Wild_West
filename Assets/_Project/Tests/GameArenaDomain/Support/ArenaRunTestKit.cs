@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Interactions.Spawn;
 using Game.Arena.Domain.Movement;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
@@ -176,6 +178,32 @@ namespace Game.Arena.Domain.Tests.Support
                 PlayerId.FromValue(777UL),
                 Arena,
                 PlayerAt(Position3D.Zero),
+                Enemies,
+                Weapons,
+                Waves(2, 1, 1));
+        }
+
+        public EnemyId Spawn(ArenaRun run, ulong value, Position3D position)
+        {
+            EnemySpawnRequest request = run.RequestEnemySpawn().Request;
+            EnemyId enemyId = EnemyId.FromValue(value);
+
+            run.ApplyEnemySpawn(new EnemySpawnResolution(request.Correlation, enemyId, position));
+
+            return enemyId;
+        }
+
+        public ArenaRun StartCompactRunWithPlayerHealth(int max, int current)
+        {
+            return new ArenaRunFactory().Start(
+                ArenaRunId.FromValue(1UL),
+                PlayerId.FromValue(2UL),
+                CompactArena,
+                new PlayerDefinition(
+                    Position3D.Zero,
+                    Health.Full(max).ApplyDamage(DamageAmount.FromPoints(max - current)).RemainingHealth,
+                    MovementSpeed.FromUnitsPerSecond(5f),
+                    CollisionRadius.FromValue(0.5f)),
                 Enemies,
                 Weapons,
                 Waves(2, 1, 1));

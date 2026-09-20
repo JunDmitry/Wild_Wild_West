@@ -36,7 +36,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void EventsBeforeFailureAreRetainedInRecorder()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _targeting.ReturnNull = true;
 
             PlayerFrameInput input = _kit.Input(
@@ -60,7 +60,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void PartialResultRevisionMatchesAggregateAfterFailure()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _targeting.ReturnNull = true;
 
             PlayerFrameInput input = _kit.Input(
@@ -83,7 +83,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void FailureLeavesInteractionPendingForNextStepRecovery()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             _targeting.ReturnNull = true;
 
             PlayerFrameInput input = _kit.Input(
@@ -105,7 +105,7 @@ namespace Game.Arena.Application.Tests.Ticks
         [Test]
         public void TickFailedExceptionCarriesPartialResultAndCause()
         {
-            ArenaRun run = _kit.StartStandardRun();
+            ArenaRun run = _kit.StartStandartRun();
             ArenaRunTickResult partial = new(
                 run.Id,
                 AggregateRevision.Initial,

@@ -155,7 +155,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private void MakeActiveRunDefeated()
         {
             ArenaRun run = _kit.Session.GetRequiredActiveRun();
-            run.MakeRunDefeat();
+            run.MakeRunDefeat(reqularsToSpawn: 1);
         }
     }
 }

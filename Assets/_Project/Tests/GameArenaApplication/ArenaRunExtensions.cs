@@ -66,12 +66,17 @@ namespace Game.Arena.Application.Tests
                 {
                     Domain.Interactions.Movement.EnemyMovementBatchRequest req = reqOutcome.Request;
 
-                    run.ApplyEnemyMovementBatch(new EnemyMovementBatchResolution(
+                    EnemyMovementBatchResolutionOutcome outcome = run.ApplyEnemyMovementBatch(new EnemyMovementBatchResolution(
                         req.Correlation,
                         new EnemyMovementBatchResolutionEntry[]
                         {
                             new(req.Intents[0].EnemyId, req.Intents[0].Intent.RequestedPosition)
                         }));
+
+                    if (outcome.IsAccepted == false)
+                    {
+                        run.CancelPendingInteraction(reqOutcome.Request.Correlation, Domain.Interactions.InteractionCancellationReason.SupersededByLifecycle);
+                    }
                 }
 
                 run.StartEligibleEnemyAttacks();

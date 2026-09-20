@@ -60,7 +60,7 @@ namespace Game.Arena.Application.Tests.Sessions
             WaveCatalog waves = new(
                 new[]
                 {
-                    new WaveDefinition(WaveNumber.First, 1),
+                    new WaveDefinition(WaveNumber.First, 10),
                 });
 
             return new ArenaRunCreationParameters(
