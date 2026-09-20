@@ -102,7 +102,7 @@ Exit criteria:
 
 ### T-3. Application Interaction Orchestration
 
-Status: In progress
+Status: Completed
 
 Goal:
 
@@ -110,23 +110,24 @@ Coordinate existing ArenaRun operations and resolve external interactions withou
 
 Substages:
 
-- T-3.1: PlayerFrameInput, granular ports, spawn pacing contract, tick result contract, and stage order. — Completed
-- T-3.2: Player movement and Player attack stages. — Completed
-- T-3.3: Enemy movement and spawn stages; FixedIntervalSpawnPacingPolicy. — Completed
-- T-3.4: Interrupted-step recovery, interaction cancellation, and error handling. — Completed
-- T-3.5: Complete ArenaRunTickCoordinator and ordered-step tests. — In Progress
+- T-3.1: PlayerFrameInput, granular ports, spawn pacing contract, tick result contract, and stage order.
+- T-3.2: Player movement and Player attack stages.
+- T-3.3: Enemy movement and spawn stages; FixedIntervalSpawnPacingPolicy.
+- T-3.4: Interrupted-step recovery, interaction cancellation, and error handling.
+- T-3.5: Complete ArenaRunTickCoordinator and ordered-step tests.
 
 Gameplay order:
 
-1. Advance Game Time.
-2. Apply Player weapon switching.
-3. Resolve and apply Player movement.
-4. Start a requested Player attack.
-5. Resolve a due Player attack impact.
-6. Resolve and apply Enemy movement.
-7. Start eligible Enemy attacks.
-8. Resolve due Enemy attack impacts.
-9. Attempt Enemy spawn according to Application pacing.
+1. Pending interaction recovery.
+2. Advance Game Time.
+3. Apply Player weapon switching.
+4. Resolve and apply Player movement.
+5. Start a requested Player attack.
+6. Resolve a due Player attack impact.
+7. Resolve and apply Enemy movement.
+8. Start eligible Enemy attacks.
+9. Resolve due Enemy attack impacts.
+10. Attempt Enemy spawn according to Application pacing.
 
 Interrupted-interaction recovery precedes normal gameplay stages.
 
@@ -142,17 +143,22 @@ application-tick-contract.md
 
 Exit criteria:
 
-- Application does not duplicate readiness, damage, target validity, or wave progression rules.
-- Resolutions are constructed from the matching Domain request.
-- Pending interactions cannot leak indefinitely after an interrupted step.
-- Previously committed Domain Events are not lost on an exceptional exit.
-- Spawn pacing resets for a new attempt while identity sources remain unchanged.
-- Tests verify the accepted stage order, terminal short-circuiting, rejection, and recovery behavior.
+- Application does not duplicate ArenaRun gameplay rules.
+- Resolutions are constructed from matching Domain request correlations.
+- Rejected interactions stop the corresponding phase.
+- Pending interactions cannot leak into the next gameplay step.
+- Adapter failures preserve previously produced Domain Events.
+- Terminal ArenaRun stops remaining gameplay stages.
+- Tick results preserve event occurrence order and event revisions.
+- Spawn pacing resets when the active ArenaRun changes.
+- Identity sources remain process-lifetime services and are never reset.
 - Domain, Application, and architecture tests are green.
 
 ### T-4. Read Models and Application Notifications
 
-Status: Planned
+Status: In Progress
+Current substage:
+- T-4.1: Define immutable ArenaRunSnapshot.
 
 Goal:
 
