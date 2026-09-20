@@ -228,5 +228,23 @@ namespace Game.Arena.Application.Tests.Ticks
             Assert.That(position, Is.EqualTo(new Position3D(5f, 0f, 0f)));
             Assert.That(run.HasPendingInteraction, Is.False);
         }
+
+        [Test]
+        public void RejectedEnemyMovementStopsRemainingEnemyStages()
+        {
+            ArenaRun run = _kit.StartCompactRun(100, 1);
+            _kit.Spawn(run, 10UL, new Position3D(5f, 0f, 0f));
+
+            _movement.Mode = ScriptedEnemyMovementResolver.ResolveMode.OmitFirstEntry;
+
+            StageExecutionStatus status = _phase.Execute(run, s_delta, _recorder);
+            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+
+            Assert.That(status, Is.EqualTo(StageExecutionStatus.InteractionLeftPending));
+            Assert.That(run.HasPendingInteraction, Is.True);
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackStart.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackImpact.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemySpawn.ToString()));
+        }
     }
 }

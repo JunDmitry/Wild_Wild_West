@@ -1,7 +1,9 @@
 ﻿using System;
 using Game.Arena.Application.Input;
+using Game.Arena.Application.Ports;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
+using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Time;
@@ -175,7 +177,6 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
 
             int playerStartIndex = FindStageIndex(result, ArenaRunTickStage.PlayerAttackStart);
-
             int enemyMovementIndex = FindStageIndex(result, ArenaRunTickStage.EnemyMovement);
 
             Assert.That(playerStartIndex, Is.LessThan(enemyMovementIndex));
@@ -195,6 +196,81 @@ namespace Game.Arena.Application.Tests.Ticks
             Assert.That(result.DomainEvents.Count, Is.GreaterThan(0));
         }
 
+        [Test]
+        public void TerminalRunDoesNotExecuteAnyGameplayStage()
+        {
+            ArenaRun run = _kit.Session.GetRequiredActiveRun();
+            run.MakeRunDefeat(reqularsToSpawn: 1);
+
+            AggregateRevision revisionBeforeTick = run.Revision;
+            GameTimePoint timeBeforeTick = run.CurrentTime;
+
+            ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
+
+            Assert.That(result.ExecutedStages, Is.Empty);
+            Assert.That(run.Revision, Is.EqualTo(revisionBeforeTick));
+            Assert.That(run.CurrentTime, Is.EqualTo(timeBeforeTick));
+            Assert.That(result.DomainEvents, Is.Empty);
+        }
+
+        [Test]
+        public void TerminalRunDoesNotAdvanceTime()
+        {
+            ArenaRun run = _kit.Session.GetRequiredActiveRun();
+            run.MakeRunDefeat(reqularsToSpawn: 1);
+
+            GameTimePoint timeBeforeTick = run.CurrentTime;
+
+            _kit.Coordinator.ExecuteTick();
+
+            Assert.That(run.CurrentTime, Is.EqualTo(timeBeforeTick));
+        }
+
+        [Test]
+        public void TerminalRunDoesNotExecutePlayerOrEnemyStages()
+        {
+            ArenaRun run = _kit.Session.GetRequiredActiveRun();
+            run.MakeRunDefeat(reqularsToSpawn: 1);
+
+            ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
+
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.WeaponSwitch.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.PlayerMovement.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.PlayerAttackStart.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.PlayerAttackImpact.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyMovement.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackStart.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackImpact.ToString()));
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemySpawn.ToString()));
+        }
+
+        [Test]
+        public void ZeroDeltaDoesNotRecordTimeAdvance()
+        {
+            TickCoordinatorTestKit kit = new();
+            kit.Session.StartInitialRun();
+            kit.Input.Input = new PlayerFrameInput(
+                MovementInput.Zero,
+                Direction3D.Right,
+                false,
+                false);
+
+            ArenaRunTickCoordinatorDependencies dependencies = new(
+                kit.Session,
+                new ZeroGameClock(),
+                kit.Input,
+                kit.PlayerPhase,
+                kit.EnemyPhase,
+                kit.RecoveryStage,
+                kit.TimeAdvanceStage);
+
+            ArenaRunTickCoordinator coordinator = new(dependencies);
+
+            ArenaRunTickResult result = coordinator.ExecuteTick();
+
+            Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.TimeAdvance.ToString()));
+        }
+
         private int FindStageIndex(
             ArenaRunTickResult result,
             ArenaRunTickStage stage)
@@ -209,13 +285,13 @@ namespace Game.Arena.Application.Tests.Ticks
 
             return -1;
         }
+    }
 
-        private void MakeRunDefeated(ArenaRun run)
+    internal sealed class ZeroGameClock : IGameClock
+    {
+        public GameDuration GetDelta()
         {
-            _kit.Spawn(run, 10UL, new Position3D(2f, 0f, 0f));
-            run.StartEligibleEnemyAttacks();
-            run.AdvanceTime(new GameDuration(0.2d));
-            run.ResolveDueEnemyAttackImpacts();
+            return new GameDuration(0d);
         }
     }
 }

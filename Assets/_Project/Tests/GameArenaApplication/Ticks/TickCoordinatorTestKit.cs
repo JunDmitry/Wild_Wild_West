@@ -106,7 +106,14 @@ namespace Game.Arena.Application.Tests.Ticks
 
         public EnemyId Spawn(ArenaRun run, ulong value, Position3D position)
         {
-            EnemySpawnRequest request = run.RequestEnemySpawn().Request;
+            EnemySpawnRequestOutcome requestOutcome = run.RequestEnemySpawn();
+
+            if (requestOutcome.HasRequest == false)
+            {
+                throw new System.Exception("No available spawns.");
+            }
+
+            EnemySpawnRequest request = requestOutcome.Request;
             EnemyId enemyId = EnemyId.FromValue(value);
 
             run.ApplyEnemySpawn(new EnemySpawnResolution(request.Correlation, enemyId, position));

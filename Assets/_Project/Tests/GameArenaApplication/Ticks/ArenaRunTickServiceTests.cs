@@ -155,38 +155,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private void MakeActiveRunDefeated()
         {
             ArenaRun run = _kit.Session.GetRequiredActiveRun();
-
-            EnemySpawnRequestOutcome requestOutcome = run.RequestEnemySpawn();
-
-            if (requestOutcome.HasRequest)
-            {
-                EnemySpawnRequest request = requestOutcome.Request;
-                EnemyId enemyId = EnemyId.FromValue(900UL);
-
-                run.ApplyEnemySpawn(
-                    new EnemySpawnResolution(
-                        request.Correlation,
-                        enemyId,
-                        new Position3D(2f, 0f, 0f)));
-            }
-
-            int infinityCycleGuard = 1000;
-
-            while (infinityCycleGuard > 0 && run.PlayerHealth.IsDepleted == false)
-            {
-                Domain.Interactions.Movement.EnemyMovementBatchRequestOutcome reqOutcome = run.RequestEnemyMovementBatch(new GameDuration(1d));
-
-                if (reqOutcome.HasRequest)
-                {
-                    Domain.Interactions.Movement.EnemyMovementBatchRequest req = reqOutcome.Request;
-                    run.ApplyEnemyMovementBatch(new EnemyMovementBatchResolution(req.Correlation, new EnemyMovementBatchResolutionEntry[] { new(req.Intents[0].EnemyId, req.Intents[0].Intent.RequestedPosition) }));
-                }
-
-                run.StartEligibleEnemyAttacks();
-                run.AdvanceTime(new GameDuration(0.2d));
-                run.ResolveDueEnemyAttackImpacts();
-                infinityCycleGuard--;
-            }
+            run.MakeRunDefeat();
         }
     }
 }

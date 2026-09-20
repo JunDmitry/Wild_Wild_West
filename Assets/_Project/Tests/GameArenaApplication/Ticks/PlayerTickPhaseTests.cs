@@ -243,5 +243,28 @@ namespace Game.Arena.Application.Tests.Ticks
             Assert.That(run.Revision, Is.EqualTo(revisionAfterDefeat));
             Assert.That(_movement.CallCount, Is.EqualTo(0));
         }
+
+        [Test]
+        public void RejectedAttackImpactLeavesInteractionPending()
+        {
+            ArenaRun run = _kit.StartStandardRun();
+
+            _targeting.SetHits(EnemyId.FromValue(777UL));
+
+            PlayerFrameInput input = _kit.Input(
+                Displacement3D.Zero,
+                Direction3D.Right,
+                true,
+                false);
+
+            StageExecutionStatus status = _phase.Execute(run, input, s_delta, _recorder);
+
+            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+
+            Assert.That(status, Is.EqualTo(StageExecutionStatus.InteractionLeftPending));
+            Assert.That(run.HasPendingInteraction, Is.True);
+            Assert.That(run.HasPendingPlayerAttack, Is.True);
+            Assert.That(result.ExecutedStages, Does.Contain(ArenaRunTickStage.PlayerAttackImpact));
+        }
     }
 }
