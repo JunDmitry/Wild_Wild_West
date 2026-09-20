@@ -302,6 +302,12 @@ Recovery produces no Domain Events and does not advance Aggregate Revision.
 
 The tick result built from Domain Events produced before a step failed. It is carried by the tick failure and must still be delivered to notification consumers.
 
+### Tick Service
+
+The public Application entry point that executes one gameplay step for the active ArenaRun.
+
+The service owns the internal interaction tracker and tick coordinator, resets spawn pacing when the active run changes, and reports failures with a partial tick result.
+
 ## Identity Terms
 
 ### ArenaRunId

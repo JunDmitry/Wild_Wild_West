@@ -1,10 +1,11 @@
 ﻿using Game.Arena.Application.Identity;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.Spawning;
+using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Time;
 
-namespace Game.Arena.Application.Ticks.Stages
+namespace Game.Arena.Application.Ticks
 {
     internal sealed class EnemyTickPhase
     {

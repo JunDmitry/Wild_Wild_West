@@ -107,12 +107,30 @@ Adapter exceptions propagate as ArenaRunTickFailedException. The exception carri
 
 An interaction left pending by a failed or rejected step is cancelled at the beginning of the next step with the SupersededByLifecycle reason.
 
+## Public Entry Point
+
+ArenaRunTickService is the only public type that executes a gameplay step.
+
+CompositionRoot and future Unity game-loop code call ArenaRunTickService.ExecuteTick.
+
+The service returns ArenaRunTickResult on success.
+
+On adapter or orchestration failure it throws ArenaRunTickFailedException. The exception carries the partial tick result produced before the failure. Callers must deliver the partial result to notification consumers and then handle the failure.
+
+The service never returns the mutable ArenaRun aggregate.
+
+## Run-Change Handling
+
+The service observes ActiveArenaRunId.
+
+When the active run changes, it resets the spawn pacing policy before executing the next step.
+
+Identity sources are not reset.
+
+The pending interaction tracker is managed by the recovery stage and requires no explicit reset on run change.
+
 ## Deferred Work
 
-- T-3.2: Player movement and attack stages.
-- T-3.3: Enemy movement and spawn stages; fixed-interval pacing.
-- T-3.4: Interrupted-step recovery, cancellation, and error handling.
-- T-3.5: Complete coordinator and ordered-step tests.
 - T-4: Snapshots and Application notifications.
 - T-5: Notification dispatch.
 - T-8: Scene lifecycle and restart delay.

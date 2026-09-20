@@ -315,3 +315,11 @@ INV-216: ArenaRunTickCoordinator does not publish Domain Events or Application N
 INV-217: A terminal ArenaRun stops remaining combat stages of the current tick.
 
 INV-218: An adapter exception is exposed as ArenaRunTickFailedException with the partial tick result and original exception.
+
+INV-219: ArenaRunTickService is the only public entry point for executing a gameplay step; coordinator, phases, stages, tracker, and recorder remain internal.
+
+INV-220: The public tick service API never exposes the mutable ArenaRun aggregate in parameters, return values, or properties.
+
+INV-221: When the active ArenaRunId changes, the tick service resets the spawn pacing policy before executing the next step.
+
+INV-222: A tick failure is reported as ArenaRunTickFailedException carrying the partial tick result; already produced Domain Events are preserved and must still be delivered.

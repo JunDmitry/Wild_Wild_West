@@ -56,6 +56,11 @@
 | Pending interaction is recovered at next tick | `PendingInteractionIsRecoveredAtBeginningOfNextTick` |
 | Adapter exception carries partial tick result | `NullTargetingResultProducesTickFailure` |
 | Player stages run before enemy stages | `PlayerAttackStartsBeforeEnemyStages` |
+| Public tick service executes a step | `ServiceReturnsTickResultOnSuccess` |
+| Tick failure preserves partial result | `ServicePropagatesTickFailureWithPartialResult` |
+| Pacing resets on new run | `PacingIsResetWhenActiveRunChanges` |
+| Pacing persists within one run | `PacingIsNotResetWithinSameRun` |
+| Tick service has no public ArenaRun surface | `TickServiceDoesNotExposeArenaRun` |
 
 ## Legacy Defect Migration Rule
 
