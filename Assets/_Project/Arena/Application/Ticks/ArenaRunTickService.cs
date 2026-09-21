@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Identity;
 
@@ -37,6 +38,8 @@ namespace Game.Arena.Application.Ticks
                     dependencies.PacingPolicy,
                     _tracker);
 
+            ArenaRunSnapshotMapper snapshotMapper = new();
+
             ArenaRunTickCoordinatorDependencies coordinatorDependencies = new(
                     dependencies.Session,
                     dependencies.Clock,
@@ -44,7 +47,8 @@ namespace Game.Arena.Application.Ticks
                     playerPhase,
                     enemyPhase,
                     recoveryStage,
-                    timeAdvanceStage);
+                    timeAdvanceStage,
+                    snapshotMapper);
 
             _coordinator = new ArenaRunTickCoordinator(coordinatorDependencies);
             _lastArenaRunId = ArenaRunId.None;

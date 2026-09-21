@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Input;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
+using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;
 using NUnit.Framework;
@@ -15,12 +19,20 @@ namespace Game.Arena.Application.Tests.Ticks
     {
         private ArenaRunId _arenaRunId;
         private AggregateRevision _firstRevision;
+        private TickCoordinatorTestKit _kit;
 
         [SetUp]
         public void SetUp()
         {
             _arenaRunId = ArenaRunId.FromValue(1UL);
             _firstRevision = AggregateRevision.Initial.Next();
+            _kit = new();
+            _kit.Session.StartInitialRun();
+            _kit.Input.Input = new PlayerFrameInput(
+                MovementInput.Zero,
+                Direction3D.Right,
+                false,
+                false);
         }
 
         [Test]
@@ -39,6 +51,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult result = new(
                 _arenaRunId,
                 _firstRevision,
+                Create(_arenaRunId, _firstRevision),
                 events,
                 stages);
 
@@ -55,6 +68,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult result = new(
                 _arenaRunId,
                 _firstRevision,
+                Create(_arenaRunId, _firstRevision),
                 new IArenaDomainEvent[]
                 {
                     CreateStartedEvent(_arenaRunId, _firstRevision),
@@ -86,6 +100,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult result = new(
                 _arenaRunId,
                 finalRevision,
+                Create(_arenaRunId, finalRevision),
                 new IArenaDomainEvent[]
                 {
                     CreateStartedEvent(_arenaRunId, _firstRevision),
@@ -114,6 +129,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _ = new ArenaRunTickResult(
                         _arenaRunId,
                         _firstRevision,
+                        Create(_arenaRunId, _firstRevision),
                         new IArenaDomainEvent[]
                         {
                             CreateStartedEvent(
@@ -133,6 +149,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _ = new ArenaRunTickResult(
                         _arenaRunId,
                         _firstRevision,
+                        Create(_arenaRunId, _firstRevision),
                         new IArenaDomainEvent[]
                         {
                             CreateStartedEvent(
@@ -154,6 +171,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _ = new ArenaRunTickResult(
                         _arenaRunId,
                         secondRevision,
+                        Create(_arenaRunId, secondRevision),
                         new IArenaDomainEvent[]
                         {
                             CreateCompletedEvent(secondRevision),
@@ -174,6 +192,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _ = new ArenaRunTickResult(
                         ArenaRunId.None,
                         AggregateRevision.Initial,
+                        default,
                         Array.Empty<IArenaDomainEvent>(),
                         Array.Empty<ArenaRunTickStage>());
                 });
@@ -188,6 +207,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _ = new ArenaRunTickResult(
                         _arenaRunId,
                         AggregateRevision.Initial,
+                        Create(_arenaRunId, AggregateRevision.Initial),
                         Array.Empty<IArenaDomainEvent>(),
                         new[]
                         {
@@ -202,11 +222,25 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult result = new(
                 _arenaRunId,
                 AggregateRevision.Initial,
+                Create(_arenaRunId, AggregateRevision.Initial),
                 Array.Empty<IArenaDomainEvent>(),
                 Array.Empty<ArenaRunTickStage>());
 
             Assert.That(result.DomainEvents, Is.Empty);
             Assert.That(result.ExecutedStages, Is.Empty);
+        }
+
+        [Test]
+        public void ResultContainsSnapshotWithFinalRevision()
+        {
+            ArenaRun run = _kit.Session.GetRequiredActiveRun();
+
+            ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
+
+            Assert.That(result.Snapshot, Is.Not.Null);
+            Assert.That(result.Snapshot.ArenaRunId, Is.EqualTo(result.ArenaRunId));
+            Assert.That(result.Snapshot.Revision, Is.EqualTo(result.FinalRevision));
+            Assert.That(result.Snapshot.Revision, Is.EqualTo(run.Revision));
         }
 
         private PlayerAttackStarted CreateStartedEvent(
@@ -234,6 +268,19 @@ namespace Game.Arena.Application.Tests.Ticks
                 WeaponKind.Ranged,
                 AttackOutcome.Miss,
                 new GameTimePoint(0d));
+        }
+
+        private ArenaRunSnapshot Create(ArenaRunId id = default, AggregateRevision final = default)
+        {
+            return new(
+                id,
+                final,
+                default,
+                default,
+                default,
+                new(default, default, default, default, default, default, default, default),
+                Array.Empty<EnemySnapshot>(),
+                new(WaveNumber.First, Domain.Aggregates.ArenaRun.WavePhase.RegularCombat, 1, Domain.Aggregates.ArenaRun.BossStatus.NotSpawned));
         }
     }
 }

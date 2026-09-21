@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
@@ -39,11 +40,20 @@ namespace Game.Arena.Application.Ticks
             }
         }
 
-        public ArenaRunTickResult Build(ArenaRunId arenaRunId, AggregateRevision finalRevision)
+        public ArenaRunTickResult Build(
+            ArenaRunId arenaRunId,
+            AggregateRevision finalRevision,
+            ArenaRunSnapshot snapshot)
         {
+            if (snapshot == null)
+            {
+                throw new System.ArgumentNullException(nameof(snapshot));
+            }
+
             return new ArenaRunTickResult(
                 arenaRunId,
                 finalRevision,
+                snapshot,
                 _events,
                 _stages);
         }

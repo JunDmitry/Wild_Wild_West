@@ -1,5 +1,6 @@
 ﻿using System;
 using Game.Arena.Application.Input;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
@@ -23,6 +24,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private ScriptedTargetingResolver _targeting;
         private PlayerTickPhase _phase;
         private ArenaRunTickRecorder _recorder;
+        private ArenaRunSnapshotMapper _mapper;
 
         [SetUp]
         public void SetUp()
@@ -32,6 +34,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _targeting = new ScriptedTargetingResolver();
             _phase = new PlayerTickPhase(_movement, _targeting, new PendingInteractionTracker());
             _recorder = new ArenaRunTickRecorder();
+            _mapper = new ArenaRunSnapshotMapper();
         }
 
         [Test]
@@ -41,7 +44,7 @@ namespace Game.Arena.Application.Tests.Ticks
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, true);
 
             _phase.Execute(run, input, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(run.SelectedWeapon, Is.EqualTo(WeaponKind.Melee));
             Assert.That(run.HasPendingPlayerAttack, Is.True);
@@ -117,7 +120,7 @@ namespace Game.Arena.Application.Tests.Ticks
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, true, false);
 
             StageExecutionStatus status = _phase.Execute(run, input, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(status, Is.EqualTo(StageExecutionStatus.InteractionLeftPending));
             Assert.That(run.HasPendingInteraction, Is.True);
@@ -135,7 +138,7 @@ namespace Game.Arena.Application.Tests.Ticks
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
 
             _phase.Execute(run, input, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(_targeting.CallCount, Is.EqualTo(1));
             Assert.That(run.HasPendingPlayerAttack, Is.False);
@@ -189,7 +192,7 @@ namespace Game.Arena.Application.Tests.Ticks
             PlayerFrameInput input = _kit.Input(Displacement3D.Zero, Direction3D.Right, true, false);
 
             _phase.Execute(run, input, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
             PlayerAttackCompleted completed = (PlayerAttackCompleted)result.DomainEvents[1];
 
             Assert.That(completed.Outcome, Is.EqualTo(AttackOutcome.Miss));
@@ -235,7 +238,7 @@ namespace Game.Arena.Application.Tests.Ticks
             PlayerFrameInput input = _kit.Input(s_right, Direction3D.Right, true, true);
 
             StageExecutionStatus status = _phase.Execute(run, input, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Defeat));
             Assert.That(status, Is.EqualTo(StageExecutionStatus.Completed));
@@ -259,12 +262,17 @@ namespace Game.Arena.Application.Tests.Ticks
 
             StageExecutionStatus status = _phase.Execute(run, input, s_delta, _recorder);
 
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(status, Is.EqualTo(StageExecutionStatus.InteractionLeftPending));
             Assert.That(run.HasPendingInteraction, Is.True);
             Assert.That(run.HasPendingPlayerAttack, Is.True);
             Assert.That(result.ExecutedStages, Does.Contain(ArenaRunTickStage.PlayerAttackImpact));
+        }
+
+        private ArenaRunTickResult Build(ArenaRun run)
+        {
+            return _recorder.Build(run.Id, run.Revision, _mapper.Map(run.CreateSnapshot()));
         }
     }
 }

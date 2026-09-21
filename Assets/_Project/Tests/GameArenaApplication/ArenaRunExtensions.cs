@@ -52,7 +52,6 @@ namespace Game.Arena.Application.Tests
                 if (outcome.IsSpawned == false)
                 {
                     run.CancelPendingInteraction(spawnRequest.Request.Correlation, Domain.Interactions.InteractionCancellationReason.SupersededByLifecycle);
-                    break;
                 }
             }
 

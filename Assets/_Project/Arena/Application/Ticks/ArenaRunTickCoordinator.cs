@@ -1,4 +1,5 @@
 ﻿using Game.Arena.Application.Input;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Time;
 
@@ -44,36 +45,47 @@ namespace Game.Arena.Application.Ticks
 
                 if (run.Status != ArenaRunStatus.Playing)
                 {
-                    return recorder.Build(run.Id, run.Revision);
+                    return BuildResult(run, recorder);
                 }
 
                 StageExecutionStatus playerStatus = _dependencies.PlayerPhase.Execute(run, input, delta, recorder);
 
                 if (playerStatus == StageExecutionStatus.InteractionLeftPending)
                 {
-                    return recorder.Build(run.Id, run.Revision);
+                    return BuildResult(run, recorder);
                 }
 
                 if (run.Status != ArenaRunStatus.Playing)
                 {
-                    return recorder.Build(run.Id, run.Revision);
+                    return BuildResult(run, recorder);
                 }
 
                 StageExecutionStatus enemyStatus = _dependencies.EnemyPhase.Execute(run, delta, recorder);
 
                 if (enemyStatus == StageExecutionStatus.InteractionLeftPending)
                 {
-                    return recorder.Build(run.Id, run.Revision);
+                    return BuildResult(run, recorder);
                 }
 
-                return recorder.Build(run.Id, run.Revision);
+                return BuildResult(run, recorder);
             }
             catch (System.Exception exception)
             {
-                ArenaRunTickResult partialResult = recorder.Build(run.Id, run.Revision);
+                ArenaRunTickResult partialResult = BuildResult(run, recorder);
 
                 throw new ArenaRunTickFailedException(partialResult, exception);
             }
+        }
+
+        private ArenaRunTickResult BuildResult(ArenaRun run, ArenaRunTickRecorder recorder)
+        {
+            ArenaRunStateSnapshot stateSnapshot = run.CreateSnapshot();
+            ArenaRunSnapshot snapshot = _dependencies.SnapshotMapper.Map(stateSnapshot);
+
+            return recorder.Build(
+                run.Id,
+                run.Revision,
+                snapshot);
         }
     }
 }

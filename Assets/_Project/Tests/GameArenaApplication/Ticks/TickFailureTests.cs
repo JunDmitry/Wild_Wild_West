@@ -1,5 +1,6 @@
 ﻿using System;
 using Game.Arena.Application.Input;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Concurrency;
@@ -21,6 +22,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private ScriptedTargetingResolver _targeting;
         private PlayerTickPhase _phase;
         private ArenaRunTickRecorder _recorder;
+        private ArenaRunSnapshotMapper _mapper;
 
         [SetUp]
         public void SetUp()
@@ -31,6 +33,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _targeting = new ScriptedTargetingResolver();
             _recorder = new ArenaRunTickRecorder();
             _phase = new PlayerTickPhase(_movement, _targeting, _tracker);
+            _mapper = new ArenaRunSnapshotMapper();
         }
 
         [Test]
@@ -51,7 +54,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _phase.Execute(run, input, s_delta, _recorder);
                 });
 
-            ArenaRunTickResult partial = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult partial = _recorder.Build(run.Id, run.Revision, _mapper.Map(run.CreateSnapshot()));
 
             Assert.That(partial.DomainEvents.Count, Is.GreaterThan(0));
             Assert.That(partial.DomainEvents[partial.DomainEvents.Count - 1], Is.TypeOf<PlayerAttackStarted>());
@@ -75,7 +78,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     _phase.Execute(run, input, s_delta, _recorder);
                 });
 
-            ArenaRunTickResult partial = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult partial = _recorder.Build(run.Id, run.Revision, _mapper.Map(run.CreateSnapshot()));
 
             Assert.That(partial.FinalRevision, Is.EqualTo(run.Revision));
         }
@@ -109,6 +112,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRunTickResult partial = new(
                 run.Id,
                 AggregateRevision.Initial,
+                _mapper.Map(run.CreateSnapshot()),
                 Array.Empty<IArenaDomainEvent>(),
                 Array.Empty<ArenaRunTickStage>());
 

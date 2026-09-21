@@ -1,13 +1,8 @@
 ﻿using System;
 using Game.Arena.Application.Input;
 using Game.Arena.Application.Ticks;
-using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Geometry;
-using Game.Arena.Domain.Identity;
-using Game.Arena.Domain.Interactions.Movement;
-using Game.Arena.Domain.Interactions.Spawn;
-using Game.Arena.Domain.Time;
 using NUnit.Framework;
 
 namespace Game.Arena.Application.Tests.Ticks

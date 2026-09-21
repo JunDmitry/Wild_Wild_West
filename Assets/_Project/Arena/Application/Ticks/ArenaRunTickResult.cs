@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Identity;
@@ -15,12 +16,28 @@ namespace Game.Arena.Application.Ticks
         public ArenaRunTickResult(
             ArenaRunId arenaRunId,
             AggregateRevision finalRevision,
+            ArenaRunSnapshot snapshot,
             IReadOnlyList<IArenaDomainEvent> domainEvents,
             IReadOnlyList<ArenaRunTickStage> executedStages)
         {
             if (arenaRunId.IsNone)
             {
                 throw new ArgumentException("ArenaRunId cannot be None.", nameof(arenaRunId));
+            }
+
+            if (snapshot == null)
+            {
+                throw new ArgumentException(nameof(snapshot));
+            }
+
+            if (snapshot.ArenaRunId != arenaRunId)
+            {
+                throw new ArgumentException("Snapshot belongs to another ArenaRun.", nameof(snapshot));
+            }
+
+            if (snapshot.Revision != finalRevision)
+            {
+                throw new ArgumentException("Snapshot revision must match the final revision.", nameof(snapshot));
             }
 
             if (domainEvents == null)
@@ -38,12 +55,15 @@ namespace Game.Arena.Application.Ticks
 
             ArenaRunId = arenaRunId;
             FinalRevision = finalRevision;
+            Snapshot = snapshot;
             _domainEvents = Array.AsReadOnly(copiedEvents);
             _executedStages = Array.AsReadOnly(copiedStages);
         }
 
         public ArenaRunId ArenaRunId { get; }
         public AggregateRevision FinalRevision { get; }
+        public ArenaRunSnapshot Snapshot { get; }
+
         public IReadOnlyList<IArenaDomainEvent> DomainEvents => _domainEvents;
         public IReadOnlyList<ArenaRunTickStage> ExecutedStages => _executedStages;
 

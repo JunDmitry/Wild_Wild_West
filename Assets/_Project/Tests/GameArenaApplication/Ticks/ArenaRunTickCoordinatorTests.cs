@@ -1,6 +1,7 @@
 ﻿using System;
 using Game.Arena.Application.Input;
 using Game.Arena.Application.Ports;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Concurrency;
@@ -8,6 +9,7 @@ using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Time;
 using NUnit.Framework;
+using UnityEngine.Profiling;
 
 namespace Game.Arena.Application.Tests.Ticks
 {
@@ -262,13 +264,30 @@ namespace Game.Arena.Application.Tests.Ticks
                 kit.PlayerPhase,
                 kit.EnemyPhase,
                 kit.RecoveryStage,
-                kit.TimeAdvanceStage);
+                kit.TimeAdvanceStage,
+                kit.SnapshotMapper);
 
             ArenaRunTickCoordinator coordinator = new(dependencies);
 
             ArenaRunTickResult result = coordinator.ExecuteTick();
 
             Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.TimeAdvance.ToString()));
+        }
+
+        [Test]
+        public void PartialResultContainsStateAtFailure()
+        {
+            ArenaRun run = _kit.Session.GetRequiredActiveRun();
+            _kit.Input.Input = null;
+
+            ArenaRunTickFailedException exception =
+                Assert.Throws<ArenaRunTickFailedException>(
+                    () =>
+                    {
+                        _kit.Coordinator.ExecuteTick();
+                    });
+
+            Assert.That(exception.PartialResult.Snapshot.Revision, Is.EqualTo(run.Revision));
         }
 
         private int FindStageIndex(

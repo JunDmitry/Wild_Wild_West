@@ -1,4 +1,5 @@
 ﻿using Game.Arena.Application.Ports;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Application.Ticks.Stages;
 
@@ -13,7 +14,8 @@ namespace Game.Arena.Application.Ticks
             PlayerTickPhase playerPhase,
             EnemyTickPhase enemyPhase,
             PendingInteractionRecoveryStage recoveryStage,
-            TimeAdvanceStage timeAdvanceStage)
+            TimeAdvanceStage timeAdvanceStage,
+            ArenaRunSnapshotMapper snapshotMapper)
         {
             Session = session ?? throw new System.ArgumentNullException(nameof(session));
             Clock = clock ?? throw new System.ArgumentNullException(nameof(clock));
@@ -22,6 +24,7 @@ namespace Game.Arena.Application.Ticks
             EnemyPhase = enemyPhase ?? throw new System.ArgumentNullException(nameof(enemyPhase));
             RecoveryStage = recoveryStage ?? throw new System.ArgumentNullException(nameof(recoveryStage));
             TimeAdvanceStage = timeAdvanceStage ?? throw new System.ArgumentNullException(nameof(timeAdvanceStage));
+            SnapshotMapper = snapshotMapper ?? throw new System.ArgumentNullException(nameof(snapshotMapper));
         }
 
         public ArenaRunSession Session { get; }
@@ -31,5 +34,6 @@ namespace Game.Arena.Application.Ticks
         public EnemyTickPhase EnemyPhase { get; }
         public PendingInteractionRecoveryStage RecoveryStage { get; }
         public TimeAdvanceStage TimeAdvanceStage { get; }
+        public ArenaRunSnapshotMapper SnapshotMapper { get; }
     }
 }

@@ -158,7 +158,7 @@ Exit criteria:
 
 Status: In Progress
 Current substage:
-- T-4.1: Define immutable ArenaRunSnapshot.
+- T-4.2: Define immutable ArenaRunSnapshot.
 
 Goal:
 

@@ -1,6 +1,5 @@
 ﻿using Game.Arena.Application.Input;
 using Game.Arena.Application.Sessions;
-using Game.Arena.Application.Spawning;
 using Game.Arena.Application.Tests.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Configuration;

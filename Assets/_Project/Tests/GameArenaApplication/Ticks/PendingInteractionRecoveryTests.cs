@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Aggregates.ArenaRun;
@@ -17,6 +18,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private PendingInteractionTracker _tracker;
         private PendingInteractionRecoveryStage _stage;
         private ArenaRunTickRecorder _recorder;
+        private ArenaRunSnapshotMapper _mapper;
 
         [SetUp]
         public void SetUp()
@@ -25,6 +27,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _tracker = new PendingInteractionTracker();
             _stage = new PendingInteractionRecoveryStage(_tracker);
             _recorder = new ArenaRunTickRecorder();
+            _mapper = new ArenaRunSnapshotMapper();
         }
 
         [Test]
@@ -33,7 +36,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRun run = _kit.StartStandartRun();
 
             StageExecutionStatus status = _stage.Execute(run, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(status, Is.EqualTo(StageExecutionStatus.Completed));
             Assert.That(result.ExecutedStages, Is.Empty);
@@ -47,7 +50,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _tracker.Track(request.Correlation);
 
             _stage.Execute(run, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(run.HasPendingInteraction, Is.False);
             Assert.That(result.ExecutedStages[0], Is.EqualTo(ArenaRunTickStage.PendingInteractionCancellation));
@@ -62,7 +65,7 @@ namespace Game.Arena.Application.Tests.Ticks
             AggregateRevision revisionBeforeRecovery = run.Revision;
 
             _stage.Execute(run, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(run.Revision, Is.EqualTo(revisionBeforeRecovery));
             Assert.That(result.DomainEvents, Is.Empty);
@@ -141,6 +144,11 @@ namespace Game.Arena.Application.Tests.Ticks
             return run.RequestPlayerMovement(
                 MovementInput.FromVector(new Displacement3D(1f, 0f, 0f)),
                 new GameDuration(0.1d)).Request;
+        }
+
+        private ArenaRunTickResult Build(ArenaRun run)
+        {
+            return _recorder.Build(run.Id, run.Revision, _mapper.Map(run.CreateSnapshot()));
         }
     }
 }

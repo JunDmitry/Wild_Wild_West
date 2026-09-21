@@ -1,4 +1,5 @@
-﻿using Game.Arena.Application.Sessions;
+﻿using Game.Arena.Application.ReadModels;
+using Game.Arena.Application.Sessions;
 using Game.Arena.Application.Spawning;
 using Game.Arena.Application.Tests.Sessions;
 using Game.Arena.Application.Ticks;
@@ -53,6 +54,7 @@ namespace Game.Arena.Application.Tests.Ticks
 
             RecoveryStage = new PendingInteractionRecoveryStage(Tracker);
             TimeAdvanceStage = new TimeAdvanceStage();
+            SnapshotMapper = new();
 
             ArenaRunTickCoordinatorDependencies dependencies = new(
                     Session,
@@ -61,7 +63,8 @@ namespace Game.Arena.Application.Tests.Ticks
                     PlayerPhase,
                     EnemyPhase,
                     RecoveryStage,
-                    TimeAdvanceStage);
+                    TimeAdvanceStage,
+                    SnapshotMapper);
 
             Coordinator = new ArenaRunTickCoordinator(dependencies);
         }
@@ -103,6 +106,8 @@ namespace Game.Arena.Application.Tests.Ticks
         public TimeAdvanceStage TimeAdvanceStage { get; }
 
         public ArenaRunTickCoordinator Coordinator { get; }
+
+        public ArenaRunSnapshotMapper SnapshotMapper { get; }
 
         public EnemyId Spawn(ArenaRun run, ulong value, Position3D position)
         {

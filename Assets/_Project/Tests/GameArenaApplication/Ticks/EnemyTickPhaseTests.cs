@@ -1,8 +1,8 @@
 ﻿using System;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Spawning;
 using Game.Arena.Application.Tests.Sessions;
 using Game.Arena.Application.Ticks;
-using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
@@ -25,6 +25,7 @@ namespace Game.Arena.Application.Tests.Ticks
         private FixedIntervalSpawnPacingPolicy _pacing;
         private EnemyTickPhase _phase;
         private ArenaRunTickRecorder _recorder;
+        private ArenaRunSnapshotMapper _mapper;
 
         [SetUp]
         public void SetUp()
@@ -46,6 +47,7 @@ namespace Game.Arena.Application.Tests.Ticks
                 _enemyIdSource,
                 _pacing,
                 new PendingInteractionTracker());
+            _mapper = new ArenaRunSnapshotMapper();
         }
 
         [Test]
@@ -91,7 +93,7 @@ namespace Game.Arena.Application.Tests.Ticks
             ArenaRun run = _kit.StartCompactRun(100, 1);
 
             _phase.Execute(run, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(run.PendingEnemyAttackCount, Is.EqualTo(0));
             Assert.That(run.PlayerHealth.Current, Is.EqualTo(run.PlayerHealth.Maximum));
@@ -106,7 +108,7 @@ namespace Game.Arena.Application.Tests.Ticks
             run.AdvanceTime(new GameDuration(2d));
 
             _phase.Execute(run, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(_movement.CallCount, Is.EqualTo(1));
             Assert.That(result.ExecutedStages[0], Is.EqualTo(ArenaRunTickStage.EnemyMovement));
@@ -175,7 +177,7 @@ namespace Game.Arena.Application.Tests.Ticks
             AggregateRevision revisionAfterDefeat = run.Revision;
 
             StageExecutionStatus status = _phase.Execute(run, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(status, Is.EqualTo(StageExecutionStatus.Completed));
             Assert.That(result.ExecutedStages, Is.Empty);
@@ -238,13 +240,18 @@ namespace Game.Arena.Application.Tests.Ticks
             _movement.Mode = ScriptedEnemyMovementResolver.ResolveMode.OmitFirstEntry;
 
             StageExecutionStatus status = _phase.Execute(run, s_delta, _recorder);
-            ArenaRunTickResult result = _recorder.Build(run.Id, run.Revision);
+            ArenaRunTickResult result = Build(run);
 
             Assert.That(status, Is.EqualTo(StageExecutionStatus.InteractionLeftPending));
             Assert.That(run.HasPendingInteraction, Is.True);
             Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackStart.ToString()));
             Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemyAttackImpact.ToString()));
             Assert.That(result.ExecutedStages, Does.Not.Contain(ArenaRunTickStage.EnemySpawn.ToString()));
+        }
+
+        private ArenaRunTickResult Build(ArenaRun run)
+        {
+            return _recorder.Build(run.Id, run.Revision, _mapper.Map(run.CreateSnapshot()));
         }
     }
 }
