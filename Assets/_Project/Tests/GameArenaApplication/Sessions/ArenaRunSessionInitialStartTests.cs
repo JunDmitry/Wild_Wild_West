@@ -1,5 +1,6 @@
 ﻿using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
+using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Movement;
 using Game.Arena.Domain.Repositories;
 using NUnit.Framework;
@@ -27,7 +28,8 @@ namespace Game.Arena.Application.Tests.Sessions
                 _repository,
                 _arenaRunIdSource,
                 _playerIdSource,
-                new ArenaRunFactory(new MovementPathPolicy()));
+                new ArenaRunFactory(new MovementPathPolicy()),
+                new ReadModels.ArenaRunSnapshotMapper());
 
             _session = new ArenaRunSession(dependencies, _creationParameters);
         }
@@ -112,6 +114,18 @@ namespace Game.Arena.Application.Tests.Sessions
                 {
                     _session.GetRequiredActiveRun();
                 });
+        }
+
+        [Test]
+        public void InitialRunReturnsSnapshot()
+        {
+            InitialRunStartOutcome outcome = _session.StartInitialRun();
+
+            Assert.That(outcome.Snapshot, Is.Not.Null);
+            Assert.That(outcome.Snapshot.ArenaRunId, Is.EqualTo(outcome.ArenaRunId));
+            Assert.That(outcome.Snapshot.Player.PlayerId, Is.EqualTo(outcome.PlayerId));
+            Assert.That(outcome.Snapshot.Revision, Is.EqualTo(AggregateRevision.Initial));
+            Assert.That(outcome.Snapshot.Status, Is.EqualTo(ArenaRunStatus.Playing));
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Identity;
 
@@ -54,9 +55,13 @@ namespace Game.Arena.Application.Sessions
                 _creationParameters.WaveCatalog);
 
             _dependencies.Repository.Add(arenaRun);
+            ArenaRunSnapshot snapshot = _dependencies.SnapshotMapper.Map(arenaRun.CreateSnapshot());
             _activeArenaRunId = arenaRunId;
 
-            return InitialRunStartOutcome.Started(arenaRunId, playerId);
+            return InitialRunStartOutcome.Started(
+                arenaRunId,
+                playerId,
+                snapshot);
         }
 
         public DefeatedRunRestartOutcome RestartDefeatedRun()
@@ -96,9 +101,13 @@ namespace Game.Arena.Application.Sessions
                 throw new InvalidOperationException("Failed to remove the previous defeated ArenaRun from the repository.");
             }
 
+            ArenaRunSnapshot snapshot = _dependencies.SnapshotMapper.Map(newArenaRun.CreateSnapshot());
             _activeArenaRunId = newArenaRunId;
 
-            return DefeatedRunRestartOutcome.Restarted(newArenaRunId, newPlayerId);
+            return DefeatedRunRestartOutcome.Restarted(
+                newArenaRunId,
+                newPlayerId,
+                snapshot);
         }
 
         internal ArenaRun GetRequiredActiveRun()

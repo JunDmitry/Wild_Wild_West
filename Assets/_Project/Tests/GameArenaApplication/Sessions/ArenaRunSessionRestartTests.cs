@@ -2,6 +2,7 @@
 using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
+using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
@@ -92,7 +93,8 @@ namespace Game.Arena.Application.Tests.Sessions
                 _repository,
                 _arenaRunIdSource,
                 _playerIdSource,
-                new ArenaRunFactory(new MovementPathPolicy()));
+                new ArenaRunFactory(new MovementPathPolicy()),
+                new ReadModels.ArenaRunSnapshotMapper());
 
             _session = new ArenaRunSession(dependencies, _creationParameters);
         }
@@ -246,6 +248,22 @@ namespace Game.Arena.Application.Tests.Sessions
 
             Assert.That(outcome.ArenaRunId, Is.EqualTo(ArenaRunId.FromValue(3UL)));
             Assert.That(outcome.PlayerId, Is.EqualTo(PlayerId.FromValue(3UL)));
+        }
+
+        [Test]
+        public void RestartReturnsSnapshotForNewRun()
+        {
+            _session.StartInitialRun();
+            MakeActiveRunDefeated();
+
+            DefeatedRunRestartOutcome outcome = _session.RestartDefeatedRun();
+
+            Assert.That(outcome.Snapshot, Is.Not.Null);
+            Assert.That(outcome.Snapshot.ArenaRunId, Is.EqualTo(outcome.ArenaRunId));
+            Assert.That(outcome.Snapshot.Player.PlayerId, Is.EqualTo(outcome.PlayerId));
+            Assert.That(outcome.Snapshot.Revision, Is.EqualTo(AggregateRevision.Initial));
+            Assert.That(outcome.Snapshot.Status, Is.EqualTo(ArenaRunStatus.Playing));
+            Assert.That(outcome.Snapshot.Enemies, Is.Empty);
         }
 
         private void MakeActiveRunDefeated()

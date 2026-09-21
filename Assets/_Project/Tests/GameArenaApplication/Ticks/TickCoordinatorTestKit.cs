@@ -34,7 +34,8 @@ namespace Game.Arena.Application.Tests.Ticks
                     ArenaRunIds,
                     PlayerIds,
                     new ArenaRunFactory(
-                        new Domain.Movement.MovementPathPolicy()));
+                        new Domain.Movement.MovementPathPolicy()),
+                    new ArenaRunSnapshotMapper());
 
             Session = new ArenaRunSession(
                 sessionDependencies,
