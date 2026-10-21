@@ -404,3 +404,13 @@ Damage.
 
 A player attack can start only when the player has no pending attack and
 the equipped weapon's Cooldown has elapsed.
+
+### BR-115 — The swing affects enemies in front within reach
+
+A melee attack impact affects every enemy within Attack Range in front of
+the player.
+
+### BR-116 — The swing spares enemies outside reach or behind
+
+A melee attack applies no Damage to an enemy outside Attack Range or
+outside the melee weapon's Attack Arc.
