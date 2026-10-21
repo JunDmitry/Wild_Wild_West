@@ -47,6 +47,7 @@ Terms added by analysis:
 | View Direction | the horizontal direction the camera currently faces, relative to which Movement Input is interpreted |
 | Third-Person View | the view in which the camera is positioned away from the Player and the Player's character remains visible |
 | Restart | the replacement of a defeated ArenaRun with a new one at Wave one |
+| run | informal synonym for ArenaRun; "ArenaRun" is the preferred term |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
