@@ -9,7 +9,6 @@ using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Time;
 using NUnit.Framework;
-using UnityEngine.Profiling;
 
 namespace Game.Arena.Application.Tests.Ticks
 {
