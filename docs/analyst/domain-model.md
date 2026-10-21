@@ -62,8 +62,10 @@ Terms added by analysis:
 | Defeated | the state of a Player that is not Active, because its Health has reached zero; it persists until a new ArenaRun begins |
 | Ranged Attack | an Attack made with the Firearm |
 | Shot | informal synonym for a Ranged Attack with the Firearm; "Ranged Attack" is the preferred term |
-| Aim Direction | the Direction in which a Shot travels; for the Firearm, the current View Direction |
+| Aim Direction | the Direction in which an Attack is delivered; for both Weapons, the current View Direction |
 | Weapon Damage | the Damage an Attack with a Weapon requests |
+| Melee Attack | an Attack made with the Melee Weapon |
+| Attack Arc | the angular spread around the Aim Direction within which a Melee Attack reaches |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
@@ -93,8 +95,11 @@ and **Melee Weapon** for the two Weapons.
 - A **Ranged Attack** is aimed along its **Aim Direction** and affects at
   most one **Enemy**: the nearest one along that direction within
   **Attack Range**.
-- A **Firearm** has a **Weapon Damage** value; a **Ranged Attack** with
-  it requests that **Damage**.
+- A **Melee Attack** is aimed along its **Aim Direction** and affects
+  every **Enemy** within **Attack Range** in front of the **Player**,
+  within its **Attack Arc**.
+- A **Weapon** has a **Weapon Damage** value; an **Attack** with it
+  requests that **Damage**.
 - An **ArenaRun** contains a monotonically increasing **Game Time**.
 
 ## 3. Invariants
@@ -175,6 +180,8 @@ and **Melee Weapon** for the two Weapons.
 - A Shot affects only the nearest Enemy along its Aim Direction within
   Attack Range.
 - A Shot that reaches no Enemy within Attack Range applies no Damage.
+- A Melee Attack affects every Enemy within Attack Range in front of the
+  Player, and no Enemy beyond Attack Range or outside its Attack Arc.
 
 **Game Time**
 - Game Time never decreases.
