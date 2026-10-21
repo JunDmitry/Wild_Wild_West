@@ -148,6 +148,8 @@ and **Melee Weapon** for the two Weapons.
 **Wave**
 - Exactly one Wave is current while the ArenaRun is active.
 - Wave Number begins at one.
+- A new Wave's Wave Number is one greater than the Wave Number of the
+  Wave it follows.
 - A Wave cannot begin before the current Wave is complete.
 - A Boss cannot become active while Regular Enemies remain to be
   spawned or alive.

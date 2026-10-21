@@ -245,6 +245,11 @@ A Wave with zero Regular Enemies begins in Boss Combat.
 
 A Boss has more health than any Regular Enemy in the run.
 
+### BR-064 — A new wave advances the wave number by one
+
+When a new Wave begins, its Wave Number is one greater than the Wave Number of
+the Wave it follows.
+
 ## Enemy Spawning
 
 ### BR-070 — Regular spawns belong to regular combat
