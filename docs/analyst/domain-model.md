@@ -65,6 +65,7 @@ Terms added by analysis:
 | Aim Direction | the Direction in which an Attack is delivered; for both Weapons, the current View Direction |
 | Weapon Damage | the Damage an Attack with a Weapon requests |
 | Melee Attack | an Attack made with the Melee Weapon |
+| Enemy Attack | an Attack made by an Enemy; its target is the Player |
 | Attack Arc | the angular spread around the Aim Direction within which a Melee Attack reaches |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
@@ -118,6 +119,8 @@ and **Melee Weapon** for the two Weapons.
 **Player**
 - An ArenaRun contains exactly one Player.
 - Health lies between zero and its maximum, inclusive.
+- A Player's Health is observable, and an observed value reflects the
+  latest Damage applied.
 - A defeated Player cannot move, switch weapons, start an attack, or
   resolve an attack.
 - A new run starts with the Player at full health and the Firearm
