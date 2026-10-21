@@ -7,7 +7,7 @@ analyst is the only writer. Status vocabulary follows
 | id | from | inbox | received | status | note |
 |----|------|-------|----------|--------|------|
 | F-001 | product-role | product-inbox | 2026-10-21T18:06:54Z | done | card confirmed 2026-10-21T18:28:09Z; analysis sent to architect-inbox 2026-10-21T18:34:17Z |
-| F-002 | product-role | product-inbox | 2026-10-21T18:07:38Z | new | |
+| F-002 | product-role | product-inbox | 2026-10-21T18:07:38Z | done | card confirmed 2026-10-21T18:42:39Z; analysis sent to architect-inbox 2026-10-21T18:45:27Z |
 | F-003 | product-role | product-inbox | 2026-10-21T18:08:43Z | new | |
 | F-004 | product-role | product-inbox | 2026-10-21T18:08:57Z | new | |
 | F-005 | product-role | product-inbox | 2026-10-21T18:09:36Z | new | |
