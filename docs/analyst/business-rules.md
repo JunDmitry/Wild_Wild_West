@@ -375,3 +375,13 @@ The melee attack has no ammunition or resource cost.
 ### BR-108 — Only a living player attacks
 
 The attack is available only while the player is alive.
+
+### BR-109 — Weapon switching needs only a living player
+
+A weapon switch is available whenever the player is alive; no cooldown or
+combat-readiness gate applies.
+
+### BR-110 — Only the switch input changes the equipped weapon
+
+The equipped weapon changes only in response to the weapon-switch input;
+starting a new run with the firearm equipped is the sole exception.
