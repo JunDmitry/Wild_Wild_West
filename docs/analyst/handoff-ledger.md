@@ -12,7 +12,7 @@ analyst is the only writer. Status vocabulary follows
 | F-004 | product-role | product-inbox | 2026-10-21T18:08:57Z | done | card confirmed 2026-10-21T19:10:36Z; analysis sent to architect-inbox 2026-10-21T19:14:01Z |
 | F-005 | product-role | product-inbox | 2026-10-21T18:09:36Z | done | card confirmed 2026-10-21T19:21:44Z; analysis sent to architect-inbox 2026-10-21T19:23:11Z |
 | F-006 | product-role | product-inbox | 2026-10-21T18:09:50Z | done | card confirmed 2026-10-21T19:33:02Z; analysis sent to architect-inbox 2026-10-21T19:35:01Z |
-| F-007 | product-role | product-inbox | 2026-10-21T18:10:02Z | new | |
+| F-007 | product-role | product-inbox | 2026-10-21T18:10:02Z | done | card confirmed 2026-10-21T19:38:53Z; analysis sent to architect-inbox 2026-10-21T19:40:14Z |
 | F-008 | product-role | product-inbox | 2026-10-21T18:10:17Z | new | |
 | F-009 | product-role | product-inbox | 2026-10-21T18:10:39Z | new | |
 | F-010 | product-role | product-inbox | 2026-10-21T18:10:55Z | new | |
