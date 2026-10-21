@@ -68,6 +68,7 @@ Terms added by analysis:
 | Melee Attack | an Attack made with the Melee Weapon |
 | Enemy Attack | an Attack made by an Enemy; its target is the Player |
 | Attack Arc | the angular spread around the Aim Direction within which a Melee Attack reaches |
+| Pursuit | an Enemy's movement toward the Player, which continues until the Enemy is within its Attack Range; movement speed is a tuning value |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
@@ -90,6 +91,8 @@ and **Melee Weapon** for the two Weapons.
 - A **Player** carries both the **Firearm** and the **Melee Weapon**;
   a **Weapon Switch** changes which one is equipped.
 - A **Player's** **Position** lies inside **Arena Bounds**.
+- An **Enemy** pursues the **Player**, moving toward the Player's current
+  **Position** until it is within its **Attack Range**.
 - A **Spawn** places an **Enemy** outside **Arena Bounds**, within the
   **Spawn Band**.
 - A **Wave** has a **Spawn Pacing** that schedules when each of its
@@ -137,6 +140,8 @@ and **Melee Weapon** for the two Weapons.
 - Every active Enemy belongs to exactly one ArenaRun.
 - Enemy health lies between zero and its maximum, inclusive.
 - A defeated Enemy is removed from the active Enemies.
+- While the ArenaRun is Playing, an Enemy that is not defeated moves toward
+  the Player until it is within its Attack Range.
 - Every Wave has at most one Boss, and a Boss is tougher than any
   Regular Enemy in the run.
 
@@ -182,6 +187,7 @@ and **Melee Weapon** for the two Weapons.
 - A ranged Attack Impact affects at most one Enemy; a melee Attack
   damages a given Enemy at most once.
 - An Enemy Attack starts and lands only within Attack Range.
+- An Enemy within its Attack Range attacks rather than closing further.
 - Player health reaching zero transitions the ArenaRun to Defeat in the
   same operation, and pending Attacks of a defeated combatant are
   cancelled.
