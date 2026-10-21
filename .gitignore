@@ -73,3 +73,38 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# system-lifecycle: agent workspace (managed block, do not edit)
+docs/.system/
+docs/product/tasks/
+docs/analyst/tasks/
+docs/analyst/product-inbox/
+docs/analyst/architect-inbox/
+docs/design/tasks/
+docs/design/product-inbox/
+docs/design/architect-inbox/
+docs/architect/orientation/
+docs/architect/tasks/
+docs/architect/analyst-inbox/
+docs/architect/design-inbox/
+docs/architect/coder-inbox/
+docs/architect/mcp-tasks/
+docs/coder/
+docs/qa/tasks/
+docs/qa/coder-inbox/
+docs/mcp/
+__pycache__/
+*.pyc
+# end system-lifecycle block
+
+# tracked project artifacts (the system-lifecycle block above ignores working dirs)
+!src/**/*.csproj
+!tests/**/*.csproj
+!Wild_Wild_West.Core.sln
+!docs/coder/
+docs/coder/*/
+!docs/coder/*.md
+src/**/bin/
+src/**/obj/
+tests/**/bin/
+tests/**/obj/
