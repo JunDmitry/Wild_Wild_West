@@ -14,7 +14,7 @@
 ## Purpose
 
 This document contains the index and template for the project's architectural decisions.  
-ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions are versioned, reviewed through code review, and kept close to the source code.
+ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that decisions are versioned, reviewed through code review, and kept close to the source code.
 
 ## Conventions
 
@@ -113,7 +113,7 @@ The project makes architectural decisions that affect the team, code, infrastruc
 
 ## Decision
 
-We will maintain ADRs as Markdown files in the `docs/adr` directory.  
+We will maintain ADRs as Markdown files in the `docs/architect/adr` directory.  
 Each significant architectural decision will be documented as a separate ADR using a consistent template.  
 Accepted ADRs are considered immutable: changes are recorded as a new ADR or a status change.
 

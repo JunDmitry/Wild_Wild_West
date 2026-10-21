@@ -139,7 +139,7 @@ A tick is not a transaction over all executed aggregate operations.
 
 Detailed contract:
 
-application-tick-contract.md
+../architect/architecture/arena-combat/application-tick-contract.md
 
 Exit criteria:
 
