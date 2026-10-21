@@ -54,6 +54,12 @@ Terms added by analysis:
 | Third-Person View | the view in which the camera is positioned away from the Player and the Player's character remains visible |
 | Restart | the replacement of a defeated ArenaRun with a new one at Wave one |
 | run | informal synonym for ArenaRun; "ArenaRun" is the preferred term |
+| Weapon Switch | the exchange of the Equipped Weapon for the other Weapon on one Weapon-Switch Input |
+| Weapon-Switch Input | the player action that requests a Weapon Switch; one press performs one Weapon Switch |
+| Equipped Weapon | the one Weapon a Player currently holds and whose Attack the Attack Input performs |
+| Attack Input | the player action that performs the Equipped Weapon's Attack |
+| Alive | a Player whose Health is above zero and who has not been defeated |
+| Defeated | a Player whose Health has reached zero; the state persists until a new ArenaRun begins |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
@@ -73,6 +79,8 @@ and **Melee Weapon** for the two Weapons.
 - A **Player** has one **Health**; an **Enemy** has one **Health**.
 - A **Player** has exactly one equipped **Weapon**, either the
   **Firearm** or the **Melee Weapon**.
+- A **Player** carries both the **Firearm** and the **Melee Weapon**;
+  a **Weapon Switch** changes which one is equipped.
 - A **Player's** **Position** lies inside **Arena Bounds**.
 - A **Spawn** places an **Enemy** outside **Arena Bounds**, within the
   **Spawn Band**.
@@ -100,6 +108,10 @@ and **Melee Weapon** for the two Weapons.
   resolve an attack.
 - A new run starts with the Player at full health and the Firearm
   equipped.
+- A Weapon Switch exchanges the Equipped Weapon; it never gains, loses,
+  or consumes a Weapon.
+- The equipped Weapon changes only through a Weapon Switch or the start
+  of a new run.
 
 **Enemy**
 - Every active Enemy belongs to exactly one ArenaRun.
@@ -181,10 +193,13 @@ and **Melee Weapon** for the two Weapons.
 - A new ArenaRun starts at full health
 
 **Weapon**
-- Firearm ⇄ Melee Weapon (one switch press alternates)
+- Firearm ⇄ Melee Weapon (one Weapon-Switch Input while the Player is
+  Alive)
 - Every new ArenaRun starts with the Firearm
 - A switch is rejected while a pending Attack exists or the Player is
   defeated
+- No input other than the Weapon-Switch Input changes the equipped
+  Weapon; a new run is the sole exception
 
 **Enemy**
 - Spawned (outside Arena Bounds) → Active (inside the Arena) → Defeated
