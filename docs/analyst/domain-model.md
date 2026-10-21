@@ -48,6 +48,7 @@ Terms added by analysis:
 | Final Wave | the third and last Wave of a run |
 | Spawn | the entry of an Enemy into the Arena from outside Arena Bounds |
 | Spawn Band | the zone outside Arena Bounds from which a Spawn may place an Enemy |
+| Spawn Pacing | the schedule by which a Wave's Enemies enter the Arena; how many enter and how far apart is a tuning value |
 | Wave Number | the position of the current Wave in the run, beginning at one |
 | Movement | the change of a Player's Position in response to Movement Input |
 | View Direction | the horizontal direction the camera currently faces, relative to which Movement Input is interpreted |
@@ -91,6 +92,8 @@ and **Melee Weapon** for the two Weapons.
 - A **Player's** **Position** lies inside **Arena Bounds**.
 - A **Spawn** places an **Enemy** outside **Arena Bounds**, within the
   **Spawn Band**.
+- A **Wave** has a **Spawn Pacing** that schedules when each of its
+  **Enemies** enters the **Arena**.
 - A **Player Attack** targets **Enemies**; an **Enemy Attack** targets
   the **Player**.
 - A **Ranged Attack** is aimed along its **Aim Direction** and affects at
@@ -166,6 +169,8 @@ and **Melee Weapon** for the two Weapons.
   at arena ground height.
 - No Enemy enters after the run ends, and no later-Wave Enemy enters
   while the current Wave is in progress.
+- A Wave's Enemies enter on that Wave's Spawn Pacing, and only while it
+  is the current Wave.
 
 **Combat**
 - Damage is positive; applied damage equals the actual health
