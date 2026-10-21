@@ -32,14 +32,20 @@ Terms added by analysis:
 |------|------------|
 | Arena | the closed play space in which one ArenaRun is fought, bounded by Arena Bounds |
 | Playing | the active ArenaRun state before Defeat or Victory |
+| Combatant | a Player or an Enemy; a participant that can have Health and a pending Attack |
+| Active | present in the ArenaRun and not defeated |
 | Attack | a combatant's attempt to deal Damage, begun at Attack Start and resolved at Attack Impact |
 | Attack Range | the distance within which a combatant can start and land its Attack |
+| View | the player's visible picture of the Arena |
+| First-Person View | a view from the Player's eyes; not available in this product |
+| Character | the visible body of a Player in the Arena |
 | Firearm | the Ranged Weapon |
 | Melee Weapon | the Weapon when it is Melee; the close-range weapon |
 | Fire Rate | the firearm's Cooldown; "Cooldown" is the preferred term |
 | Attack Rate | the Melee Weapon's Cooldown; "Cooldown" is the preferred term |
 | Regular Enemy | an Enemy that is not a Boss |
 | Boss | the single high-health Enemy that closes each Wave |
+| Final Wave | the third and last Wave of a run |
 | Spawn | the entry of an Enemy into the Arena from outside Arena Bounds |
 | Spawn Band | the zone outside Arena Bounds from which a Spawn may place an Enemy |
 | Wave Number | the position of the current Wave in the run, beginning at one |

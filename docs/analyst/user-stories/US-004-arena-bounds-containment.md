@@ -1,4 +1,4 @@
-# US-004 — Arena bounds containment
+# US-004 — Arena Bounds containment
 
 - **Feature:** F-001 — Player movement and third-person camera
 - **Actor:** player
@@ -7,24 +7,24 @@
 
 ## Story
 
-As a player, I want movement to stop at the arena bounds, so that the closed
+As a player, I want movement to stop at Arena Bounds, so that the closed
 arena stays the whole playable space and I cannot leave it.
 
 ## Examples
 
-**E1 — walking into an edge stops at the edge**
-- Given the run is Playing and the player stands next to an arena edge,
+**E1 — walking into Arena Bounds stops there**
+- Given the run is Playing and the player stands next to Arena Bounds,
 - when the player holds the direction that points out of the arena,
-- then the player stops at the edge and does not cross it.
+- then the player stops at Arena Bounds and does not cross it.
 
-**E2 — sliding along an edge stays inside**
-- Given the run is Playing and the player is held against an edge,
-- when the player also holds a direction along that edge,
-- then the player moves along the edge while remaining inside the arena.
+**E2 — sliding along Arena Bounds stays inside**
+- Given the run is Playing and the player is held against Arena Bounds,
+- when the player also holds a direction along Arena Bounds,
+- then the player moves along Arena Bounds while remaining inside the arena.
 
 **E3 — a diagonal into a corner stays inside**
 - Given the run is Playing and the player stands in a corner,
-- when the player holds a diagonal direction pointing out of both edges,
+- when the player holds a diagonal direction pointing out of Arena Bounds,
 - then the player remains inside the arena.
 
 ## Notes

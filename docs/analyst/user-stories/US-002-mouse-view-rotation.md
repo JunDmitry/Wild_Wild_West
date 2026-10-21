@@ -7,8 +7,8 @@
 
 ## Story
 
-As a player, I want to rotate the view around my character with the mouse, so
-that I can look toward threats and choose the direction my movement is
+As a player, I want to rotate the view around my character with the mouse,
+so that I can look toward threats and choose the direction my movement is
 relative to.
 
 ## Examples
