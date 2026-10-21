@@ -58,8 +58,8 @@ Terms added by analysis:
 | Weapon-Switch Input | the player action that requests a Weapon Switch; one press performs one Weapon Switch |
 | Equipped Weapon | the one Weapon a Player currently holds and whose Attack the Attack Input performs |
 | Attack Input | the player action that performs the Equipped Weapon's Attack |
-| Alive | a Player whose Health is above zero and who has not been defeated |
-| Defeated | a Player whose Health has reached zero; the state persists until a new ArenaRun begins |
+| Alive | the state of a Player that is Active: present in the ArenaRun and not defeated |
+| Defeated | the state of a Player that is not Active, because its Health has reached zero; it persists until a new ArenaRun begins |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
