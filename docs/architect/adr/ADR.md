@@ -9,7 +9,7 @@
 - **Owner:** `Dmitry Rysev`
 - **Repository:** `https://github.com/JunDmitry/Wild_Wild_West`
 - **Created:** `2026-09-13`
-- **Last updated:** `2026-09-13`
+- **Last updated:** `2026-10-21`
 
 ## Purpose
 
@@ -45,6 +45,8 @@ ADRs are stored as Markdown files in the `docs/adr/` directory so that decisions
 | ADR-0012 | Domain authority over spawn placement and schedule | Accepted | 2026-09-16 | [ADR-0012](ADR-0012-domain-authority-over-spawn-placement-and-schedule.md) |
 | ADR-0013 | Stage attacks into start and impact | Accepted | YYYY-MM-DD | [ADR-0013](ADR-0013-stage-attacks-into-start-and-impact.md) |
 | ADR-0014 | Use VContainer for dependency injection in CompositionRoot | Accepted | 2026-09-18 | [ADR-0014](ADR-0014-use-vcontainer-for-dependency-injection.md) |
+| ADR-0015 | Build the Arena core as a standalone .NET project while keeping its sources in Assets | Accepted | 2026-10-21 | [ADR-0015](ADR-0015-standalone-dotnet-build-for-arena-core.md) |
+| ADR-0016 | Organize gameplay by bounded context and documentation by role zone | Accepted | 2026-10-21 | [ADR-0016](ADR-0016-bounded-context-and-documentation-layout.md) |
 
 ## New ADR Template
 
