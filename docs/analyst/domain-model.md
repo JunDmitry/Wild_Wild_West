@@ -60,6 +60,10 @@ Terms added by analysis:
 | Attack Input | the player action that performs the Equipped Weapon's Attack |
 | Alive | the state of a Player that is Active: present in the ArenaRun and not defeated |
 | Defeated | the state of a Player that is not Active, because its Health has reached zero; it persists until a new ArenaRun begins |
+| Ranged Attack | an Attack made with the Firearm |
+| Shot | informal synonym for a Ranged Attack with the Firearm; "Ranged Attack" is the preferred term |
+| Aim Direction | the Direction in which a Shot travels; for the Firearm, the current View Direction |
+| Weapon Damage | the Damage an Attack with a Weapon requests |
 
 Preferred terms: use **Cooldown** rather than Fire Rate or Attack Rate;
 use **Enemy** with Regular Enemy and Boss as its two kinds; use **Arena
@@ -86,6 +90,11 @@ and **Melee Weapon** for the two Weapons.
   **Spawn Band**.
 - A **Player Attack** targets **Enemies**; an **Enemy Attack** targets
   the **Player**.
+- A **Ranged Attack** is aimed along its **Aim Direction** and affects at
+  most one **Enemy**: the nearest one along that direction within
+  **Attack Range**.
+- A **Firearm** has a **Weapon Damage** value; a **Ranged Attack** with
+  it requests that **Damage**.
 - An **ArenaRun** contains a monotonically increasing **Game Time**.
 
 ## 3. Invariants
@@ -163,6 +172,9 @@ and **Melee Weapon** for the two Weapons.
 - Player health reaching zero transitions the ArenaRun to Defeat in the
   same operation, and pending Attacks of a defeated combatant are
   cancelled.
+- A Shot affects only the nearest Enemy along its Aim Direction within
+  Attack Range.
+- A Shot that reaches no Enemy within Attack Range applies no Damage.
 
 **Game Time**
 - Game Time never decreases.
@@ -200,6 +212,15 @@ and **Melee Weapon** for the two Weapons.
   defeated
 - No input other than the Weapon-Switch Input changes the equipped
   Weapon; a new run is the sole exception
+
+**Attack**
+- Ready → Started (the attack input is accepted: the attacker is Alive,
+  no Attack is pending, and the Weapon is ready)
+- Started → Impact (Game Time reaches the impact time; Damage is applied
+  or the Attack misses)
+- Started → Cancelled (the attacker is defeated)
+- Impact or Cancelled → Ready (once the attacker can attack again;
+  Cooldown starts at Attack Start)
 
 **Enemy**
 - Spawned (outside Arena Bounds) → Active (inside the Arena) → Defeated
