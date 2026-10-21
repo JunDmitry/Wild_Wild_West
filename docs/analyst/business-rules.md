@@ -385,3 +385,22 @@ combat-readiness gate applies.
 
 The equipped weapon changes only in response to the weapon-switch input;
 starting a new run with the firearm equipped is the sole exception.
+
+### BR-111 — The shot follows the view direction
+
+A firearm shot travels along the player's current View Direction.
+
+### BR-112 — The shot affects the nearest enemy in its path
+
+A firearm shot that reaches enemies affects only the nearest enemy along
+its direction within Attack Range.
+
+### BR-113 — A missed shot changes no health
+
+A firearm shot that reaches no enemy within Attack Range applies no
+Damage.
+
+### BR-114 — A player attack needs readiness
+
+A player attack can start only when the player has no pending attack and
+the equipped weapon's Cooldown has elapsed.
