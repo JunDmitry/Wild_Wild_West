@@ -49,6 +49,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0016 | Organize gameplay by bounded context and documentation by role zone | Accepted | 2026-10-21 | [ADR-0016](ADR-0016-bounded-context-and-documentation-layout.md) |
 | ADR-0017 | Convert view-relative player input in the Application | Accepted | 2026-10-22 | [ADR-0017](ADR-0017-view-relative-player-input.md) |
 | ADR-0018 | PlayMode tests live in a separate Unity test assembly | Accepted | 2026-10-22 | [ADR-0018](ADR-0018-playmode-test-assembly.md) |
+| ADR-0019 | Model the melee Attack Arc in the Domain contract | Accepted | 2026-10-22 | [ADR-0019](ADR-0019-attack-arc-in-domain-contract.md) |
 
 ## New ADR Template
 
