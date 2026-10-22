@@ -21,3 +21,4 @@ yet accounted for.
 | F-008 | analyst-role | analyst-inbox | 2026-10-21T19:47:08Z | done | already satisfied by `Wave`/`WaveCatalog`/`ArenaRun` (incl. BR-064 successor numbering and victory); no change, no handoff; task `docs/architect/tasks/F-008.md` |
 | F-009 | analyst-role | analyst-inbox | 2026-10-22T03:39:33Z | done | accepted; BR-063 enforced in `EnemyCatalog` with Domain tests; other boss rules already owned; no handoff; task `docs/architect/tasks/F-009.md` |
 | F-010 | analyst-role | analyst-inbox | 2026-10-22T03:46:13Z | done | accepted; ADR-0021, automatic defeat restart owned by the Application tick; implemented in `933ec0e`; no handoff; task `docs/architect/tasks/F-010.md` |
+| F-011 | analyst-role | analyst-inbox | 2026-10-22T03:54:07Z | done | accepted; ADR-0022, Application notifications for one-shot facts; victory published through a sink port; no coder handoff; task `docs/architect/tasks/F-011.md` |

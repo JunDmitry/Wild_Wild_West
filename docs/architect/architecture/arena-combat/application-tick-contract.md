@@ -47,7 +47,7 @@ A rejected interaction resolution ends the current tick after recording the oper
 
 A defeated ArenaRun runs the Defeat Restart stage and then ends the current tick before later combat stages.
 
-ArenaRunTickCoordinator returns a tick result and does not publish notifications.
+ArenaRunTickCoordinator returns a tick result and does not publish notifications. ArenaRunTickService publishes Application notifications after the result is built (see § Victory and Terminal Runs).
 
 ## External Resolution Boundary
 
@@ -126,7 +126,7 @@ The final tick revision is not assigned to all events.
 
 Collections are copied and published read-only.
 
-Tick results are inputs for future Application notification mapping, not direct Presentation messages.
+Tick results are inputs for Application notification mapping, not direct Presentation messages.
 
 A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
 
@@ -182,8 +182,23 @@ The delay is measured in GameDuration from IGameClock. A zero delta also does no
 
 The Domain has no restart timer and no delay value. No defeat window, message, confirmation, or manual restart exists in the contract.
 
+## Victory and Terminal Runs
+
+A run reaches the Victory status when the last Wave of its WaveCatalog is completed. The Domain emits ArenaRunVictorious in the same revision as the WaveCompleted that closed that Wave, so one committed transition produces both events.
+
+Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory.
+
+IArenaRunNotification marks an Application notification. IArenaRunNotificationSink is the outbound port; Presentation implements it and the CompositionRoot supplies it, so Application never references a view.
+
+ArenaRunTickService publishes the notifications of a tick after the result is built, in Domain Event order. A tick whose events map to nothing publishes nothing.
+
+The notification is published once, because the event exists only in the tick that produced it; a later tick on a victorious run produces no new events and therefore no repeat.
+
+A sink failure stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when the sink is called.
+
+Victory does not restart. A victorious run is terminal and is replaced only when composition starts another run; Defeat restarts automatically (see § Defeat and Restart). Notifications describe a committed fact and are never commands back into Application.
 ## Deferred Work
 
-- T-4: Snapshots and Application notifications.
-- T-5: Notification dispatch.
+- T-4: Remaining Application notifications beyond victory.
+- T-5: Notification dispatch to the view (the Application port and the mapper exist; the adapter does not).
 - T-8: Scene lifecycle (the restart delay is owned by the tick; see § Defeat and Restart).
