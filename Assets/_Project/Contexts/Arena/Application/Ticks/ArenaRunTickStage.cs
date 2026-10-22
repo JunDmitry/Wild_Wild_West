@@ -12,5 +12,6 @@
         EnemyAttackStart = 7,
         EnemyAttackImpact = 8,
         EnemySpawn = 9,
+        DefeatRestart = 10,
     }
 }

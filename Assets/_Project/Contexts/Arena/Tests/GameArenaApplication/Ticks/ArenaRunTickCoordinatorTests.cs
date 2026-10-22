@@ -197,7 +197,7 @@ namespace Game.Arena.Application.Tests.Ticks
         }
 
         [Test]
-        public void TerminalRunDoesNotExecuteAnyGameplayStage()
+        public void TerminalRunExecutesOnlyDefeatRestartStage()
         {
             ArenaRun run = _kit.Session.GetRequiredActiveRun();
             run.MakeRunDefeat(reqularsToSpawn: 1);
@@ -207,7 +207,9 @@ namespace Game.Arena.Application.Tests.Ticks
 
             ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
 
-            Assert.That(result.ExecutedStages, Is.Empty);
+            Assert.That(
+                result.ExecutedStages,
+                Is.EquivalentTo(new[] { ArenaRunTickStage.DefeatRestart }));
             Assert.That(run.Revision, Is.EqualTo(revisionBeforeTick));
             Assert.That(run.CurrentTime, Is.EqualTo(timeBeforeTick));
             Assert.That(result.DomainEvents, Is.Empty);
@@ -263,6 +265,7 @@ namespace Game.Arena.Application.Tests.Ticks
                 kit.EnemyPhase,
                 kit.RecoveryStage,
                 kit.TimeAdvanceStage,
+                kit.DefeatRestartStage,
                 kit.SnapshotMapper);
 
             ArenaRunTickCoordinator coordinator = new(dependencies);

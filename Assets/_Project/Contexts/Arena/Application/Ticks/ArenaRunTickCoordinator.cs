@@ -29,6 +29,14 @@ namespace Game.Arena.Application.Ticks
                 }
 
                 GameDuration delta = _dependencies.Clock.GetDelta();
+
+                if (_dependencies.DefeatRestartStage.Execute(run, delta, recorder))
+                {
+                    ArenaRun restartedRun = _dependencies.Session.GetRequiredActiveRun();
+
+                    return BuildResult(restartedRun, recorder);
+                }
+
                 PlayerFrameInput input = _dependencies.InputSource.Read();
 
                 if (input == null)

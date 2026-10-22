@@ -15,6 +15,7 @@ namespace Game.Arena.Application.Ticks
             EnemyTickPhase enemyPhase,
             PendingInteractionRecoveryStage recoveryStage,
             TimeAdvanceStage timeAdvanceStage,
+            DefeatRestartStage defeatRestartStage,
             ArenaRunSnapshotMapper snapshotMapper)
         {
             Session = session ?? throw new System.ArgumentNullException(nameof(session));
@@ -24,6 +25,7 @@ namespace Game.Arena.Application.Ticks
             EnemyPhase = enemyPhase ?? throw new System.ArgumentNullException(nameof(enemyPhase));
             RecoveryStage = recoveryStage ?? throw new System.ArgumentNullException(nameof(recoveryStage));
             TimeAdvanceStage = timeAdvanceStage ?? throw new System.ArgumentNullException(nameof(timeAdvanceStage));
+            DefeatRestartStage = defeatRestartStage ?? throw new System.ArgumentNullException(nameof(defeatRestartStage));
             SnapshotMapper = snapshotMapper ?? throw new System.ArgumentNullException(nameof(snapshotMapper));
         }
 
@@ -34,6 +36,7 @@ namespace Game.Arena.Application.Ticks
         public EnemyTickPhase EnemyPhase { get; }
         public PendingInteractionRecoveryStage RecoveryStage { get; }
         public TimeAdvanceStage TimeAdvanceStage { get; }
+        public DefeatRestartStage DefeatRestartStage { get; }
         public ArenaRunSnapshotMapper SnapshotMapper { get; }
     }
 }

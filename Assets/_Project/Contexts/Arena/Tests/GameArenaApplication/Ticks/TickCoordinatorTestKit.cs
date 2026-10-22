@@ -1,4 +1,5 @@
 ﻿using Game.Arena.Application.ReadModels;
+using Game.Arena.Application.Restart;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Application.Spawning;
 using Game.Arena.Application.Tests.Sessions;
@@ -13,7 +14,7 @@ namespace Game.Arena.Application.Tests.Ticks
 {
     internal sealed class TickCoordinatorTestKit
     {
-        public TickCoordinatorTestKit()
+        public TickCoordinatorTestKit(double restartDelaySeconds = 1000d)
         {
             Repository = new TestArenaRunRepository();
             ArenaRunIds = new RecordingArenaRunIdSource();
@@ -25,6 +26,8 @@ namespace Game.Arena.Application.Tests.Ticks
             EnemyMovementResolver = new ScriptedEnemyMovementResolver();
             SpawnResolver = new ScriptedSpawnPlacementResolver();
             Pacing = new FixedIntervalSpawnPacingPolicy(new Domain.Time.GameDuration(1d));
+            RestartDelayPolicy = new FixedIntervalRunRestartDelayPolicy(
+                new Domain.Time.GameDuration(restartDelaySeconds));
             Clock = new FixedGameClock(new Domain.Time.GameDuration(0.1d));
             Input = new FixedPlayerInputSource();
             Tracker = new PendingInteractionTracker();
@@ -55,6 +58,7 @@ namespace Game.Arena.Application.Tests.Ticks
 
             RecoveryStage = new PendingInteractionRecoveryStage(Tracker);
             TimeAdvanceStage = new TimeAdvanceStage();
+            DefeatRestartStage = new DefeatRestartStage(Session, RestartDelayPolicy);
             SnapshotMapper = new();
 
             ArenaRunTickCoordinatorDependencies dependencies = new(
@@ -65,6 +69,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     EnemyPhase,
                     RecoveryStage,
                     TimeAdvanceStage,
+                    DefeatRestartStage,
                     SnapshotMapper);
 
             Coordinator = new ArenaRunTickCoordinator(dependencies);
@@ -90,6 +95,8 @@ namespace Game.Arena.Application.Tests.Ticks
 
         public FixedIntervalSpawnPacingPolicy Pacing { get; }
 
+        public FixedIntervalRunRestartDelayPolicy RestartDelayPolicy { get; }
+
         public FixedGameClock Clock { get; }
 
         public FixedPlayerInputSource Input { get; }
@@ -105,6 +112,8 @@ namespace Game.Arena.Application.Tests.Ticks
         public PendingInteractionRecoveryStage RecoveryStage { get; }
 
         public TimeAdvanceStage TimeAdvanceStage { get; }
+
+        public DefeatRestartStage DefeatRestartStage { get; }
 
         public ArenaRunTickCoordinator Coordinator { get; }
 

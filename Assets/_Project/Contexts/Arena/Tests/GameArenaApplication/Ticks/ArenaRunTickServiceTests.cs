@@ -125,7 +125,8 @@ namespace Game.Arena.Application.Tests.Ticks
                         _kit.EnemyMovementResolver,
                         _kit.SpawnResolver,
                         _kit.EnemyIds,
-                        _kit.Pacing);
+                        _kit.Pacing,
+                        _kit.RestartDelayPolicy);
                 });
         }
 
@@ -142,7 +143,8 @@ namespace Game.Arena.Application.Tests.Ticks
                     kit.EnemyMovementResolver,
                     kit.SpawnResolver,
                     kit.EnemyIds,
-                    kit.Pacing);
+                    kit.Pacing,
+                    kit.RestartDelayPolicy);
 
             return new ArenaRunTickService(dependencies);
         }

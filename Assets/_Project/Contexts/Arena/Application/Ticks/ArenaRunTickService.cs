@@ -25,6 +25,9 @@ namespace Game.Arena.Application.Ticks
 
             PendingInteractionRecoveryStage recoveryStage = new(_tracker);
             TimeAdvanceStage timeAdvanceStage = new();
+            DefeatRestartStage defeatRestartStage = new(
+                    dependencies.Session,
+                    dependencies.RestartDelayPolicy);
 
             PlayerTickPhase playerPhase = new(
                     dependencies.MovementResolver,
@@ -48,6 +51,7 @@ namespace Game.Arena.Application.Ticks
                     enemyPhase,
                     recoveryStage,
                     timeAdvanceStage,
+                    defeatRestartStage,
                     snapshotMapper);
 
             _coordinator = new ArenaRunTickCoordinator(coordinatorDependencies);
@@ -63,6 +67,7 @@ namespace Game.Arena.Application.Ticks
                 if (activeId != _lastArenaRunId)
                 {
                     _dependencies.PacingPolicy.Reset();
+                    _dependencies.RestartDelayPolicy.Reset();
                     _lastArenaRunId = activeId;
                 }
             }
