@@ -59,8 +59,8 @@ Terms added by analysis:
 | Weapon-Switch Input | the player action that requests a Weapon Switch; one press performs one Weapon Switch |
 | Equipped Weapon | the one Weapon a Player currently holds and whose Attack the Attack Input performs |
 | Attack Input | the player action that performs the Equipped Weapon's Attack |
-| Alive | the state of a Player that is Active: present in the ArenaRun and not defeated |
-| Defeated | the state of a Player that is not Active, because its Health has reached zero; it persists until a new ArenaRun begins |
+| Alive | the state of a Combatant that is Active: present in the ArenaRun and not defeated |
+| Defeated | the state of a Combatant whose Health has reached zero; a defeated Enemy is removed from the active Enemies, a defeated Player persists until a new ArenaRun begins |
 | Ranged Attack | an Attack made with the Firearm |
 | Shot | informal synonym for a Ranged Attack with the Firearm; "Ranged Attack" is the preferred term |
 | Aim Direction | the Direction in which an Attack is delivered; for both Weapons, the current View Direction |
@@ -139,6 +139,7 @@ and **Melee Weapon** for the two Weapons.
 **Enemy**
 - Every active Enemy belongs to exactly one ArenaRun.
 - Enemy health lies between zero and its maximum, inclusive.
+- An Enemy whose Health reaches zero is Defeated.
 - A defeated Enemy is removed from the active Enemies.
 - While the ArenaRun is Playing, an Enemy that is not defeated moves toward
   the Player until it is within its Attack Range.

@@ -184,6 +184,10 @@ An enemy outside its attack range causes no damage to the player.
 A landed enemy attack reduces the player's health by that attack's
 damage.
 
+### BR-048 — Zero health defeats an enemy
+
+An Enemy whose health reaches zero is Defeated.
+
 ## Wave
 
 ### BR-050 — One current wave

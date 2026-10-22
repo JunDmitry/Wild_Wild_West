@@ -3,7 +3,7 @@
 - **Feature:** F-009 — Boss enemy each wave
 - **Actor:** player
 - **Priority:** P1 (from `docs/product/backlog.md`)
-- **Rules:** `BR-063`, `BR-041`
+- **Rules:** `BR-063`, `BR-041`, `BR-091`, `BR-048`
 
 ## Story
 
