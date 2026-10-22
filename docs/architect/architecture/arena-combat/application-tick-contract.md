@@ -45,7 +45,7 @@ Normal gameplay order:
 
 A rejected interaction resolution ends the current tick after recording the operation result.
 
-A terminal ArenaRun ends the current tick before later combat stages.
+A defeated ArenaRun runs the Defeat Restart stage and then ends the current tick before later combat stages.
 
 ArenaRunTickCoordinator returns a tick result and does not publish notifications.
 
@@ -128,6 +128,8 @@ Collections are copied and published read-only.
 
 Tick results are inputs for future Application notification mapping, not direct Presentation messages.
 
+A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
@@ -158,14 +160,30 @@ The service never returns the mutable ArenaRun aggregate.
 
 The service observes ActiveArenaRunId.
 
-When the active run changes, it resets the spawn pacing policy before executing the next step.
+When the active run changes, it resets the spawn pacing policy and the run restart delay policy before executing the next step.
 
 Identity sources are not reset.
 
 The pending interaction tracker is managed by the recovery stage and requires no explicit reset on run change.
 
+## Defeat and Restart
+
+A defeated ArenaRun restarts itself. The tick, not the view, owns the transition (BR-017).
+
+IRunRestartDelayPolicy belongs to Application. FixedIntervalRunRestartDelayPolicy is constructed with a GameDuration tuning value supplied by composition; no other layer reads or writes it.
+
+The Defeat Restart stage runs only while the active run is in the Defeat status. It records ArenaRunTickStage.DefeatRestart, feeds the tick delta to the policy, and restarts when the policy reports that the delay has elapsed.
+
+The stage calls ArenaRunSession.RestartDefeatedRun. The Session allocates a new ArenaRunId and PlayerId, builds a fresh run through ArenaRunFactory.Start (first Wave, full Health, Firearm), adds it, and removes the defeated run. The defeated aggregate is never reset (BR-016).
+
+After a restart the tick returns the new run's result and ends. It reads no player input and runs no gameplay stage for that frame. The restarted run is ticked normally from the next tick.
+
+The delay is measured in GameDuration from IGameClock. A zero delta also does not advance it.
+
+The Domain has no restart timer and no delay value. No defeat window, message, confirmation, or manual restart exists in the contract.
+
 ## Deferred Work
 
 - T-4: Snapshots and Application notifications.
 - T-5: Notification dispatch.
-- T-8: Scene lifecycle and restart delay.
+- T-8: Scene lifecycle (the restart delay is owned by the tick; see § Defeat and Restart).
