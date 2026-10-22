@@ -13,5 +13,7 @@
         public const float MovementPathTolerance = 0.001f;
 
         public const float CombatRangeTolerance = 0.001f;
+
+        public const float AttackArcTolerance = 0.0001f;
     }
 }

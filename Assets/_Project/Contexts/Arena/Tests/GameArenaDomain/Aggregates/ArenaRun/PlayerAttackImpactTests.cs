@@ -237,6 +237,59 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         }
 
         [Test]
+        public void MeleeTargetOutsideAttackArcIsRejected()
+        {
+            ArenaRun run = _kit.StartRunInSmallArena(
+                _kit.WeaponsWithMeleeArc(AttackArc.FromDegrees(90f)));
+            EnemyId enemyId = SpawnRegular(run, 10UL, new Position3D(-2.5f, 0f, 0f));
+            run.SwitchWeapon();
+            run.StartPlayerAttack();
+            run.AdvanceTime(new GameDuration(0.3d));
+            PlayerAttackImpactRequest request = run.RequestPlayerAttackImpact(Direction3D.Right).Request;
+
+            PlayerAttackImpactOutcome outcome = run.ApplyPlayerAttackImpact(
+                new PlayerAttackImpactResolution(request.Correlation, new[] { enemyId }));
+
+            Assert.That(
+                outcome.RejectionReason,
+                Is.EqualTo(PlayerAttackImpactRejectionReason.TargetOutsideArc));
+            Assert.That(run.HasPendingPlayerAttack, Is.True);
+        }
+
+        [Test]
+        public void MeleeTargetInsideAttackArcIsDamaged()
+        {
+            ArenaRun run = _kit.StartRunInSmallArena(
+                _kit.WeaponsWithMeleeArc(AttackArc.FromDegrees(90f)));
+            EnemyId enemyId = SpawnRegular(run, 10UL, new Position3D(2.4f, 0f, 0.4f));
+            run.SwitchWeapon();
+            run.StartPlayerAttack();
+            run.AdvanceTime(new GameDuration(0.3d));
+            PlayerAttackImpactRequest request = run.RequestPlayerAttackImpact(Direction3D.Right).Request;
+
+            PlayerAttackImpactOutcome outcome = run.ApplyPlayerAttackImpact(
+                new PlayerAttackImpactResolution(request.Correlation, new[] { enemyId }));
+
+            Assert.That(outcome.Status, Is.EqualTo(PlayerAttackImpactStatus.Hit));
+        }
+
+        [Test]
+        public void FullArcWeaponAcceptsTargetBehind()
+        {
+            ArenaRun run = _kit.StartRunInSmallArena();
+            EnemyId enemyId = SpawnRegular(run, 10UL, new Position3D(-2.5f, 0f, 0f));
+            run.SwitchWeapon();
+            run.StartPlayerAttack();
+            run.AdvanceTime(new GameDuration(0.3d));
+            PlayerAttackImpactRequest request = run.RequestPlayerAttackImpact(Direction3D.Right).Request;
+
+            PlayerAttackImpactOutcome outcome = run.ApplyPlayerAttackImpact(
+                new PlayerAttackImpactResolution(request.Correlation, new[] { enemyId }));
+
+            Assert.That(outcome.Status, Is.EqualTo(PlayerAttackImpactStatus.Hit));
+        }
+
+        [Test]
         public void RejectedImpactAllowsRetryWithValidResolution()
         {
             ArenaRun run = _kit.StartRun();

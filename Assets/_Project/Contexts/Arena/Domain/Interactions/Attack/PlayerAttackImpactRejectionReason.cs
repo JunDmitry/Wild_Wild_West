@@ -11,5 +11,6 @@
         UnknownTarget = 6,
         TargetOutOfRange = 7,
         TooManyTargets = 8,
+        TargetOutsideArc = 9,
     }
 }

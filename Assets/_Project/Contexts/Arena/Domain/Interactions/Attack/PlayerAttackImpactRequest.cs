@@ -13,7 +13,8 @@ namespace Game.Arena.Domain.Interactions.Attack
             WeaponKind weaponKind,
             Position3D origin,
             Direction3D aimDirection,
-            Distance range)
+            Distance range,
+            AttackArc arc)
         {
             if (correlation.ArenaRunId.IsNone)
             {
@@ -40,12 +41,18 @@ namespace Game.Arena.Domain.Interactions.Attack
                 throw new ArgumentOutOfRangeException(nameof(range));
             }
 
+            if (arc.IsValid == false)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arc));
+            }
+
             Correlation = correlation;
             AttackId = attackId;
             WeaponKind = weaponKind;
             Origin = origin;
             AimDirection = aimDirection;
             Range = range;
+            Arc = arc;
         }
 
         public InteractionCorrelation Correlation { get; }
@@ -62,6 +69,8 @@ namespace Game.Arena.Domain.Interactions.Attack
 
         public Distance Range { get; }
 
+        public AttackArc Arc { get; }
+
         public bool Equals(PlayerAttackImpactRequest other)
         {
             return Correlation.Equals(other.Correlation)
@@ -69,7 +78,8 @@ namespace Game.Arena.Domain.Interactions.Attack
                 && WeaponKind == other.WeaponKind
                 && Origin.Equals(other.Origin)
                 && AimDirection.Equals(other.AimDirection)
-                && Range.Equals(other.Range);
+                && Range.Equals(other.Range)
+                && Arc.Equals(other.Arc);
         }
 
         public override bool Equals(object obj)
@@ -79,7 +89,7 @@ namespace Game.Arena.Domain.Interactions.Attack
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Correlation, AttackId, WeaponKind, Origin, AimDirection, Range);
+            return HashCode.Combine(Correlation, AttackId, WeaponKind, Origin, AimDirection, Range, Arc);
         }
 
         public static bool operator ==(PlayerAttackImpactRequest left, PlayerAttackImpactRequest right)

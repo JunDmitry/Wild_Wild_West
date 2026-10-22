@@ -14,6 +14,17 @@ namespace Game.Arena.Domain.Configuration
             Distance range,
             GameDuration cooldown,
             GameDuration windupDuration)
+            : this(kind, damage, range, cooldown, windupDuration, AttackArc.Full)
+        {
+        }
+
+        public WeaponDefinition(
+            WeaponKind kind,
+            DamageAmount damage,
+            Distance range,
+            GameDuration cooldown,
+            GameDuration windupDuration,
+            AttackArc arc)
         {
             if (damage.Points <= 0)
             {
@@ -30,11 +41,17 @@ namespace Game.Arena.Domain.Configuration
                 throw new ArgumentOutOfRangeException(nameof(cooldown));
             }
 
+            if (arc.IsValid == false)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arc));
+            }
+
             Kind = kind;
             Damage = damage;
             Range = range;
             Cooldown = cooldown;
             WindupDuration = windupDuration;
+            Arc = arc;
         }
 
         public WeaponKind Kind { get; }
@@ -42,5 +59,6 @@ namespace Game.Arena.Domain.Configuration
         public Distance Range { get; }
         public GameDuration Cooldown { get; }
         public GameDuration WindupDuration { get; }
+        public AttackArc Arc { get; }
     }
 }

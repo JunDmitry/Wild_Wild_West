@@ -482,7 +482,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 attack.WeaponKind,
                 _player.Position,
                 aimDirection,
-                weapon.Range);
+                weapon.Range,
+                weapon.Arc);
 
             return PlayerAttackImpactRequestOutcome.Requested(_pendingAttackImpactRequest);
         }
@@ -522,6 +523,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 if (IsWithinAttackRange(enemy, request.Range) == false)
                 {
                     return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TargetOutOfRange, CreateNoChange());
+                }
+
+                if (IsWithinAttackArc(enemy, request) == false)
+                {
+                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TargetOutsideArc, CreateNoChange());
                 }
 
                 if (targets.Contains(enemyId) == false)
@@ -1224,6 +1230,26 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 + GeometryTolerance.CombatRangeTolerance;
 
             return distance <= limit;
+        }
+
+        private bool IsWithinAttackArc(Enemy enemy, PlayerAttackImpactRequest request)
+        {
+            if (request.Arc.IsFull)
+            {
+                return true;
+            }
+
+            Displacement3D offset = enemy.Position - request.Origin;
+            Displacement3D horizontalOffset = new(offset.X, 0f, offset.Z);
+
+            if (horizontalOffset.TryToDirection(out Direction3D offsetDirection) == false)
+            {
+                return true;
+            }
+
+            float alignment = offsetDirection.Dot(request.AimDirection);
+
+            return alignment >= request.Arc.CosHalfAngle - GeometryTolerance.AttackArcTolerance;
         }
 
         private List<EnemyId> OrderedEnemyIds()

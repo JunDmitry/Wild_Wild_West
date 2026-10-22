@@ -132,14 +132,37 @@ namespace Game.Arena.Domain.Tests.Support
 
         public ArenaRun StartRunInSmallArena()
         {
+            return StartRunInSmallArena(Weapons);
+        }
+
+        public ArenaRun StartRunInSmallArena(WeaponCatalog weapons)
+        {
             return new ArenaRunFactory().Start(
                 ArenaRunId.FromValue(1UL),
                 PlayerId.FromValue(2UL),
                 SmallArena,
                 PlayerAt(Position3D.Zero),
                 Enemies,
-                Weapons,
+                weapons,
                 Waves(2, 1, 1));
+        }
+
+        public WeaponCatalog WeaponsWithMeleeArc(AttackArc arc)
+        {
+            return new WeaponCatalog(
+                new WeaponDefinition(
+                    WeaponKind.Ranged,
+                    DamageAmount.FromPoints(10),
+                    Distance.FromValue(50f),
+                    new GameDuration(0.4d),
+                    new GameDuration(0)),
+                new WeaponDefinition(
+                    WeaponKind.Melee,
+                    DamageAmount.FromPoints(20),
+                    Distance.FromValue(2f),
+                    new GameDuration(0.8d),
+                    new GameDuration(0.3d),
+                    arc));
         }
 
         public ArenaRun StartRunInCompactArena()

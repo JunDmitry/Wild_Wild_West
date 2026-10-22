@@ -52,6 +52,48 @@ namespace Game.Arena.Domain.Tests.Configuration
         }
 
         [Test]
+        public void Constructor_WithoutArc_UsesFullArc()
+        {
+            WeaponDefinition weaponDefinition = new(
+                Combat.WeaponKind.Melee,
+                DamageAmount.FromPoints(20),
+                Distance.FromValue(5),
+                new Domain.Time.GameDuration(1.1),
+                new Domain.Time.GameDuration(.4d));
+
+            Assert.IsTrue(weaponDefinition.Arc.IsFull);
+        }
+
+        [Test]
+        public void Constructor_WithArc_StoresArc()
+        {
+            WeaponDefinition weaponDefinition = new(
+                Combat.WeaponKind.Melee,
+                DamageAmount.FromPoints(20),
+                Distance.FromValue(5),
+                new Domain.Time.GameDuration(1.1),
+                new Domain.Time.GameDuration(.4d),
+                Combat.AttackArc.FromDegrees(90f));
+
+            Assert.IsTrue(weaponDefinition.Arc.Equals(Combat.AttackArc.FromDegrees(90f)));
+        }
+
+        [Test]
+        public void Constructor_IfInvalidArc_ThrownOutOfRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                _ = new WeaponDefinition(
+                    Combat.WeaponKind.Melee,
+                    DamageAmount.FromPoints(20),
+                    Distance.FromValue(5),
+                    new Domain.Time.GameDuration(1.1),
+                    new Domain.Time.GameDuration(.4d),
+                    default);
+            });
+        }
+
+        [Test]
         public void Constructor_WhenCreate_SetValues()
         {
             WeaponDefinition weaponDefinition = new(
