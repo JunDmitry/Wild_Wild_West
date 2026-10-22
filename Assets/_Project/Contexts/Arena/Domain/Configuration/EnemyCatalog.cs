@@ -30,6 +30,13 @@ namespace Game.Arena.Domain.Configuration
                 throw new ArgumentException("Definition kind must be Boss.", nameof(boss));
             }
 
+            if (boss.InitialHealth.Maximum <= regular.InitialHealth.Maximum)
+            {
+                throw new ArgumentException(
+                    "Boss health must exceed every Regular Enemy's health.",
+                    nameof(boss));
+            }
+
             _regular = regular;
             _boss = boss;
         }

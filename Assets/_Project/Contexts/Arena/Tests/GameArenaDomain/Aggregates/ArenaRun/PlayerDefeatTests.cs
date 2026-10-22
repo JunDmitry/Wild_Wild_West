@@ -230,7 +230,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             EnemyCatalog enemies = new EnemyCatalog(
                 new EnemyDefinition(
                     EnemyKind.Regular,
-                    Health.Full(10),
+                    Health.Full(9),
                     MovementSpeed.FromUnitsPerSecond(2f),
                     CollisionRadius.FromValue(0.5f),
                     DamageAmount.FromPoints(8),

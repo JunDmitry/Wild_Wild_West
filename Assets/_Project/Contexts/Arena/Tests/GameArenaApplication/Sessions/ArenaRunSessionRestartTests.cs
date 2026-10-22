@@ -59,7 +59,7 @@ namespace Game.Arena.Application.Tests.Sessions
             EnemyCatalog enemies = new(
                 new EnemyDefinition(
                     EnemyKind.Regular,
-                    Health.Full(10),
+                    Health.Full(9),
                     MovementSpeed.FromUnitsPerSecond(2f),
                     CollisionRadius.FromValue(0.5f),
                     DamageAmount.FromPoints(8),
