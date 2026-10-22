@@ -12,14 +12,18 @@ A tick uses one GameDuration and one PlayerFrameInput.
 
 PlayerFrameInput contains:
 
-- planar MovementInput;
-- current AimDirection;
+- MovementAxes: forward and right movement axes, relative to the view;
+- the current horizontal View Direction;
 - an attack-start request;
 - a weapon-switch request.
 
+The Application translates MovementAxes into a planar world-space MovementInput. View Direction is forward; its right-hand perpendicular is right. The resulting magnitude is clamped to one, so diagonal input is not faster, and zero axes produce no movement request.
+
+The View Direction is also the Aim Direction for both weapons.
+
 AttackPressed requests Attack Start. It does not request immediate Damage.
 
-AimDirection remains available when no new attack is requested because an existing pending Attack may become due.
+The View Direction remains available when no new attack is requested because an existing pending Attack may become due.
 
 A zero delta must not be passed to ArenaRun.AdvanceTime.
 

@@ -26,7 +26,7 @@ namespace Game.Arena.Application.Ticks.Stages
         {
             recorder.RecordStage(ArenaRunTickStage.PlayerAttackImpact);
 
-            PlayerAttackImpactRequestOutcome impactRequestOutcome = run.RequestPlayerAttackImpact(input.AimDirection);
+            PlayerAttackImpactRequestOutcome impactRequestOutcome = run.RequestPlayerAttackImpact(input.ViewDirection);
 
             if (impactRequestOutcome.HasRequest == false)
             {

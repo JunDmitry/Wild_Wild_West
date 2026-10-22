@@ -23,7 +23,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit = new TickCoordinatorTestKit();
             _kit.Session.StartInitialRun();
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 false,
                 false);
@@ -56,7 +56,7 @@ namespace Game.Arena.Application.Tests.Ticks
         public void TickContainsEventsInOccurrenceOrder()
         {
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 true,
                 false);
@@ -81,7 +81,7 @@ namespace Game.Arena.Application.Tests.Ticks
         public void PlayerStagesRunAfterTimeAdvance()
         {
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.FromVector(new Displacement3D(1f, 0f, 0f)),
+                new MovementAxes(1f, 0f),
                 Direction3D.Right,
                 true,
                 true);
@@ -102,8 +102,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit.MovementResolver.FixedPosition = new Position3D(100f, 0f, 0f);
 
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.FromVector(
-                    new Displacement3D(1f, 0f, 0f)),
+                new MovementAxes(1f, 0f),
                 Direction3D.Right,
                 true,
                 false);
@@ -121,7 +120,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit.MovementResolver.Mode = ScriptedPlayerMovementResolver.ResolveMode.ThrowError;
 
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.FromVector(new Displacement3D(1f, 0f, 0f)),
+                new MovementAxes(1f, 0f),
                 Direction3D.Right,
                 true,
                 false);
@@ -134,7 +133,7 @@ namespace Game.Arena.Application.Tests.Ticks
 
             _kit.MovementResolver.Mode = ScriptedPlayerMovementResolver.ResolveMode.AcceptRequested;
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 false,
                 false);
@@ -150,7 +149,7 @@ namespace Game.Arena.Application.Tests.Ticks
         {
             _kit.TargetingResolver.ReturnNull = true;
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 true,
                 false);
@@ -170,7 +169,7 @@ namespace Game.Arena.Application.Tests.Ticks
         public void PlayerAttackStartsBeforeEnemyStages()
         {
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 true,
                 false);
@@ -187,7 +186,7 @@ namespace Game.Arena.Application.Tests.Ticks
         public void CoordinatorDoesNotPublishEvents()
         {
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 true,
                 false);
@@ -251,7 +250,7 @@ namespace Game.Arena.Application.Tests.Ticks
             TickCoordinatorTestKit kit = new();
             kit.Session.StartInitialRun();
             kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 false,
                 false);

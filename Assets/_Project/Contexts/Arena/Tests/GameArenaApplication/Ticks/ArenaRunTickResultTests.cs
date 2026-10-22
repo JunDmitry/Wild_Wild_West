@@ -29,7 +29,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit = new();
             _kit.Session.StartInitialRun();
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 false,
                 false);

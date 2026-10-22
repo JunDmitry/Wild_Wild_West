@@ -21,7 +21,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit.Session.StartInitialRun();
 
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 false,
                 false);
@@ -43,7 +43,7 @@ namespace Game.Arena.Application.Tests.Ticks
             _kit.TargetingResolver.ReturnNull = true;
 
             _kit.Input.Input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Right,
                 true,
                 false);

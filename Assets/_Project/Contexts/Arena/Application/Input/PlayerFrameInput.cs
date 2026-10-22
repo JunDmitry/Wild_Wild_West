@@ -6,25 +6,33 @@ namespace Game.Arena.Application.Input
     public sealed class PlayerFrameInput
     {
         public PlayerFrameInput(
-            MovementInput movement,
-            Direction3D aimDirection,
+            MovementAxes movementAxes,
+            Direction3D viewDirection,
             bool attackPressed,
             bool switchWeaponPressed)
         {
-            if (aimDirection.IsValid == false)
+            if (viewDirection.IsValid == false)
             {
-                throw new ArgumentException("Aim direction is invalid.", nameof(aimDirection));
+                throw new ArgumentException("View direction is invalid.", nameof(viewDirection));
             }
 
-            Movement = movement;
-            AimDirection = aimDirection;
+            if (viewDirection.Y != 0f)
+            {
+                throw new ArgumentException("View direction must be horizontal.", nameof(viewDirection));
+            }
+
+            MovementAxes = movementAxes;
+            ViewDirection = viewDirection;
             AttackPressed = attackPressed;
             SwitchWeaponPressed = switchWeaponPressed;
         }
 
-        public MovementInput Movement { get; }
-        public Direction3D AimDirection { get; }
+        public MovementAxes MovementAxes { get; }
+
+        public Direction3D ViewDirection { get; }
+
         public bool AttackPressed { get; }
+
         public bool SwitchWeaponPressed { get; }
     }
 }

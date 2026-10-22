@@ -26,7 +26,8 @@ namespace Game.Arena.Application.Ticks.Stages
         {
             recorder.RecordStage(ArenaRunTickStage.PlayerMovement);
 
-            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(input.Movement, delta);
+            MovementInput movement = ViewRelativeMovement.Translate(input.MovementAxes, input.ViewDirection);
+            PlayerMovementRequestOutcome requestOutcome = run.RequestPlayerMovement(movement, delta);
 
             if (requestOutcome.HasRequest == false)
             {

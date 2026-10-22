@@ -44,13 +44,17 @@ namespace Game.Arena.Application.Tests.Ticks
 
         public PlayerFrameInput Input(
             Displacement3D movement,
-            Direction3D aim,
+            Direction3D viewDirection,
             bool attack,
             bool switchWeapon)
         {
+            Displacement3D viewRight = new Displacement3D(viewDirection.Z, 0f, -viewDirection.X);
+            float forward = movement.Dot(viewDirection);
+            float right = (movement.X * viewRight.X) + (movement.Z * viewRight.Z);
+
             return new PlayerFrameInput(
-                MovementInput.FromVector(movement),
-                aim,
+                new MovementAxes(forward, right),
+                viewDirection,
                 attack,
                 switchWeapon);
         }

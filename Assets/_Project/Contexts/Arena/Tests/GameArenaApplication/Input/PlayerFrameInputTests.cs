@@ -11,29 +11,28 @@ namespace Game.Arena.Application.Tests.Input
         [Test]
         public void ConstructorPreservesInputValues()
         {
-            MovementInput movement = MovementInput.FromVector(
-                new Displacement3D(0.5f, 0f, 0f));
+            MovementAxes axes = new MovementAxes(0.5f, -0.25f);
 
             PlayerFrameInput input = new(
-                movement,
+                axes,
                 Direction3D.Right,
                 true,
                 true);
 
-            Assert.That(input.Movement, Is.EqualTo(movement));
-            Assert.That(input.AimDirection, Is.EqualTo(Direction3D.Right));
+            Assert.That(input.MovementAxes, Is.EqualTo(axes));
+            Assert.That(input.ViewDirection, Is.EqualTo(Direction3D.Right));
             Assert.That(input.AttackPressed, Is.True);
             Assert.That(input.SwitchWeaponPressed, Is.True);
         }
 
         [Test]
-        public void ConstructorRejectsInvalidAimDirection()
+        public void ConstructorRejectsInvalidViewDirection()
         {
             Assert.Throws<ArgumentException>(
                 () =>
                 {
                     _ = new PlayerFrameInput(
-                        MovementInput.Zero,
+                        MovementAxes.Zero,
                         default,
                         false,
                         false);
@@ -41,16 +40,30 @@ namespace Game.Arena.Application.Tests.Input
         }
 
         [Test]
-        public void AimIsAvailableWithoutNewAttackRequest()
+        public void ConstructorRejectsNonHorizontalViewDirection()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _ = new PlayerFrameInput(
+                        MovementAxes.Zero,
+                        Direction3D.Up,
+                        false,
+                        false);
+                });
+        }
+
+        [Test]
+        public void ViewDirectionIsAvailableWithoutNewAttackRequest()
         {
             PlayerFrameInput input = new PlayerFrameInput(
-                MovementInput.Zero,
+                MovementAxes.Zero,
                 Direction3D.Left,
                 false,
                 false);
 
             Assert.That(input.AttackPressed, Is.False);
-            Assert.That(input.AimDirection, Is.EqualTo(Direction3D.Left));
+            Assert.That(input.ViewDirection, Is.EqualTo(Direction3D.Left));
         }
     }
 }
