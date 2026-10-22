@@ -60,6 +60,15 @@ reset.
 
 A defeated run restarts automatically, without a menu or confirmation.
 
+### BR-117 — No attack after victory
+
+Once an ArenaRun is Victory, the player can start no Attack.
+
+### BR-118 — Victory is announced
+
+When an ArenaRun reaches Victory, a Victory window stating that the run was won
+is shown to the player.
+
 ## Player and Health
 
 ### BR-020 — A run starts at full health
