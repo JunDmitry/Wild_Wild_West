@@ -79,6 +79,14 @@ An empty targeting result is a legitimate miss.
 
 An adapter failure must not be converted silently into a miss or successful blocked movement.
 
+Enemy spawn placement returns a position in the Spawn Band, at arena ground
+height, that lies outside the player's current view whenever the band offers
+such a point; if every band candidate is visible, it returns the band point
+farthest from the Aim Direction, so an Enemy never materializes in front of
+the player. The adapter owns that choice — it is the only layer that knows the
+camera. The Domain validates the result only: outside Arena Bounds, inside the
+Spawn Band, on the ground, plus wave-phase and duplicate-identity rules.
+
 Player stages are implemented as internal Application collaborators composed by PlayerTickPhase. They are not public API and are not invoked by Presentation or CompositionRoot directly.
 
 ## Spawn Pacing
