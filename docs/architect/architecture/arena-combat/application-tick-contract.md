@@ -67,6 +67,14 @@ from the request origin along its Aim Direction reaches within the request
 range, and never more than one Enemy for a ranged weapon. The adapter owns
 that selection; the Domain validates range and cardinality, not proximity.
 
+Melee targeting returns every Enemy whose horizontal offset from the request
+origin lies within the request range and within the request Attack Arc around
+its Aim Direction, each Enemy at most once. The adapter owns that selection;
+the Domain independently rejects any melee target outside the range or the arc
+(`TargetOutOfRange`, `TargetOutsideArc`) and dedupes repeated identities. The
+Attack Arc is a Domain value carried by the weapon catalog and copied into the
+request; a weapon that does not tune one is unrestricted (`AttackArc.Full`).
+
 An empty targeting result is a legitimate miss.
 
 An adapter failure must not be converted silently into a miss or successful blocked movement.
