@@ -47,6 +47,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0014 | Use VContainer for dependency injection in CompositionRoot | Accepted | 2026-09-18 | [ADR-0014](ADR-0014-use-vcontainer-for-dependency-injection.md) |
 | ADR-0015 | Build the Arena core as a standalone .NET project while keeping its sources in Assets | Accepted | 2026-10-21 | [ADR-0015](ADR-0015-standalone-dotnet-build-for-arena-core.md) |
 | ADR-0016 | Organize gameplay by bounded context and documentation by role zone | Accepted | 2026-10-21 | [ADR-0016](ADR-0016-bounded-context-and-documentation-layout.md) |
+| ADR-0017 | Convert view-relative player input in the Application | Accepted | 2026-10-22 | [ADR-0017](ADR-0017-view-relative-player-input.md) |
 
 ## New ADR Template
 
