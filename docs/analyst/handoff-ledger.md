@@ -15,5 +15,5 @@ analyst is the only writer. Status vocabulary follows
 | F-007 | product-role | product-inbox | 2026-10-21T18:10:02Z | done | card confirmed 2026-10-21T19:38:53Z; analysis sent to architect-inbox 2026-10-21T19:40:14Z |
 | F-008 | product-role | product-inbox | 2026-10-21T18:10:17Z | done | card confirmed 2026-10-21T19:45:32Z; analysis sent to architect-inbox 2026-10-21T19:47:08Z |
 | F-009 | product-role | product-inbox | 2026-10-21T18:10:39Z | done | card confirmed 2026-10-22T03:35:00Z; analysis sent to architect-inbox 2026-10-22T03:39:33Z |
-| F-010 | product-role | product-inbox | 2026-10-21T18:10:55Z | new | |
+| F-010 | product-role | product-inbox | 2026-10-21T18:10:55Z | done | card confirmed 2026-10-22T03:44:09Z; analysis sent to architect-inbox 2026-10-22T03:46:13Z |
 | F-011 | product-role | product-inbox | 2026-10-21T18:11:06Z | new | |
