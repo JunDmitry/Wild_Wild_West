@@ -50,6 +50,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0017 | Convert view-relative player input in the Application | Accepted | 2026-10-22 | [ADR-0017](ADR-0017-view-relative-player-input.md) |
 | ADR-0018 | PlayMode tests live in a separate Unity test assembly | Accepted | 2026-10-22 | [ADR-0018](ADR-0018-playmode-test-assembly.md) |
 | ADR-0019 | Model the melee Attack Arc in the Domain contract | Accepted | 2026-10-22 | [ADR-0019](ADR-0019-attack-arc-in-domain-contract.md) |
+| ADR-0020 | Let Presentation consume Domain read-model value types | Accepted | 2026-10-22 | [ADR-0020](ADR-0020-presentation-domain-read-model-values.md) |
 
 ## New ADR Template
 

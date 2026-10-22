@@ -1,6 +1,6 @@
 # ADR-0007: Isolate Unity from Arena Combat Domain and Application layers
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by [ADR-0020](ADR-0020-presentation-domain-read-model-values.md): Presentation may reference Domain read-model value types)
 - **Date:** 2026-09-13
 - **Authors:** Dmitry Rysev
 - **Reviewers:** none
