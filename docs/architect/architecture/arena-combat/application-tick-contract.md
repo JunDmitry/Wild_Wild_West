@@ -62,6 +62,11 @@ Application constructs Domain resolutions using the correlation of the correspon
 
 Domain performs final admission and payload validation.
 
+Player attack targeting returns the nearest Enemy that the horizontal ray
+from the request origin along its Aim Direction reaches within the request
+range, and never more than one Enemy for a ranged weapon. The adapter owns
+that selection; the Domain validates range and cardinality, not proximity.
+
 An empty targeting result is a legitimate miss.
 
 An adapter failure must not be converted silently into a miss or successful blocked movement.
