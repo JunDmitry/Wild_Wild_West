@@ -87,6 +87,16 @@ the player. The adapter owns that choice — it is the only layer that knows the
 camera. The Domain validates the result only: outside Arena Bounds, inside the
 Spawn Band, on the ground, plus wave-phase and duplicate-identity rules.
 
+Enemy movement resolution returns one accepted position per intent in the
+batch. The Domain builds the batch: it computes each pursuit intent (direction
+toward the Player's current position, distance the Enemy can travel this step)
+and omits Enemies that are defeated, have a pending attack, or already stand
+within their attack range — so the stop-to-attack rule is not the adapter's.
+The adapter may only shorten or stop an intent for scene geometry; it must not
+re-aim it, extend it beyond the requested distance, add an Enemy, or drop one.
+The Domain validates that every accepted position lies on its intent's path
+and inside the Arena Bounds.
+
 Player stages are implemented as internal Application collaborators composed by PlayerTickPhase. They are not public API and are not invoked by Presentation or CompositionRoot directly.
 
 ## Spawn Pacing
