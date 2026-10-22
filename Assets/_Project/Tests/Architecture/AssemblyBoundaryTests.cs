@@ -28,6 +28,7 @@ namespace Game.Architecture.Tests
             ["Game.Arena.Presentation"] = new[]
                 {
                     "Game.Arena.Application",
+                    "Game.Arena.Domain",
                 },
             ["Game.CompositionRoot"] = new[]
                 {
