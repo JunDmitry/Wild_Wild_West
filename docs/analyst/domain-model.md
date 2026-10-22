@@ -46,6 +46,7 @@ Terms added by analysis:
 | Regular Enemy | an Enemy that is not a Boss |
 | Boss | the single high-health Enemy that closes each Wave |
 | Final Wave | the third and last Wave of a run |
+| Victory Window | the announcement shown to the player when an ArenaRun is won; it states that the run was won |
 | Spawn | the entry of an Enemy into the Arena from outside Arena Bounds |
 | Spawn Band | the zone outside Arena Bounds from which a Spawn may place an Enemy |
 | Spawn Pacing | the schedule by which a Wave's Enemies enter the Arena; how many enter and how far apart is a tuning value |
