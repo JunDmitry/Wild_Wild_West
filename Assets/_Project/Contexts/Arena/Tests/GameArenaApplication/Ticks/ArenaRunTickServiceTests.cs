@@ -1,5 +1,6 @@
 ﻿using System;
 using Game.Arena.Application.Input;
+using Game.Arena.Application.Tests.Notifications;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Geometry;
@@ -11,13 +12,15 @@ namespace Game.Arena.Application.Tests.Ticks
     public sealed class ArenaRunTickServiceTests
     {
         private TickCoordinatorTestKit _kit;
+        private RecordingNotificationSink _sink;
         private ArenaRunTickService _service;
 
         [SetUp]
         public void SetUp()
         {
             _kit = new TickCoordinatorTestKit();
-            _service = CreateService(_kit);
+            _sink = new RecordingNotificationSink();
+            _service = CreateService(_kit, _sink);
             _kit.Session.StartInitialRun();
 
             _kit.Input.Input = new PlayerFrameInput(
@@ -71,7 +74,7 @@ namespace Game.Arena.Application.Tests.Ticks
                 new TickCoordinatorTestKit();
 
             ArenaRunTickService freshService =
-                CreateService(freshKit);
+                CreateService(freshKit, new RecordingNotificationSink());
 
             Assert.Throws<InvalidOperationException>(
                 () =>
@@ -111,6 +114,14 @@ namespace Game.Arena.Application.Tests.Ticks
         }
 
         [Test]
+        public void TickWithoutVictoryPublishesNoNotifications()
+        {
+            _service.ExecuteTick();
+
+            Assert.That(_sink.Published, Is.Empty);
+        }
+
+        [Test]
         public void ServiceDependenciesRejectNullPorts()
         {
             Assert.Throws<ArgumentNullException>(
@@ -126,12 +137,14 @@ namespace Game.Arena.Application.Tests.Ticks
                         _kit.SpawnResolver,
                         _kit.EnemyIds,
                         _kit.Pacing,
-                        _kit.RestartDelayPolicy);
+                        _kit.RestartDelayPolicy,
+                        _sink);
                 });
         }
 
         private ArenaRunTickService CreateService(
-            TickCoordinatorTestKit kit)
+            TickCoordinatorTestKit kit,
+            RecordingNotificationSink sink)
         {
             ArenaRunTickServiceDependencies dependencies =
                 new ArenaRunTickServiceDependencies(
@@ -144,7 +157,8 @@ namespace Game.Arena.Application.Tests.Ticks
                     kit.SpawnResolver,
                     kit.EnemyIds,
                     kit.Pacing,
-                    kit.RestartDelayPolicy);
+                    kit.RestartDelayPolicy,
+                    sink);
 
             return new ArenaRunTickService(dependencies);
         }

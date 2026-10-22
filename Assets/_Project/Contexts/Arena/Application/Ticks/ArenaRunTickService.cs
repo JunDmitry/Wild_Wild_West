@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Identity;
@@ -10,6 +11,7 @@ namespace Game.Arena.Application.Ticks
         private readonly ArenaRunTickServiceDependencies _dependencies;
         private readonly PendingInteractionTracker _tracker;
         private readonly ArenaRunTickCoordinator _coordinator;
+        private readonly ArenaRunNotificationPublisher _notificationPublisher;
 
         private ArenaRunId _lastArenaRunId;
 
@@ -55,6 +57,8 @@ namespace Game.Arena.Application.Ticks
                     snapshotMapper);
 
             _coordinator = new ArenaRunTickCoordinator(coordinatorDependencies);
+            _notificationPublisher = new ArenaRunNotificationPublisher(
+                dependencies.NotificationSink);
             _lastArenaRunId = ArenaRunId.None;
         }
 
@@ -72,7 +76,18 @@ namespace Game.Arena.Application.Ticks
                 }
             }
 
-            return _coordinator.ExecuteTick();
+            ArenaRunTickResult result = _coordinator.ExecuteTick();
+
+            try
+            {
+                _notificationPublisher.Publish(result.DomainEvents);
+            }
+            catch (Exception exception)
+            {
+                throw new ArenaRunTickFailedException(result, exception);
+            }
+
+            return result;
         }
     }
 }

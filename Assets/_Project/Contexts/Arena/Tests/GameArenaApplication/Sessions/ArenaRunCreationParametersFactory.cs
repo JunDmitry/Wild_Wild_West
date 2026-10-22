@@ -70,5 +70,43 @@ namespace Game.Arena.Application.Tests.Sessions
                 enemies,
                 waves);
         }
+
+        public ArenaRunCreationParameters CreateSingleWaveBossRun()
+        {
+            ArenaRunCreationParameters defaults = Create();
+
+            EnemyCatalog enemies = new(
+                new EnemyDefinition(
+                    EnemyKind.Regular,
+                    Health.Full(9),
+                    MovementSpeed.FromUnitsPerSecond(2f),
+                    CollisionRadius.FromValue(0.5f),
+                    DamageAmount.FromPoints(5),
+                    Distance.FromValue(2f),
+                    new GameDuration(1d),
+                    new GameDuration(0.2d)),
+                new EnemyDefinition(
+                    EnemyKind.Boss,
+                    Health.Full(10),
+                    MovementSpeed.FromUnitsPerSecond(1.75f),
+                    CollisionRadius.FromValue(1f),
+                    DamageAmount.FromPoints(25),
+                    Distance.FromValue(3f),
+                    new GameDuration(1.1d),
+                    new GameDuration(0.4d)));
+
+            WaveCatalog waves = new(
+                new[]
+                {
+                    new WaveDefinition(WaveNumber.First, 0),
+                });
+
+            return new ArenaRunCreationParameters(
+                defaults.ArenaDefinition,
+                defaults.PlayerDefinition,
+                defaults.WeaponCatalog,
+                enemies,
+                waves);
+        }
     }
 }

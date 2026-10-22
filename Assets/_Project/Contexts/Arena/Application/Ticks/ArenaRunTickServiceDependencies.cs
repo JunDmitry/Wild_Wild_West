@@ -19,7 +19,8 @@ namespace Game.Arena.Application.Ticks
             IEnemySpawnPlacementResolver spawnPlacementResolver,
             IEnemyIdSource enemyIdSource,
             IEnemySpawnPacingPolicy pacingPolicy,
-            IRunRestartDelayPolicy restartDelayPolicy)
+            IRunRestartDelayPolicy restartDelayPolicy,
+            IArenaRunNotificationSink notificationSink)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -31,6 +32,7 @@ namespace Game.Arena.Application.Ticks
             EnemyIdSource = enemyIdSource ?? throw new ArgumentNullException(nameof(enemyIdSource));
             PacingPolicy = pacingPolicy ?? throw new ArgumentNullException(nameof(pacingPolicy));
             RestartDelayPolicy = restartDelayPolicy ?? throw new ArgumentNullException(nameof(restartDelayPolicy));
+            NotificationSink = notificationSink ?? throw new ArgumentNullException(nameof(notificationSink));
         }
 
         public ArenaRunSession Session { get; }
@@ -52,5 +54,7 @@ namespace Game.Arena.Application.Ticks
         public IEnemySpawnPacingPolicy PacingPolicy { get; }
 
         public IRunRestartDelayPolicy RestartDelayPolicy { get; }
+
+        public IArenaRunNotificationSink NotificationSink { get; }
     }
 }

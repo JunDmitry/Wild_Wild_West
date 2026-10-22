@@ -14,13 +14,16 @@ namespace Game.Arena.Application.Tests.Ticks
 {
     internal sealed class TickCoordinatorTestKit
     {
-        public TickCoordinatorTestKit(double restartDelaySeconds = 1000d)
+        public TickCoordinatorTestKit(
+            double restartDelaySeconds = 1000d,
+            ArenaRunCreationParameters creationParameters = null)
         {
             Repository = new TestArenaRunRepository();
             ArenaRunIds = new RecordingArenaRunIdSource();
             PlayerIds = new RecordingPlayerIdSource();
             EnemyIds = new RecordingEnemyIdSource();
-            CreationParameters = new ArenaRunCreationParametersFactory().Create();
+            CreationParameters = creationParameters
+                ?? new ArenaRunCreationParametersFactory().Create();
             MovementResolver = new ScriptedPlayerMovementResolver();
             TargetingResolver = new ScriptedTargetingResolver();
             EnemyMovementResolver = new ScriptedEnemyMovementResolver();
