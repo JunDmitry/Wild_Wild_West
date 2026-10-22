@@ -1,0 +1,21 @@
+{
+    "name": "Game.Arena.PlayMode.Tests",
+    "rootNamespace": "Game.Arena.PlayMode.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Game.Arena.Domain",
+        "Game.Arena.Application",
+        "Game.Arena.Infrastructure",
+        "Game.Arena.Presentation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["nunit.framework.dll"],
+    "autoReferenced": false,
+    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
