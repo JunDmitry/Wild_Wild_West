@@ -15,3 +15,4 @@ yet accounted for.
 | c1 | coder-role | coder-inbox | 2026-10-22T19:58:22Z | done | answered 2026-10-22T19:59:51Z: ADR-0018, one `Game.Arena.PlayMode.Tests` assembly authorized (`docs/coder/architect-inbox/c1.md`) |
 | F-004 | analyst-role | analyst-inbox | 2026-10-21T19:14:01Z | done | accepted; ADR-0019, Attack Arc in the Domain contract; melee resolver handed to `coder-role` 2026-10-22T20:12:34Z (`docs/coder/architect-inbox/F-004.md`) |
 | c1b | coder-role | coder-inbox | 2026-10-22T20:06:05Z | done | answered 2026-10-22T20:20:20Z: ADR-0020, Presentation may reference Domain read-model value types; exact asmdef and boundary-test edits authorized (`docs/coder/architect-inbox/c1b.md`) |
+| F-005 | analyst-role | analyst-inbox | 2026-10-21T19:23:11Z | done | already satisfied by existing architecture (Health, defeat guards, snapshot, restart); no change, no handoff; task `docs/architect/tasks/F-005.md` |
