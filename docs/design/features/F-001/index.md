@@ -1,8 +1,8 @@
 # F-001 — Player movement and third-person camera
 
 - **Source spec:** `docs/product/requirements/F-001-player-movement-and-camera.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-001.md`
 
 ## Artifacts
 
