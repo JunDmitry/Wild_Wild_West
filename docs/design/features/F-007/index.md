@@ -1,8 +1,8 @@
 # F-007 — Enemy pursuit and close-range attack
 
 - **Source spec:** `docs/product/requirements/F-007-enemy-pursuit-and-attack.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-007.md`
 
 ## Artifacts
 
