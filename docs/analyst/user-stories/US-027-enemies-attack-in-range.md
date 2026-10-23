@@ -32,4 +32,5 @@ letting an enemy close the distance has a cost and the threat is real.
 ## Notes
 
 Attack range, damage, attack rate, and movement speed are tuning values.
-Attack timing and telegraphs are not fixed by this feature.
+Attack timing remains a tuning value; the ordering — an attack's cue is
+visible before its damage lands — is fixed by `BR-120` and told in `US-044`.
