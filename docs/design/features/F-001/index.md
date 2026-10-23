@@ -1,0 +1,28 @@
+# F-001 — Player movement and third-person camera
+
+- **Source spec:** `docs/product/requirements/F-001-player-movement-and-camera.md`
+- **Status:** designed
+- **Handoff:** —
+
+## Artifacts
+
+The six artifacts this feature owns. Update the date when an artifact
+changes.
+
+| Artifact | Link | Last updated |
+|----------|------|--------------|
+| UX flows | [`ux-flows.md`](ux-flows.md) | 2026-10-23 |
+| Screens | [`screens.md`](screens.md) | 2026-10-23 |
+| Wireframes | [`wireframes.md`](wireframes.md) | 2026-10-23 |
+| Interaction | [`interaction.md`](interaction.md) | 2026-10-23 |
+| States | [`states.md`](states.md) | 2026-10-23 |
+| Accessibility | [`accessibility.md`](accessibility.md) | 2026-10-23 |
+
+## Id index
+
+- Flows: `FL-001`, `FL-002`, `FL-003`
+- Screens: `S-001`
+
+## Open questions
+
+- May the view still rotate after the player dies? The spec fixes movement only (US-005 note); FL-003 is provisional pending an answer, returned to `product-role`.
