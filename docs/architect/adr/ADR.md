@@ -54,6 +54,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0021 | Automatic defeat restart is an Application tick concern | Accepted | 2026-10-22 | [ADR-0021](ADR-0021-automatic-defeat-restart-in-application-tick.md) |
 | ADR-0022 | Publish one-shot facts through an Application notification sink | Accepted | 2026-10-23 | [ADR-0022](ADR-0022-application-notifications-for-one-shot-facts.md) |
 | ADR-0023 | Allow sliding along Arena Bounds in the Domain movement contract | Accepted | 2026-10-23 | [ADR-0023](ADR-0023-arena-bounds-sliding.md) |
+| ADR-0024 | Prepare HUD text in an Application-owned HUD model | Accepted | 2026-10-23 | [ADR-0024](ADR-0024-application-owned-hud-model.md) |
 
 ## New ADR Template
 
