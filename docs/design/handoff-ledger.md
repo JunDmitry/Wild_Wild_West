@@ -17,7 +17,7 @@ yet accounted for.
 | F-001b | product-role | product-inbox | 2026-10-23T18:25:09Z | done | handoff `docs/architect/design-inbox/F-001b.md` (supersedes F-001); FL-003 settled — the view freezes on Defeat and Victory; F-005/F-011 caveats corrected |
 | F-003 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-003.md`; S-001 extended with the aiming marker and hit confirmation; no new screen; no provisional flows |
 | F-004 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-004.md`; S-001 extended with the melee swing and hit confirmation; no new screen; no provisional flows |
-| F-007 | product-role | product-inbox | 2026-10-23T18:44:22Z | acknowledged | card confirmed; flows drawn; screens and handoff pending |
+| F-007 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-007.md`; S-001 extended with pursuit and the Attack Cue; no new screen; no provisional flows |
 | F-008 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
 | F-009 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
 | F-010 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
