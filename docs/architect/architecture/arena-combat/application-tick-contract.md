@@ -132,7 +132,7 @@ Tick results are inputs for Application notification mapping, not direct Present
 
 A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
 
-Presentation renders from the reported ArenaRunSnapshot. Per-tick state changes arrive as snapshot fields, not as Application notifications: the equipped-weapon indicator on S-001 (F-002) reads PlayerSnapshot.SelectedWeapon and announces a change on the view side. Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
+Presentation renders from the reported ArenaRunSnapshot. The result also publishes a presentation-ready ArenaRunHudSnapshot (Hud), derived from that snapshot, so both describe one revision. The HUD model carries the labels and formatted values the S-001 HUD regions show: health as text and fraction, the equipped weapon as text, and the defeated flag; Application owns that formatting (ADR-0024). Presentation binds the HUD to Hud and does not format gameplay values itself; other presenters keep reading Snapshot (ADR-0020). Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
 
 ## Atomicity and Failures
 
