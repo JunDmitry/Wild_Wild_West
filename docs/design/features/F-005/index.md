@@ -1,8 +1,8 @@
 # F-005 — Player health and death
 
 - **Source spec:** `docs/product/requirements/F-005-player-health-and-death.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-005.md`
 
 ## Artifacts
 
