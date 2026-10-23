@@ -112,6 +112,17 @@ namespace Game.Arena.Application.Hud
                 });
         }
 
+        [Test]
+        public void MapShowsTheCurrentWaveAgainstTheTotal()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(100, 100, WeaponKind.Ranged, ArenaRunStatus.Playing));
+
+            Assert.That(hud.WaveCurrent, Is.EqualTo(1));
+            Assert.That(hud.WaveTotal, Is.EqualTo(3));
+            Assert.That(hud.WaveText, Is.EqualTo("1 / 3"));
+        }
+
         private static ArenaRunSnapshot CreateSnapshot(
             int currentHealth,
             int maximumHealth,
@@ -150,7 +161,8 @@ namespace Game.Arena.Application.Hud
                     WaveNumber.First,
                     WavePhase.RegularCombat,
                     0,
-                    BossStatus.NotSpawned));
+                    BossStatus.NotSpawned),
+                WaveNumber.FromValue(3));
         }
     }
 }

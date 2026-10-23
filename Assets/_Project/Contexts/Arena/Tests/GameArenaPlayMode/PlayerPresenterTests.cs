@@ -92,7 +92,8 @@ namespace Game.Arena.PlayMode.Tests
                 new ArenaBounds(-20f, 20f, -20f, 20f, 0f),
                 player,
                 Array.Empty<EnemySnapshot>(),
-                new WaveSnapshot(WaveNumber.First, WavePhase.RegularCombat, 0, BossStatus.NotSpawned));
+                new WaveSnapshot(WaveNumber.First, WavePhase.RegularCombat, 0, BossStatus.NotSpawned),
+                WaveNumber.FromValue(3));
         }
     }
 }

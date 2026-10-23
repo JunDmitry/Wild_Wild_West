@@ -11,6 +11,8 @@ namespace Game.Arena.Application.Hud
             int healthMaximum,
             string equippedWeaponLabel,
             string equippedWeaponText,
+            int waveCurrent,
+            int waveTotal,
             bool isDefeated)
         {
             if (string.IsNullOrWhiteSpace(healthLabel))
@@ -38,6 +40,16 @@ namespace Game.Arena.Application.Hud
                 throw new ArgumentException("Equipped weapon text cannot be empty.", nameof(equippedWeaponText));
             }
 
+            if (waveCurrent < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(waveCurrent));
+            }
+
+            if (waveTotal < waveCurrent)
+            {
+                throw new ArgumentException("Wave total cannot precede the current wave.", nameof(waveTotal));
+            }
+
             HealthLabel = healthLabel;
             HealthCurrent = healthCurrent;
             HealthMaximum = healthMaximum;
@@ -49,6 +61,13 @@ namespace Game.Arena.Application.Hud
             HealthFraction = (float)healthCurrent / healthMaximum;
             EquippedWeaponLabel = equippedWeaponLabel;
             EquippedWeaponText = equippedWeaponText;
+            WaveCurrent = waveCurrent;
+            WaveTotal = waveTotal;
+            WaveText = string.Format(
+                CultureInfo.InvariantCulture,
+                "{0} / {1}",
+                waveCurrent,
+                waveTotal);
             IsDefeated = isDefeated;
         }
 
@@ -65,6 +84,12 @@ namespace Game.Arena.Application.Hud
         public string EquippedWeaponLabel { get; }
 
         public string EquippedWeaponText { get; }
+
+        public int WaveCurrent { get; }
+
+        public int WaveTotal { get; }
+
+        public string WaveText { get; }
 
         public bool IsDefeated { get; }
     }

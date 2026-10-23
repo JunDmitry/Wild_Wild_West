@@ -77,6 +77,16 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         }
 
         [Test]
+        public void SnapshotContainsTheLastWaveOfTheCatalog()
+        {
+            ArenaRun run = _kit.StartRun();
+
+            ArenaRunStateSnapshot snapshot = run.CreateSnapshot();
+
+            Assert.That(snapshot.WaveTotal, Is.EqualTo(WaveNumber.FromValue(3)));
+        }
+
+        [Test]
         public void SnapshotContainsEnemiesInAscendingEnemyIdOrder()
         {
             ArenaRun run = _kit.StartRun(Position3D.Zero, new(new[] { new WaveDefinition(WaveNumber.First, 3) }));

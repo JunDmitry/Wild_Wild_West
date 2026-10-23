@@ -996,7 +996,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 _arenaDefinition.Bounds,
                 player,
                 enemies,
-                wave);
+                wave,
+                _waveCatalog.Last);
         }
 
         private static PlayerMovementResolutionRejectionReason MapRejectionReason(InteractionRejectionReason reason)

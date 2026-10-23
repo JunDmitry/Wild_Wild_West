@@ -53,7 +53,8 @@ namespace Game.Arena.Application.ReadModels
                 source.Bounds,
                 player,
                 enemies,
-                wave);
+                wave,
+                source.WaveTotal);
         }
     }
 }

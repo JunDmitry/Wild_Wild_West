@@ -17,7 +17,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             ArenaBounds bounds,
             PlayerStateSnapshot player,
             IReadOnlyList<EnemyStateSnapshot> enemies,
-            WaveStateSnapshot wave)
+            WaveStateSnapshot wave,
+            WaveNumber waveTotal)
         {
             if (arenaRunId.IsNone)
             {
@@ -39,6 +40,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new ArgumentNullException(nameof(wave));
             }
 
+            if (waveTotal < wave.Number)
+            {
+                throw new ArgumentException("Wave total cannot precede the current wave.", nameof(waveTotal));
+            }
+
             ArenaRunId = arenaRunId;
             Revision = revision;
             Status = status;
@@ -47,6 +53,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Player = player;
             Enemies = CopyEnemies(enemies);
             Wave = wave;
+            WaveTotal = waveTotal;
         }
 
         public ArenaRunId ArenaRunId { get; }
@@ -64,6 +71,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         public IReadOnlyList<EnemyStateSnapshot> Enemies { get; }
 
         public WaveStateSnapshot Wave { get; }
+
+        public WaveNumber WaveTotal { get; }
 
         private static IReadOnlyList<EnemyStateSnapshot> CopyEnemies(
             IReadOnlyList<EnemyStateSnapshot> enemies)

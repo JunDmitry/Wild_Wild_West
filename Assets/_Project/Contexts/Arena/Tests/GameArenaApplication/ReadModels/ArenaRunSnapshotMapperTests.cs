@@ -41,6 +41,7 @@ namespace Game.Arena.Application.ReadModels
             Assert.That(applicationSnapshot.Enemies.Count, Is.EqualTo(1));
             Assert.That(applicationSnapshot.Enemies[0].EnemyId, Is.EqualTo(EnemyId.FromValue(10UL)));
             Assert.That(applicationSnapshot.Wave.Number, Is.EqualTo(run.CurrentWaveNumber));
+            Assert.That(applicationSnapshot.WaveTotal, Is.EqualTo(_kit.WaveTotal));
         }
 
         [Test]

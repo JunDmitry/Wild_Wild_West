@@ -28,6 +28,8 @@ namespace Game.Arena.Application.Tests.Ticks
             return Start(_standardParameters, 100);
         }
 
+        public WaveNumber WaveTotal => _standardParameters.WaveCatalog.Last;
+
         public ArenaRun StartCompactRun(int playerHealth)
         {
             ArenaRunCreationParameters compact = new(

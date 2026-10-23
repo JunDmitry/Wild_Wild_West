@@ -306,7 +306,8 @@ namespace Game.Arena.Application.Tests.Ticks
                     false,
                     default),
                 Array.Empty<EnemySnapshot>(),
-                new(WaveNumber.First, Domain.Aggregates.ArenaRun.WavePhase.RegularCombat, 1, Domain.Aggregates.ArenaRun.BossStatus.NotSpawned));
+                new(WaveNumber.First, Domain.Aggregates.ArenaRun.WavePhase.RegularCombat, 1, Domain.Aggregates.ArenaRun.BossStatus.NotSpawned),
+                WaveNumber.First);
         }
     }
 }

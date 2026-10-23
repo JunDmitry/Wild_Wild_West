@@ -57,6 +57,8 @@ namespace Game.Arena.Application.Hud
                         1,
                         "Equipped weapon",
                         "Firearm",
+                        1,
+                        3,
                         false);
                 });
         }
@@ -73,6 +75,54 @@ namespace Game.Arena.Application.Hud
                         1,
                         "Equipped weapon",
                         string.Empty,
+                        1,
+                        3,
+                        false);
+                });
+        }
+
+        [Test]
+        public void ConstructorDerivesWaveText()
+        {
+            ArenaRunHudSnapshot hud = Create(25, 50);
+
+            Assert.That(hud.WaveCurrent, Is.EqualTo(1));
+            Assert.That(hud.WaveTotal, Is.EqualTo(3));
+            Assert.That(hud.WaveText, Is.EqualTo("1 / 3"));
+        }
+
+        [Test]
+        public void ConstructorRejectsWaveCurrentBelowOne()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    _ = new ArenaRunHudSnapshot(
+                        "Health",
+                        1,
+                        1,
+                        "Equipped weapon",
+                        "Firearm",
+                        0,
+                        3,
+                        false);
+                });
+        }
+
+        [Test]
+        public void ConstructorRejectsWaveTotalBeforeCurrent()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _ = new ArenaRunHudSnapshot(
+                        "Health",
+                        1,
+                        1,
+                        "Equipped weapon",
+                        "Firearm",
+                        3,
+                        2,
                         false);
                 });
         }
@@ -85,6 +135,8 @@ namespace Game.Arena.Application.Hud
                 maximum,
                 "Equipped weapon",
                 "Firearm",
+                1,
+                3,
                 false);
         }
     }

@@ -26,6 +26,8 @@ namespace Game.Arena.Application.Hud
                 health.Maximum,
                 EquippedWeaponLabel,
                 MapWeapon(source.Player.SelectedWeapon),
+                source.Wave.Number.Value,
+                source.WaveTotal.Value,
                 source.Status == ArenaRunStatus.Defeat);
         }
 

@@ -18,7 +18,8 @@ namespace Game.Arena.Application.ReadModels
             ArenaBounds bounds,
             PlayerSnapshot player,
             IReadOnlyList<EnemySnapshot> enemies,
-            WaveSnapshot wave)
+            WaveSnapshot wave,
+            WaveNumber waveTotal)
         {
             if (arenaRunId.IsNone)
             {
@@ -40,6 +41,11 @@ namespace Game.Arena.Application.ReadModels
                 throw new ArgumentNullException(nameof(wave));
             }
 
+            if (waveTotal < wave.Number)
+            {
+                throw new ArgumentException("Wave total cannot precede the current wave.", nameof(waveTotal));
+            }
+
             ArenaRunId = arenaRunId;
             Revision = revision;
             Status = status;
@@ -48,6 +54,7 @@ namespace Game.Arena.Application.ReadModels
             Player = player;
             Enemies = CopyEnemies(enemies);
             Wave = wave;
+            WaveTotal = waveTotal;
         }
 
         public ArenaRunId ArenaRunId { get; }
@@ -65,6 +72,8 @@ namespace Game.Arena.Application.ReadModels
         public IReadOnlyList<EnemySnapshot> Enemies { get; }
 
         public WaveSnapshot Wave { get; }
+
+        public WaveNumber WaveTotal { get; }
 
         private static IReadOnlyList<EnemySnapshot> CopyEnemies(
             IReadOnlyList<EnemySnapshot> enemies)
