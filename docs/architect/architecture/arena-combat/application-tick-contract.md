@@ -203,6 +203,9 @@ The notification is published once, because the event exists only in the tick th
 A sink failure stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when the sink is called.
 
 Victory does not restart. A victorious run is terminal and is replaced only when composition starts another run; Defeat restarts automatically (see § Defeat and Restart). Notifications describe a committed fact and are never commands back into Application.
+
+Presentation reacts to the victory notification, not to a snapshot edge. The S-002 victory window appears once when ArenaRunVictoryNotification is received, in the same tick as the winning operation, and stays for as long as the run is shown. It is modal and non-dismissible, holds the focus, and offers no control; the arena view behind it holds its last snapshot, and the four gameplay inputs change nothing. The notification carries no display text: the window's title and message are Presentation copy, so the notification stays a fact. No new port or notification is needed for the window.
+
 ## Deferred Work
 
 - T-4: Remaining Application notifications beyond victory.
