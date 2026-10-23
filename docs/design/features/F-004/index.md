@@ -2,7 +2,7 @@
 
 - **Source spec:** `docs/product/requirements/F-004-melee-attack.md`
 - **Status:** handed-off
-- **Handoff:** `docs/architect/design-inbox/F-004.md`
+- **Handoff:** `docs/architect/design-inbox/F-004b.md` (supersedes `F-004.md`)
 
 ## Artifacts
 
