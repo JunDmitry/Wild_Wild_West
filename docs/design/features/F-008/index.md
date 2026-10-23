@@ -1,8 +1,8 @@
 # F-008 — Wave progression
 
 - **Source spec:** `docs/product/requirements/F-008-wave-progression.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-008.md`
 
 ## Artifacts
 

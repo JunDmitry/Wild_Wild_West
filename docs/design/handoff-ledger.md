@@ -18,6 +18,6 @@ yet accounted for.
 | F-003 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-003.md`; S-001 extended with the aiming marker and hit confirmation; no new screen; no provisional flows |
 | F-004 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-004.md`; S-001 extended with the melee swing and hit confirmation; no new screen; no provisional flows |
 | F-007 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-007.md`; S-001 extended with pursuit and the Attack Cue; no new screen; no provisional flows |
-| F-008 | product-role | product-inbox | 2026-10-23T18:44:22Z | acknowledged | flows drawn; screens and handoff pending |
+| F-008 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-008.md`; S-001 extended with the wave indicator and the new-wave announcement; S-002 reached unchanged; no new screen; no provisional flows |
 | F-009 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
 | F-010 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
