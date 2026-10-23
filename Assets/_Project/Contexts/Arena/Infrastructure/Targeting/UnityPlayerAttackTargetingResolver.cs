@@ -10,16 +10,21 @@ namespace Game.Arena.Infrastructure.Targeting
 {
     public sealed class UnityPlayerAttackTargetingResolver : IPlayerAttackTargetingResolver
     {
+        private const int BufferSize = 64;
         private const float MinimumDirectionLengthSquared = 1e-8f;
         private const float MinimumOffsetLengthSquared = 1e-8f;
 
-        private static readonly IReadOnlyList<EnemyId> NoTargets = Array.Empty<EnemyId>();
+        private static readonly IReadOnlyList<EnemyId> s_noTargets = Array.Empty<EnemyId>();
 
         private readonly IEnemyColliderRegistry _enemyColliders;
+        private readonly RaycastHit[] _raycastHitsBuffer;
+        private readonly Collider[] _collidersBuffer;
 
         public UnityPlayerAttackTargetingResolver(IEnemyColliderRegistry enemyColliders)
         {
             _enemyColliders = enemyColliders ?? throw new ArgumentNullException(nameof(enemyColliders));
+            _raycastHitsBuffer = new RaycastHit[BufferSize];
+            _collidersBuffer = new Collider[BufferSize];
         }
 
         public IReadOnlyList<EnemyId> Resolve(PlayerAttackImpactRequest request)
@@ -29,7 +34,7 @@ namespace Game.Arena.Infrastructure.Targeting
 
             if (direction.sqrMagnitude <= MinimumDirectionLengthSquared)
             {
-                return NoTargets;
+                return s_noTargets;
             }
 
             direction.Normalize();
@@ -44,9 +49,10 @@ namespace Game.Arena.Infrastructure.Targeting
             Vector3 origin,
             Vector3 direction)
         {
-            RaycastHit[] hits = Physics.RaycastAll(
+            int hitsCount = Physics.RaycastNonAlloc(
                 origin,
                 direction,
+                _raycastHitsBuffer,
                 request.Range.Value,
                 Physics.AllLayers,
                 QueryTriggerInteraction.Ignore);
@@ -54,25 +60,25 @@ namespace Game.Arena.Infrastructure.Targeting
             EnemyId nearestEnemy = EnemyId.None;
             float nearestDistance = float.PositiveInfinity;
 
-            for (int index = 0; index < hits.Length; index++)
+            for (int index = 0; index < hitsCount; index++)
             {
-                if (_enemyColliders.TryGetEnemyId(hits[index].collider, out EnemyId enemyId) == false)
+                if (_enemyColliders.TryGetEnemyId(_raycastHitsBuffer[index].collider, out EnemyId enemyId) == false)
                 {
                     continue;
                 }
 
-                if (hits[index].distance >= nearestDistance)
+                if (_raycastHitsBuffer[index].distance >= nearestDistance)
                 {
                     continue;
                 }
 
-                nearestDistance = hits[index].distance;
+                nearestDistance = _raycastHitsBuffer[index].distance;
                 nearestEnemy = enemyId;
             }
 
             if (nearestEnemy.IsNone)
             {
-                return NoTargets;
+                return s_noTargets;
             }
 
             return new[] { nearestEnemy };
@@ -83,9 +89,10 @@ namespace Game.Arena.Infrastructure.Targeting
             Vector3 origin,
             Vector3 direction)
         {
-            Collider[] overlaps = Physics.OverlapSphere(
+            int overlapsCount = Physics.OverlapSphereNonAlloc(
                 origin,
                 request.Range.Value,
+                _collidersBuffer,
                 Physics.AllLayers,
                 QueryTriggerInteraction.Ignore);
 
@@ -93,9 +100,9 @@ namespace Game.Arena.Infrastructure.Targeting
             List<EnemyId> targets = new();
             HashSet<EnemyId> seen = new();
 
-            for (int index = 0; index < overlaps.Length; index++)
+            for (int index = 0; index < overlapsCount; index++)
             {
-                if (_enemyColliders.TryGetEnemyId(overlaps[index], out EnemyId enemyId) == false)
+                if (_enemyColliders.TryGetEnemyId(_collidersBuffer[index], out EnemyId enemyId) == false)
                 {
                     continue;
                 }
@@ -105,7 +112,7 @@ namespace Game.Arena.Infrastructure.Targeting
                     continue;
                 }
 
-                Vector3 offset = overlaps[index].transform.position - origin;
+                Vector3 offset = _collidersBuffer[index].transform.position - origin;
                 offset.y = 0f;
 
                 float offsetSquared = offset.sqrMagnitude;
@@ -126,7 +133,7 @@ namespace Game.Arena.Infrastructure.Targeting
                 targets.Add(enemyId);
             }
 
-            return targets.Count == 0 ? NoTargets : targets;
+            return targets.Count == 0 ? s_noTargets : targets;
         }
     }
 }

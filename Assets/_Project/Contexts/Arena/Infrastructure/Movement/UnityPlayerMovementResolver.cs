@@ -8,17 +8,20 @@ namespace Game.Arena.Infrastructure.Movement
 {
     public sealed class UnityPlayerMovementResolver : IPlayerMovementResolver
     {
+        private const int BufferSize = 64;
         private const float MinimumTravelSquared = 1e-8f;
         private const float GroundNormalThreshold = 0.5f;
         private const float CollisionSkin = 1e-3f;
 
         private readonly Transform _player;
         private readonly int _layerMask;
+        private readonly RaycastHit[] _hitsBuffer;
 
         public UnityPlayerMovementResolver(Transform player, int layerMask = Physics.AllLayers)
         {
             _player = player != null ? player : throw new ArgumentNullException(nameof(player));
             _layerMask = layerMask;
+            _hitsBuffer = new RaycastHit[BufferSize];
         }
 
         public Position3D Resolve(PlayerMovementRequest request)
@@ -58,19 +61,20 @@ namespace Game.Arena.Infrastructure.Movement
             float distance,
             float radius)
         {
-            RaycastHit[] hits = Physics.SphereCastAll(
+            int hitsCount = Physics.SphereCastNonAlloc(
                 origin,
                 radius,
                 direction,
+                _hitsBuffer,
                 distance,
                 _layerMask,
                 QueryTriggerInteraction.Ignore);
 
             float reachableDistance = distance;
 
-            for (int index = 0; index < hits.Length; index++)
+            for (int index = 0; index < hitsCount; index++)
             {
-                RaycastHit hit = hits[index];
+                RaycastHit hit = _hitsBuffer[index];
 
                 if (hit.collider == null)
                 {
