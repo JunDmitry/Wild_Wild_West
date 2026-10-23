@@ -29,7 +29,7 @@ namespace Game.Arena.PlayMode.Tests
         public const int RangedDamage = 10;
         public const int EnemyHealth = 50;
 
-        private static readonly GameDuration TickInterval = new(0.1d);
+        private static readonly GameDuration s_tickInterval = new(0.1d);
 
         private readonly InMemoryArenaRunRepository _repository;
         private readonly ArenaRunSession _session;
@@ -49,7 +49,7 @@ namespace Game.Arena.PlayMode.Tests
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
             _input = playerInputSource ?? _mutableInput;
-            _clock = new MutableClock(TickInterval);
+            _clock = new MutableClock(s_tickInterval);
 
             ArenaRunSessionDependencies sessionDependencies = new(
                 _repository,

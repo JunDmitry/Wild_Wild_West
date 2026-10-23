@@ -7,7 +7,7 @@ namespace Game.Arena.Presentation.Player
 {
     public sealed class PlayerPresenter : MonoBehaviour
     {
-        [SerializeField] private PlayerView playerView;
+        [SerializeField] private PlayerView _playerView;
 
         public void Present(ArenaRunSnapshot snapshot)
         {
@@ -16,7 +16,7 @@ namespace Game.Arena.Presentation.Player
                 throw new ArgumentNullException(nameof(snapshot));
             }
 
-            PlayerView view = playerView != null ? playerView : GetComponent<PlayerView>();
+            PlayerView view = _playerView != null ? _playerView : GetComponent<PlayerView>();
 
             if (view == null)
             {

@@ -4,9 +4,9 @@ namespace Game.Arena.Presentation.Player
 {
     public sealed class PlayerView : MonoBehaviour
     {
-        [SerializeField] private Transform body;
+        [SerializeField] private Transform _body;
 
-        public Transform Body => body != null ? body : transform;
+        public Transform Body => _body != null ? _body : transform;
 
         public void SetWorldPosition(Vector3 position)
         {

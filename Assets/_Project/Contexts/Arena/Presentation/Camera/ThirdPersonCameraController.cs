@@ -7,43 +7,43 @@ namespace Game.Arena.Presentation.Camera
         private const string MouseHorizontalAxis = "Mouse X";
         private const string MouseVerticalAxis = "Mouse Y";
 
-        [SerializeField] private Transform target;
-        [SerializeField] private float distance = 6f;
-        [SerializeField] private float height = 2f;
-        [SerializeField] private float yawSensitivity = 3f;
-        [SerializeField] private float pitchSensitivity = 3f;
-        [SerializeField] private float minimumPitch = -10f;
-        [SerializeField] private float maximumPitch = 60f;
-        [SerializeField] private float initialPitch = 20f;
+        [SerializeField] private Transform _target;
+        [SerializeField] private float _distance = 6f;
+        [SerializeField] private float _height = 2f;
+        [SerializeField] private float _yawSensitivity = 3f;
+        [SerializeField] private float _pitchSensitivity = 3f;
+        [SerializeField] private float _minimumPitch = -10f;
+        [SerializeField] private float _maximumPitch = 60f;
+        [SerializeField] private float _initialPitch = 20f;
 
         private float _yaw;
         private float _pitch;
 
         public Transform Target
         {
-            get => target;
-            set => target = value;
+            get => _target;
+            set => _target = value;
         }
 
         public float Distance
         {
-            get => distance;
-            set => distance = value;
+            get => _distance;
+            set => _distance = value;
         }
 
         public float Height
         {
-            get => height;
-            set => height = value;
+            get => _height;
+            set => _height = value;
         }
 
-        public float MinimumPitch => minimumPitch;
+        public float MinimumPitch => _minimumPitch;
 
-        public float MaximumPitch => maximumPitch;
+        public float MaximumPitch => _maximumPitch;
 
-        public float YawSensitivity => yawSensitivity;
+        public float YawSensitivity => _yawSensitivity;
 
-        public float PitchSensitivity => pitchSensitivity;
+        public float PitchSensitivity => _pitchSensitivity;
 
         public float Yaw => _yaw;
 
@@ -52,7 +52,7 @@ namespace Game.Arena.Presentation.Camera
         private void Awake()
         {
             _yaw = transform.eulerAngles.y;
-            _pitch = Mathf.Clamp(initialPitch, minimumPitch, maximumPitch);
+            _pitch = Mathf.Clamp(_initialPitch, _minimumPitch, _maximumPitch);
         }
 
         private void Update()
@@ -69,20 +69,20 @@ namespace Game.Arena.Presentation.Camera
 
         public void ApplyLook(float mouseX, float mouseY)
         {
-            _yaw += mouseX * yawSensitivity;
-            _pitch = Mathf.Clamp(_pitch - (mouseY * pitchSensitivity), minimumPitch, maximumPitch);
+            _yaw += mouseX * _yawSensitivity;
+            _pitch = Mathf.Clamp(_pitch - (mouseY * _pitchSensitivity), _minimumPitch, _maximumPitch);
         }
 
         public void Follow()
         {
-            if (target == null)
+            if (_target == null)
             {
                 return;
             }
 
             Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0f);
-            Vector3 focus = target.position + (Vector3.up * height);
-            Vector3 position = focus - ((rotation * Vector3.forward) * distance);
+            Vector3 focus = _target.position + (Vector3.up * _height);
+            Vector3 position = focus - ((rotation * Vector3.forward) * _distance);
 
             transform.SetPositionAndRotation(position, rotation);
         }

@@ -12,22 +12,22 @@ namespace Game.Arena.Infrastructure.Input
         private const string VerticalAxis = "Vertical";
         private const string AttackButton = "Fire1";
 
-        [SerializeField] private Transform viewTransform;
-        [SerializeField] private KeyCode switchWeaponKey = KeyCode.Q;
+        [SerializeField] private Transform _viewTransform;
+        [SerializeField] private KeyCode _switchWeaponKey = KeyCode.Q;
 
         private IUnityInputDevice _device;
         private Direction3D _lastViewDirection = Direction3D.Forward;
 
         public Transform ViewTransform
         {
-            get => viewTransform;
-            set => viewTransform = value;
+            get => _viewTransform;
+            set => _viewTransform = value;
         }
 
         public KeyCode SwitchWeaponKey
         {
-            get => switchWeaponKey;
-            set => switchWeaponKey = value;
+            get => _switchWeaponKey;
+            set => _switchWeaponKey = value;
         }
 
         public IUnityInputDevice Device
@@ -48,13 +48,13 @@ namespace Game.Arena.Infrastructure.Input
                 movementAxes,
                 ReadViewDirection(),
                 device.GetButtonDown(AttackButton),
-                device.GetKeyDown(switchWeaponKey));
+                device.GetKeyDown(_switchWeaponKey));
         }
 
         private Direction3D ReadViewDirection()
         {
-            Transform view = viewTransform != null
-                ? viewTransform
+            Transform view = _viewTransform != null
+                ? _viewTransform
                 : Camera.main != null ? Camera.main.transform : null;
 
             if (view != null)
