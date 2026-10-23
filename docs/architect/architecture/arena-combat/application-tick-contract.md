@@ -132,6 +132,8 @@ Tick results are inputs for Application notification mapping, not direct Present
 
 A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
 
+Presentation renders from the reported ArenaRunSnapshot. Per-tick state changes arrive as snapshot fields, not as Application notifications: the equipped-weapon indicator on S-001 (F-002) reads PlayerSnapshot.SelectedWeapon and announces a change on the view side. Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
