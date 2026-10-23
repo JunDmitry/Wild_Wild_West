@@ -1,8 +1,8 @@
 # F-004 — Melee attack
 
 - **Source spec:** `docs/product/requirements/F-004-melee-attack.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-004.md`
 
 ## Artifacts
 
