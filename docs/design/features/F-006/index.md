@@ -1,8 +1,8 @@
 # F-006 — Enemy spawning outside the arena, unseen
 
 - **Source spec:** `docs/product/requirements/F-006-enemy-spawning.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-006.md`
 
 ## Artifacts
 
