@@ -138,6 +138,8 @@ An enemy is presented only once it is inside Arena Bounds: Presentation renders 
 
 An Enemy Attack's cue window is its windup: the attack starts in stage 7 and its Damage is applied only when its ImpactAt is reached in stage 8, so a started attack is published as pending in every snapshot until it lands. Presentation shows the attack cue from that published state — EnemySnapshot.HasPendingAttack with PendingAttack.StartedAt and PendingAttack.ImpactAt. The cue's duration and form are tuning and design; the ordering is not, and no notification is added for it (ADR-0022). Enemy tuning must keep AttackWindupDuration longer than one tick's delta, or the attack starts and impacts inside a single tick and no snapshot ever reports it pending.
 
+The firearm's aiming marker is Presentation-owned in the same way: it is drawn from the current View Direction and the published snapshot alone, and shown only while the equipped weapon is the firearm and the run is Playing with the player alive. It selects nothing, locks nothing, and adds no Application state.
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
@@ -194,13 +196,15 @@ The Domain has no restart timer and no delay value. The Application owns no defe
 
 A run reaches the Victory status when the last Wave of its WaveCatalog is completed. The Domain emits ArenaRunVictorious in the same revision as the WaveCompleted that closed that Wave, so one committed transition produces both events.
 
-Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory.
+Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory and enemy damage.
 
 IArenaRunNotification marks an Application notification. IArenaRunNotificationSink is the outbound port; Presentation implements it and the CompositionRoot supplies it, so Application never references a view.
 
 ArenaRunTickService publishes the notifications of a tick after the result is built, in Domain Event order. A tick whose events map to nothing publishes nothing.
 
 The notification is published once, because the event exists only in the tick that produced it; a later tick on a victorious run produces no new events and therefore no repeat.
+
+ArenaRunNotificationMapper maps a second one-shot fact: EnemyDamaged becomes ArenaRunEnemyDamagedNotification, carrying the run id, the revision, and the enemy id. Damage is a one-shot fact with no state to read afterwards — a later snapshot shows the reduced health but not that this impact produced it — so it stays on the notification channel (ADR-0022). The mapping is damage-source-agnostic: a firearm impact and a melee impact both produce it. Presentation shows the hit confirmation at that enemy's published position; the mark's form and lifetime are design and tuning.
 
 A sink failure stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when the sink is called.
 
