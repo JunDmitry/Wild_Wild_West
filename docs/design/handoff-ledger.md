@@ -10,3 +10,4 @@ yet accounted for.
 | id | from | inbox | received | status | note |
 |----|------|-------|----------|--------|------|
 | F-001 | product-role | product-inbox | 2026-10-21T18:06:54Z | done | handoff `docs/architect/design-inbox/F-001.md`; FL-003 provisional on view rotation after death |
+| F-002 | product-role | product-inbox | 2026-10-21T18:12:28Z | acknowledged | card confirmed 2026-10-23T05:58:30Z; flows FL-004–FL-008 drawn |
