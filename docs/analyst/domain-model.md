@@ -66,6 +66,7 @@ Terms added by analysis:
 | Shot | informal synonym for a Ranged Attack with the Firearm; "Ranged Attack" is the preferred term |
 | Aim Direction | the Direction in which an Attack is delivered; for both Weapons, the current View Direction |
 | Weapon Damage | the Damage an Attack with a Weapon requests |
+| Weapon Readiness | the earliest Game Time at which that Weapon can start its next Attack; each Weapon has its own |
 | Melee Attack | an Attack made with the Melee Weapon |
 | Enemy Attack | an Attack made by an Enemy; its target is the Player |
 | Attack Arc | the angular spread around the Aim Direction within which a Melee Attack reaches |
@@ -136,6 +137,8 @@ and **Melee Weapon** for the two Weapons.
   or consumes a Weapon.
 - The equipped Weapon changes only through a Weapon Switch or the start
   of a new run.
+- Each Weapon's readiness is independent of the other's; a Weapon Switch
+  preserves both Weapons' readiness and transfers none.
 
 **Enemy**
 - Every active Enemy belongs to exactly one ArenaRun.
@@ -235,6 +238,8 @@ and **Melee Weapon** for the two Weapons.
 - Every new ArenaRun starts with the Firearm
 - A switch is rejected while a pending Attack exists or the Player is
   defeated
+- A switch preserves each Weapon's readiness; it neither transfers,
+  resets, nor shares it
 - No input other than the Weapon-Switch Input changes the equipped
   Weapon; a new run is the sole exception
 
