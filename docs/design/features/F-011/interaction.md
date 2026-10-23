@@ -16,5 +16,5 @@ Feature F-011 — Victory after three waves.
 - Focus moves from S-001 into S-002 when the window appears and stays there for as long as the run is shown.
 - The four gameplay inputs remain direct inputs while the run is Playing. After Victory they are inert: they change nothing and are not announced.
 - A refused input after Victory is silent. No state is shown for it, and the window does not react.
-- The inherited F-001 FL-003 view-rotation-after-death question is untouched. F-011 settles only the post-Victory case, where the window holds the focus and the view does not rotate.
+- The inherited F-001 FL-003 view-rotation-after-death question was settled by F-001b on 2026-10-23: the view freezes once the run ends. F-011's post-Victory case — the window holds the focus and the view does not rotate — is consistent with that settlement.
 - Focus order continues the shared S-001 order from F-001, F-002, and F-005; the window is the only element that ever receives focus besides the view.

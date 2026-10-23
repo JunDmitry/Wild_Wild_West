@@ -83,4 +83,5 @@ flowchart TD
 - None. The trigger, the terminal behaviour, and the exclusion of
   actions, score, and animation are settled by the spec and the
   analysis. The inherited F-001 FL-003 view-rotation-after-death
-  question remains provisional there and is untouched here.
+  question was settled by F-001b on 2026-10-23: the view freezes once
+  the run ends.

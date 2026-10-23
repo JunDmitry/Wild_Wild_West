@@ -31,5 +31,5 @@ feature. Ids are global to the role and never reused.
 - None. The spec and the analysis settle the trigger, the terminal
   behaviour, and the exclusion of menu actions, score, rewards,
   animation, music, and camera work. The inherited F-001 FL-003
-  view-rotation-after-death question remains provisional there and is
-  untouched here.
+  view-rotation-after-death question was settled by F-001b on
+  2026-10-23: the view freezes once the run ends.

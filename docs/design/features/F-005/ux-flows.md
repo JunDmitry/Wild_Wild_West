@@ -61,4 +61,4 @@ flowchart TD
 
 ## Open questions
 
-- None for F-005. The inherited F-001 FL-003 question — whether the view may rotate after the player dies — remains `provisional` there and is not resolved by this feature.
+- None for F-005. The inherited F-001 FL-003 question — whether the view may rotate after the player dies — was settled by F-001b on 2026-10-23: the view freezes once the run ends.

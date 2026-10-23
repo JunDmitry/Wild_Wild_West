@@ -2,7 +2,7 @@
 
 - **Source spec:** `docs/product/requirements/F-001-player-movement-and-camera.md`
 - **Status:** handed-off
-- **Handoff:** `docs/architect/design-inbox/F-001.md`
+- **Handoff:** `docs/architect/design-inbox/F-001b.md` (supersedes `F-001.md`)
 
 ## Artifacts
 
@@ -25,4 +25,4 @@ changes.
 
 ## Open questions
 
-- May the view still rotate after the player dies? The spec fixes movement only (US-005 note); FL-003 is provisional pending an answer, returned to `product-role`.
+- None. F-001b settles the question this feature carried: once the run ends — by Defeat or by Victory — the view no longer rotates in response to input and holds its last direction (spec R7, A6).

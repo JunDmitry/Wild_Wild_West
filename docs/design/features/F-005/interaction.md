@@ -6,7 +6,7 @@ Feature F-005 — Player health and death.
 |---------|-----------|---------------|-------------|
 | Health indicator | displays the current value against the maximum and a fill proportional to it; updates the instant damage is applied; reads zero and stops changing when the player is defeated; never interactive | none — display only | not in the focus order |
 | Movement input while the player is defeated | changes the player's position no more from the moment health reaches zero until a new run begins; the input itself is unchanged from F-001 | W, A, S, D — unchanged from F-001 | 1 |
-| View control while the player is defeated | whether the view may still rotate after death is the provisional question in F-001 FL-003; F-005 neither changes nor resolves it | mouse — unchanged from F-001 | 2 |
+| View control while the player is defeated | no rotation: the view holds the direction it had when the player was defeated (settled by F-001b) | mouse — unchanged from F-001 | 2 |
 | Weapon-switch input while the player is defeated | performs no switch; the equipped weapon stays as it was; the pending-attack refusal is F-002's | Q — unchanged from F-002 | 3 |
 | Attack input while the player is defeated | starts no attack; the pending-attack behaviour is F-002's | left mouse button — unchanged from F-002 | 4 |
 
