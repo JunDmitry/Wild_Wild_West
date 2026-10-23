@@ -989,7 +989,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 465d54068dd1ab04d82c63e59692e4ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _target: {fileID: 0}
+  _target: {fileID: 1579961942}
   _distance: 6
   _height: 2
   _yawSensitivity: 3
