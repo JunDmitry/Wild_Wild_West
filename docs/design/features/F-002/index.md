@@ -1,8 +1,8 @@
 # F-002 — Weapon switching
 
 - **Source spec:** `docs/product/requirements/F-002-weapon-switching.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-002.md`
 
 ## Artifacts
 
