@@ -15,3 +15,9 @@ yet accounted for.
 | F-006 | product-role | product-inbox | 2026-10-21T18:09:50Z | done | handoff `docs/architect/design-inbox/F-006.md`; S-001 extended with enemy entry; no new screen; no provisional F-006 flows |
 | F-011 | product-role | product-inbox | 2026-10-21T18:11:06Z | done | handoff `docs/architect/design-inbox/F-011.md`; S-002 Victory window minted; S-001 post-victory state; no provisional F-011 flows; inherited F-001 FL-003 view-rotation question remains provisional |
 | F-001b | product-role | product-inbox | 2026-10-23T18:25:09Z | done | handoff `docs/architect/design-inbox/F-001b.md` (supersedes F-001); FL-003 settled — the view freezes on Defeat and Victory; F-005/F-011 caveats corrected |
+| F-003 | product-role | product-inbox | 2026-10-23T18:44:22Z | acknowledged | card confirmed; flows drawn; screens and handoff pending |
+| F-004 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
+| F-007 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
+| F-008 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
+| F-009 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
+| F-010 | product-role | product-inbox | 2026-10-23T18:44:22Z | new | |
