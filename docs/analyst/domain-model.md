@@ -69,6 +69,7 @@ Terms added by analysis:
 | Weapon Readiness | the earliest Game Time at which that Weapon can start its next Attack; each Weapon has its own |
 | Melee Attack | an Attack made with the Melee Weapon |
 | Enemy Attack | an Attack made by an Enemy; its target is the Player |
+| Attack Cue | a visible signal shown when an Enemy Attack starts, before that Attack's Damage is applied; its duration is a tuning value |
 | Attack Arc | the angular spread around the Aim Direction within which a Melee Attack reaches |
 | Pursuit | an Enemy's movement toward the Player, which continues until the Enemy is within its Attack Range; movement speed is a tuning value |
 
@@ -194,6 +195,8 @@ and **Melee Weapon** for the two Weapons.
 - A ranged Attack Impact affects at most one Enemy; a melee Attack
   damages a given Enemy at most once.
 - An Enemy Attack starts and lands only within Attack Range.
+- An Enemy Attack's Attack Cue is visible before that Attack's Damage is
+  applied.
 - An Enemy within its Attack Range attacks rather than closing further.
 - Player health reaching zero transitions the ArenaRun to Defeat in the
   same operation, and pending Attacks of a defeated combatant are
