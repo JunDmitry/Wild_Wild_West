@@ -140,6 +140,8 @@ An Enemy Attack's cue window is its windup: the attack starts in stage 7 and its
 
 The firearm's aiming marker is Presentation-owned in the same way: it is drawn from the current View Direction and the published snapshot alone, and shown only while the equipped weapon is the firearm and the run is Playing with the player alive. It selects nothing, locks nothing, and adds no Application state.
 
+The melee swing is Presentation-owned on the same terms. It is drawn from the published pending attack — PlayerSnapshot.HasPendingAttack with PendingAttack.WeaponKind, StartedAt and ImpactAt — and it is redrawn from the current View Direction while the attack is pending, so the arc covers the area the impact will check. Damage resolves along the View Direction supplied to stage 5, not the direction the attack started with, so a player who turns during the windup swings into the new direction; the arc follows for the same reason. The swing is shown only while the run is Playing with the player alive, so a pending melee attack left unresolved by a terminal transition is not drawn, and no standing reach marker is added. With melee equipped the firearm's aiming marker is absent.
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
@@ -204,7 +206,7 @@ ArenaRunTickService publishes the notifications of a tick after the result is bu
 
 The notification is published once, because the event exists only in the tick that produced it; a later tick on a victorious run produces no new events and therefore no repeat.
 
-ArenaRunNotificationMapper maps a second one-shot fact: EnemyDamaged becomes ArenaRunEnemyDamagedNotification, carrying the run id, the revision, and the enemy id. Damage is a one-shot fact with no state to read afterwards — a later snapshot shows the reduced health but not that this impact produced it — so it stays on the notification channel (ADR-0022). The mapping is damage-source-agnostic: a firearm impact and a melee impact both produce it. Presentation shows the hit confirmation at that enemy's published position; the mark's form and lifetime are design and tuning.
+ArenaRunNotificationMapper maps a second one-shot fact: EnemyDamaged becomes ArenaRunEnemyDamagedNotification, carrying the run id, the revision, and the enemy id. Damage is a one-shot fact with no state to read afterwards — a later snapshot shows the reduced health but not that this impact produced it — so it stays on the notification channel (ADR-0022). The mapping is damage-source-agnostic: a firearm impact and a melee impact both produce it. Presentation shows the hit confirmation at that enemy's published position; the mark's form and lifetime are design and tuning. One impact produces one EnemyDamaged per enemy it damages, all carrying that impact's AggregateRevision, so the confirmation needs no batch signal: Presentation marks each named enemy and announces the hit once per revision — once per impact, however many enemies it damaged. A swing that damages nothing produces no event, no mark, and no announcement.
 
 A sink failure stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when the sink is called.
 
