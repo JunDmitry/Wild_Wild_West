@@ -1,7 +1,7 @@
 # F-011 — Victory after three waves
 
 - **Source spec:** `docs/product/requirements/F-011-victory.md`
-- **Status:** designed
+- **Status:** handed-off
 - **Handoff:** `docs/architect/design-inbox/F-011.md`
 
 ## Artifacts
