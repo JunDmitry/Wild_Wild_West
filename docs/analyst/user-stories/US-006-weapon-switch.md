@@ -3,7 +3,7 @@
 - **Feature:** F-002 — Weapon switching
 - **Actor:** player
 - **Priority:** P1 (from `docs/product/backlog.md`)
-- **Rules:** `BR-023`, `BR-096`, `BR-104`, `BR-109`, `BR-110`
+- **Rules:** `BR-023`, `BR-096`, `BR-104`, `BR-109`, `BR-110`, `BR-119`
 
 ## Story
 
@@ -44,6 +44,16 @@ without losing the other one.
   weapon-switch input,
 - then the melee weapon remains the equipped weapon.
 
+**E6 — a cooldown survives a switch away and back**
+- Given the player has just attacked with the firearm and its cooldown
+  has not elapsed,
+- when the player switches to the melee weapon and back to the firearm
+  before the cooldown elapses,
+- then the firearm's attack is still unavailable for the remainder of
+  its original cooldown,
+- and the melee weapon's own readiness was unaffected by the switch.
+
 ## Notes
 
-None.
+`BR-096` still rejects a switch while an attack is pending. This story's
+E6 concerns readiness after that attack has impacted.
