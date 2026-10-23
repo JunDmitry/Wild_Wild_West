@@ -432,3 +432,9 @@ the player.
 
 A melee attack applies no Damage to an enemy outside Attack Range or
 outside the melee weapon's Attack Arc.
+
+### BR-119 — Each weapon keeps its own readiness
+
+Each weapon's attack readiness is its own: a weapon switch neither
+transfers, resets, nor shares the other weapon's pending attack or
+Cooldown.
