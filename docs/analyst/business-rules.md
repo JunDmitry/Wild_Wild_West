@@ -438,3 +438,8 @@ outside the melee weapon's Attack Arc.
 Each weapon's attack readiness is its own: a weapon switch neither
 transfers, resets, nor shares the other weapon's pending attack or
 Cooldown.
+
+### BR-120 — An enemy attack's cue precedes its damage
+
+An Enemy Attack shows a visible cue, and that cue is visible before the
+Damage of that Attack is applied.
