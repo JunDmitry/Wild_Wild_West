@@ -19,3 +19,4 @@ analyst is the only writer. Status vocabulary follows
 | F-011 | product-role | product-inbox | 2026-10-21T18:11:06Z | done | card confirmed 2026-10-22T03:52:02Z; analysis sent to architect-inbox 2026-10-22T03:54:07Z |
 | F-002b | product-role | product-inbox | 2026-10-23T18:25:09Z | done | card confirmed 2026-10-23T19:01:37Z; analysis sent to architect-inbox 2026-10-23T19:03:39Z |
 | F-007b | product-role | product-inbox | 2026-10-23T18:44:22Z | done | card confirmed 2026-10-23T19:04:39Z; analysis sent to architect-inbox 2026-10-23T19:07:30Z |
+| F-010b | product-role | product-inbox | 2026-10-23T18:55:07Z | done | card confirmed 2026-10-23T19:09:35Z; analysis sent to architect-inbox 2026-10-23T19:11:07Z; architectural question carried to architect-role |
