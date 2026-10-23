@@ -22,13 +22,16 @@ can try again immediately instead of being left in a dead run.
 - when no player input is given,
 - then a new ArenaRun begins and is Playing.
 
-**E3 — nothing stands between defeat and the restart**
+**E3 — nothing blocks or waits for the player**
 - Given the ArenaRun has entered Defeat,
 - when the Restart happens,
-- then no defeat window, defeat message, or confirmation stands between the
-  defeat and the new ArenaRun.
+- then no confirmation, menu, or input requirement stands between the
+  defeat and the new ArenaRun,
+- and the defeat message shown inside the delay requires nothing from the
+  player.
 
 ## Notes
 
-The time between Defeat and the Restart is a tuning value. A defeat screen or
-defeat message is out of scope.
+The time between Defeat and the Restart is a tuning value. A defeat message
+is shown inside that delay and is told in `US-045` and `US-046`; it never
+waits for the player.
