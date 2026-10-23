@@ -55,6 +55,7 @@ Terms added by analysis:
 | View Direction | the horizontal direction the camera currently faces, relative to which Movement Input is interpreted |
 | Third-Person View | the view in which the camera is positioned away from the Player and the Player's character remains visible |
 | Restart | the replacement of a defeated ArenaRun with a new one at Wave one |
+| Defeat Message | the announcement shown to the player when an ArenaRun ends in Defeat, within the delay before the Restart, naming the Wave Number reached |
 | run | informal synonym for ArenaRun; "ArenaRun" is the preferred term |
 | Weapon Switch | the exchange of the Equipped Weapon for the other Weapon on one Weapon-Switch Input |
 | Weapon-Switch Input | the player action that requests a Weapon Switch; one press performs one Weapon Switch |
@@ -215,6 +216,7 @@ and **Melee Weapon** for the two Weapons.
 
 **ArenaRun**
 - Playing → Defeat (Player health reaches zero)
+- Defeat shows the Defeat Message before the new ArenaRun begins
 - Playing → Victory (final Wave completed)
 - Defeat → a new ArenaRun in Playing (Restart)
 - Victory is terminal
