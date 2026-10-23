@@ -132,7 +132,7 @@ Tick results are inputs for Application notification mapping, not direct Present
 
 A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
 
-Presentation renders from the reported ArenaRunSnapshot. The result also publishes a presentation-ready ArenaRunHudSnapshot (Hud), derived from that snapshot, so both describe one revision. The HUD model carries the labels and formatted values the S-001 HUD regions show: health as text and fraction, the equipped weapon as text, and the defeated flag; Application owns that formatting (ADR-0024). Presentation binds the HUD to Hud and does not format gameplay values itself; other presenters keep reading Snapshot (ADR-0020). Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
+Presentation renders from the reported ArenaRunSnapshot. The result also publishes a presentation-ready ArenaRunHudSnapshot (Hud), derived from that snapshot, so both describe one revision. The HUD model carries the labels and formatted values the S-001 HUD regions show: health as text and fraction, the equipped weapon as text, the current wave against the run's total wave count as text (WaveCurrent, WaveTotal, WaveText), and the defeated flag; Application owns that formatting (ADR-0024). The wave total is the run's configuration, published by the Domain state snapshot from the run's WaveCatalog (WaveTotal) and carried into ArenaRunSnapshot, so the S-003 defeat window and the wave readout share one contract (ADR-0025). Presentation binds the HUD to Hud and does not format gameplay values itself; other presenters keep reading Snapshot (ADR-0020). Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
 
 An enemy is presented only once it is inside Arena Bounds: Presentation renders it when ArenaBounds.Contains(enemy.Position, enemy.CollisionRadius) holds in the published snapshot. The outside-to-inside transition between successive snapshots is the entry moment; nothing is drawn at the spawn position, and no placeholder, flash, or effect announces it. The entry is derived from published state, not a Domain fact, so no event or notification is added for it. The placement adapter still chooses Spawn Band points outside the current view (§ External Resolution Boundary).
 
@@ -186,7 +186,7 @@ After a restart the tick returns the new run's result and ends. It reads no play
 
 The delay is measured in GameDuration from IGameClock. A zero delta also does not advance it.
 
-The Domain has no restart timer and no delay value. No defeat window, message, confirmation, or manual restart exists in the contract.
+The Domain has no restart timer and no delay value. The Application owns no defeat message and no defeat notification: the published snapshot keeps the Defeat status and the wave reached for the whole delay, and Presentation renders the defeat window S-003 from that published state — no control, no confirmation, no manual restart (ADR-0025). The window's lifetime is exactly the defeated state; it ends when the restart publishes the fresh run. A manual restart, a restart control, and a defeat confirmation do not exist in the contract.
 
 ## Victory and Terminal Runs
 
