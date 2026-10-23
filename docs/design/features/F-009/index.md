@@ -1,8 +1,8 @@
 # F-009 — Boss enemy each wave
 
 - **Source spec:** `docs/product/requirements/F-009-boss-enemy.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-009.md`
 
 ## Artifacts
 
