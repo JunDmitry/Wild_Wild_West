@@ -33,6 +33,13 @@ namespace Game.Arena.Application.Notifications
                         victorious.ArenaRunId,
                         victorious.AggregateRevision));
                 }
+                else if (domainEvent is EnemyDamaged damaged)
+                {
+                    notifications.Add(new ArenaRunEnemyDamagedNotification(
+                        damaged.ArenaRunId,
+                        damaged.AggregateRevision,
+                        damaged.EnemyId));
+                }
             }
 
             return notifications.AsReadOnly();
