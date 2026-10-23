@@ -134,6 +134,8 @@ A tick that performs a Defeat Restart reports the new ArenaRun: its identity, it
 
 Presentation renders from the reported ArenaRunSnapshot. The result also publishes a presentation-ready ArenaRunHudSnapshot (Hud), derived from that snapshot, so both describe one revision. The HUD model carries the labels and formatted values the S-001 HUD regions show: health as text and fraction, the equipped weapon as text, and the defeated flag; Application owns that formatting (ADR-0024). Presentation binds the HUD to Hud and does not format gameplay values itself; other presenters keep reading Snapshot (ADR-0020). Application notifications stay reserved for one-shot facts (ADR-0022) and carry no state a snapshot already publishes.
 
+An enemy is presented only once it is inside Arena Bounds: Presentation renders it when ArenaBounds.Contains(enemy.Position, enemy.CollisionRadius) holds in the published snapshot. The outside-to-inside transition between successive snapshots is the entry moment; nothing is drawn at the spawn position, and no placeholder, flash, or effect announces it. The entry is derived from published state, not a Domain fact, so no event or notification is added for it. The placement adapter still chooses Spawn Band points outside the current view (§ External Resolution Boundary).
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
