@@ -37,9 +37,9 @@ flowchart TD
   D -- "no" --> F["S-001 — stopped; a diagonal into a corner stays inside"]
 ```
 
-### FL-003 — Movement after the run ends
+### FL-003 — Movement and view after the run ends
 
-Edge flow — `provisional`.
+Edge flow. Complete. Settled by F-001b.
 
 ```mermaid
 flowchart TD
@@ -50,9 +50,13 @@ flowchart TD
   D --> B
   B --> E{"mouse moved?"}
   E -- "no" --> B
-  E -- "yes" --> F(["open question: may the view rotate after the run ends?"])
+  E -- "yes" --> F["S-001 — terminal; the view holds its last direction"]
+  F --> B
+  B --> G{"does a new run begin?"}
+  G -- "no" --> B
+  G -- "yes — F-010's automatic restart" --> H(["new run — movement and view act again"])
 ```
 
 ## Open questions
 
-- FL-003 is provisional: the spec fixes movement only and does not state whether the view may still rotate after the player dies (US-005 note). Returned to `product-role`.
+- None. F-001b settles the only question F-001 carried: once the run ends — by Defeat or by Victory — the view no longer rotates in response to input and holds its last direction (spec R7, A6).

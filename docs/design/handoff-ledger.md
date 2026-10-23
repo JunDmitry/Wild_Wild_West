@@ -14,3 +14,4 @@ yet accounted for.
 | F-005 | product-role | product-inbox | 2026-10-21T18:09:36Z | done | handoff `docs/architect/design-inbox/F-005.md`; S-001 extended with the health indicator; no provisional F-005 flows; inherited F-001 FL-003 view-rotation question remains provisional |
 | F-006 | product-role | product-inbox | 2026-10-21T18:09:50Z | done | handoff `docs/architect/design-inbox/F-006.md`; S-001 extended with enemy entry; no new screen; no provisional F-006 flows |
 | F-011 | product-role | product-inbox | 2026-10-21T18:11:06Z | done | handoff `docs/architect/design-inbox/F-011.md`; S-002 Victory window minted; S-001 post-victory state; no provisional F-011 flows; inherited F-001 FL-003 view-rotation question remains provisional |
+| F-001b | product-role | product-inbox | 2026-10-23T18:25:09Z | acknowledged | supersedes F-001; settles FL-003 — the view freezes on Defeat and Victory |
