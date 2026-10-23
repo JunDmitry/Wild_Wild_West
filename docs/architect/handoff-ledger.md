@@ -22,3 +22,5 @@ yet accounted for.
 | F-009 | analyst-role | analyst-inbox | 2026-10-22T03:39:33Z | done | accepted; BR-063 enforced in `EnemyCatalog` with Domain tests; other boss rules already owned; no handoff; task `docs/architect/tasks/F-009.md` |
 | F-010 | analyst-role | analyst-inbox | 2026-10-22T03:46:13Z | done | accepted; ADR-0021, automatic defeat restart owned by the Application tick; implemented in `933ec0e`; no handoff; task `docs/architect/tasks/F-010.md` |
 | F-011 | analyst-role | analyst-inbox | 2026-10-22T03:54:07Z | done | accepted; ADR-0022, Application notifications for one-shot facts; victory published through a sink port; no coder handoff; task `docs/architect/tasks/F-011.md` |
+| F-001 | design-role | design-inbox | 2026-10-23T05:33:23Z | done | accepted; design matches ADR-0017; FL-002 sliding surfaced an architecture gap resolved by ADR-0023; no rework reply; task `docs/architect/tasks/F-001.md` |
+| F-001 | coder-role | coder-inbox | 2026-10-22T22:01:41Z | done | implementation report verified against ADR-0017 and the F-001 design; deviations accepted; follow-up `F-001b` handed off 2026-10-23T10:12:18Z for sliding PlayMode coverage |

@@ -19,6 +19,8 @@ PlayerFrameInput contains:
 
 The Application translates MovementAxes into a planar world-space MovementInput. View Direction is forward; its right-hand perpendicular is right. The resulting magnitude is clamped to one, so diagonal input is not faster, and zero axes produce no movement request.
 
+Arena Bounds resolve the movement with sliding (ADR-0023). When the requested travel would cross a bound, the Player travels to the bound and then along it; the Player Movement Request that results therefore may carry a direction different from the input direction, and its requested distance is the length of that resolved path. A direction with no component along the bound stops at the bound, and a diagonal into a corner stops in the corner.
+
 The View Direction is also the Aim Direction for both weapons.
 
 AttackPressed requests Attack Start. It does not request immediate Damage.
