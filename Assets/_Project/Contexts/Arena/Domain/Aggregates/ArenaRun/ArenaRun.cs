@@ -225,14 +225,14 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 .DistanceOver(duration)
                 .Scaled(movementInput.Magnitude);
 
-            Distance pemittedDistance = _arenaDefinition.Bounds.PermittedTravel(_player.Position, direction, _player.CollisionRadius, requestedDistance);
+            BoundedMovement permittedMovement = _arenaDefinition.Bounds.PermittedMovement(_player.Position, direction, _player.CollisionRadius, requestedDistance);
 
-            if (pemittedDistance.IsZero)
+            if (permittedMovement.IsZero)
             {
                 return PlayerMovementRequestOutcome.PositionUnchanged;
             }
 
-            PlanarMovementIntent intent = new(_player.Position, direction, pemittedDistance);
+            PlanarMovementIntent intent = new(_player.Position, permittedMovement.Direction, permittedMovement.Distance);
             InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.PlayerMovement, Revision);
             _pendingMovementRequest = new(correlation, intent, _player.CollisionRadius);
 

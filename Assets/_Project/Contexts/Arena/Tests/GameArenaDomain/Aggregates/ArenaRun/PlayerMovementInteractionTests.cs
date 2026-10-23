@@ -50,6 +50,26 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         }
 
         [Test]
+        public void RequestSlidesAlongArenaBoundsInsteadOfStopping()
+        {
+            ArenaRun run = CreateRun(new Position3D(19.5f, 0f, 0f));
+            MovementInput input = MovementInput.FromVector(
+                new Displacement3D(0.70710678f, 0f, 0.70710678f));
+
+            PlayerMovementRequestOutcome outcome = run.RequestPlayerMovement(
+                input,
+                new GameDuration(1d));
+
+            Assert.That(outcome.HasRequest, Is.True);
+
+            PlayerMovementRequest request = outcome.Request;
+
+            Assert.That(request.Direction, Is.EqualTo(Direction3D.Forward));
+            Assert.That(request.RequestedDistance.Value, Is.EqualTo(5f * 0.70710678f).Within(0.001f));
+            Assert.That(request.From.X, Is.EqualTo(19.5f));
+        }
+
+        [Test]
         public void ResolvedMovementUpdatesPlayerPosition()
         {
             ArenaRun run = CreateRun();

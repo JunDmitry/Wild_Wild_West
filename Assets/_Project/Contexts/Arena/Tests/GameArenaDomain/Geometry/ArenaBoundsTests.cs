@@ -51,68 +51,129 @@ namespace Game.Arena.Domain.Tests.Geometry
         }
 
         [Test]
-        public void PermittedTravelIsLimitedByBoundaryAlongDirection()
+        public void PermittedMovementReturnsRequestedWhenBoundaryIsFar()
         {
             ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
             CollisionRadius radius = CollisionRadius.FromValue(1f);
 
-            Distance permitted = bounds.PermittedTravel(
-                new Position3D(7f, 0f, 0f),
-                Direction3D.Right,
-                radius,
-                Distance.FromValue(50f));
-
-            Assert.That(permitted.Value, Is.EqualTo(2f).Within(0.0001f));
-        }
-
-        [Test]
-        public void PermittedTravelReturnsRequestedWhenBoundaryIsFar()
-        {
-            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
-            CollisionRadius radius = CollisionRadius.FromValue(1f);
-
-            Distance permitted = bounds.PermittedTravel(
+            BoundedMovement movement = bounds.PermittedMovement(
                 Position3D.Zero,
                 Direction3D.Back,
                 radius,
                 Distance.FromValue(3f));
 
-            Assert.That(permitted.Value, Is.EqualTo(3f));
+            Assert.That(movement.Direction, Is.EqualTo(Direction3D.Back));
+            Assert.That(movement.Distance.Value, Is.EqualTo(3f));
         }
 
         [Test]
-        public void PermittedTravelIsZeroAtBoundary()
+        public void PermittedMovementApproachesBoundaryAlongDirection()
         {
             ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
             CollisionRadius radius = CollisionRadius.FromValue(1f);
 
-            Distance permitted = bounds.PermittedTravel(
+            BoundedMovement movement = bounds.PermittedMovement(
+                new Position3D(7f, 0f, 0f),
+                Direction3D.Right,
+                radius,
+                Distance.FromValue(50f));
+
+            Assert.That(movement.Direction, Is.EqualTo(Direction3D.Right));
+            Assert.That(movement.Distance.Value, Is.EqualTo(2f).Within(0.0001f));
+        }
+
+        [Test]
+        public void PermittedMovementIsZeroWhenPushedStraightOutOfBounds()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+
+            BoundedMovement movement = bounds.PermittedMovement(
                 new Position3D(0f, 0f, -9f),
                 Direction3D.Back,
                 radius,
                 Distance.FromValue(3f));
 
-            Assert.That(permitted.IsZero, Is.True);
+            Assert.That(movement.IsZero, Is.True);
         }
 
         [Test]
-        public void PermittedTravelKeepsDiagonalMovementOnRay()
+        public void PermittedMovementSlidesAlongBoundary()
         {
             ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
             CollisionRadius radius = CollisionRadius.FromValue(1f);
             Direction3D diagonal = Direction3D.From(new Displacement3D(1f, 0f, 1f));
 
-            Distance permitted = bounds.PermittedTravel(
+            BoundedMovement movement = bounds.PermittedMovement(
+                new Position3D(9f, 0f, 0f),
+                diagonal,
+                radius,
+                Distance.FromValue(10f));
+
+            Assert.That(movement.Direction, Is.EqualTo(Direction3D.Forward));
+            Assert.That(movement.Distance.Value, Is.EqualTo(10f * 0.70710678f).Within(0.001f));
+
+            Position3D destination = new Position3D(9f, 0f, 0f)
+                .MovedAlong(movement.Direction, movement.Distance);
+
+            Assert.That(destination.X, Is.EqualTo(9f).Within(0.001f));
+            Assert.That(destination.Z, Is.EqualTo(7.071f).Within(0.001f));
+            Assert.That(bounds.Contains(destination, radius), Is.True);
+        }
+
+        [Test]
+        public void PermittedMovementClampsSlideToRemainingBoundary()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+            Direction3D diagonal = Direction3D.From(new Displacement3D(1f, 0f, 1f));
+
+            BoundedMovement movement = bounds.PermittedMovement(
+                new Position3D(9f, 0f, 8f),
+                diagonal,
+                radius,
+                Distance.FromValue(10f));
+
+            Assert.That(movement.Direction, Is.EqualTo(Direction3D.Forward));
+            Assert.That(movement.Distance.Value, Is.EqualTo(1f).Within(0.0001f));
+
+            Position3D destination = new Position3D(9f, 0f, 8f)
+                .MovedAlong(movement.Direction, movement.Distance);
+
+            Assert.That(bounds.Contains(destination, radius), Is.True);
+        }
+
+        [Test]
+        public void PermittedMovementIsZeroForDiagonalIntoCorner()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+            Direction3D diagonal = Direction3D.From(new Displacement3D(1f, 0f, 1f));
+
+            BoundedMovement movement = bounds.PermittedMovement(
+                new Position3D(9f, 0f, 9f),
+                diagonal,
+                radius,
+                Distance.FromValue(10f));
+
+            Assert.That(movement.IsZero, Is.True);
+        }
+
+        [Test]
+        public void PermittedMovementKeepsDirectionNearBoundary()
+        {
+            ArenaBounds bounds = new(-10f, 10f, -10f, 10f, 0f);
+            CollisionRadius radius = CollisionRadius.FromValue(1f);
+            Direction3D diagonal = Direction3D.From(new Displacement3D(1f, 0f, 1f));
+
+            BoundedMovement movement = bounds.PermittedMovement(
                 new Position3D(8f, 0f, 0f),
                 diagonal,
                 radius,
-                Distance.FromValue(50f));
+                Distance.FromValue(1.4f));
 
-            Position3D destination = new Position3D(8f, 0f, 0f).MovedAlong(diagonal, permitted);
-
-            Assert.That(destination.X, Is.EqualTo(9f).Within(0.001f));
-            Assert.That(destination.Z, Is.EqualTo(1f).Within(0.001f));
-            Assert.That(bounds.Contains(destination, radius), Is.True);
+            Assert.That(movement.Direction, Is.EqualTo(diagonal));
+            Assert.That(movement.Distance.Value, Is.EqualTo(1.4f).Within(0.0001f));
         }
     }
 }
