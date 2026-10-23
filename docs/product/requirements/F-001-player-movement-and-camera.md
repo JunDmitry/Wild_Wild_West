@@ -13,10 +13,11 @@ The arena is played from a third-person view. Without locomotion and view contro
 
 - **R1** — the player moves horizontally with W, A, S, and D while the run is active.
 - **R2** — movement is relative to the camera's current facing: W moves away from the camera, S toward it, A and D to its sides.
-- **R3** — mouse movement rotates the camera view around the player.
+- **R3** — mouse movement rotates the camera view around the player while the run is active.
 - **R4** — the camera stays in a third-person position that keeps the player character visible.
 - **R5** — the player is kept inside the arena bounds; moving into an edge never carries the player outside.
 - **R6** — a dead player does not move in response to input.
+- **R7** — once the run has ended, the camera no longer rotates in response to input.
 
 ## Acceptance criteria
 
@@ -25,6 +26,7 @@ The arena is played from a third-person view. Without locomotion and view contro
 - **A3** — the player can move and rotate the camera at the same time.
 - **A4** — moving against an arena boundary stops at the boundary; the player never leaves the arena.
 - **A5** — while the player is dead, movement input produces no movement.
+- **A6** — after the player dies, and again after the victory window appears, moving the mouse leaves the view unchanged.
 
 ## Constraints
 
@@ -36,3 +38,12 @@ The arena is played from a third-person view. Without locomotion and view contro
 - Controller support and rebindable input.
 - Camera collision with scenery, camera shake, or aim-assist.
 - A first-person view.
+
+## Revisions
+
+- 2026-10-23 — R3 scoped to an active run; R7 and A6 added. Resolves the
+  question returned by `design-role` as flow `FL-003`
+  (`docs/design/features/F-001/ux-flows.md` § Open questions): the spec
+  fixed movement after death but was silent on the camera. The run ending —
+  by defeat or by victory — freezes the view. Superseding request:
+  `docs/design/product-inbox/F-001b.md`.

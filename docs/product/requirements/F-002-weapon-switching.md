@@ -17,6 +17,7 @@ The player carries a firearm and a melee weapon, and the brief requires moving b
 - **R4** — after a switch, the attack input performs only the equipped weapon's attack.
 - **R5** — switching is available whenever the player is alive.
 - **R6** — a dead player cannot switch weapons.
+- **R7** — each weapon's attack readiness is its own: a switch neither transfers, resets, nor shares the other weapon's pending attack or cooldown.
 
 ## Acceptance criteria
 
@@ -25,9 +26,19 @@ The player carries a firearm and a melee weapon, and the brief requires moving b
 - **A3** — at the start of every run, the firearm is equipped.
 - **A4** — no input other than Q changes the equipped weapon.
 - **A5** — while the player is dead, Q does not change the equipped weapon.
+- **A6** — attack with the firearm, switch to melee and back before its cooldown elapses; the firearm's attack is still unavailable when the player returns, for the remainder of its original interval.
 
 ## Out of scope
 
 - More than two weapons, weapon pickups, or loadouts.
 - Dual wielding or simultaneous use of both weapons.
 - Switching animation timing, holstering rules, or per-weapon movement penalties.
+
+## Revisions
+
+- 2026-10-23 — R7 and A6 added. The rules did not say whether a switch keeps
+  the other weapon's pending attack or cooldown
+  (`docs/architect/tasks/F-002.md` § Open questions), and the behaviour was
+  being settled in the implementation. Each weapon's readiness is now
+  independent and stated. Superseding request:
+  `docs/analyst/product-inbox/F-002b.md`.
