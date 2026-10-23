@@ -1,8 +1,8 @@
 # F-003 — Firearm attack
 
 - **Source spec:** `docs/product/requirements/F-003-firearm-attack.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-003.md`
 
 ## Artifacts
 
