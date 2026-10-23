@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Game.Arena.Application.Hud;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
@@ -56,6 +57,7 @@ namespace Game.Arena.Application.Ticks
             ArenaRunId = arenaRunId;
             FinalRevision = finalRevision;
             Snapshot = snapshot;
+            Hud = new ArenaRunHudSnapshotMapper().Map(snapshot);
             _domainEvents = Array.AsReadOnly(copiedEvents);
             _executedStages = Array.AsReadOnly(copiedStages);
         }
@@ -63,6 +65,7 @@ namespace Game.Arena.Application.Ticks
         public ArenaRunId ArenaRunId { get; }
         public AggregateRevision FinalRevision { get; }
         public ArenaRunSnapshot Snapshot { get; }
+        public ArenaRunHudSnapshot Hud { get; }
 
         public IReadOnlyList<IArenaDomainEvent> DomainEvents => _domainEvents;
         public IReadOnlyList<ArenaRunTickStage> ExecutedStages => _executedStages;

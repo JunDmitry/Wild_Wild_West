@@ -10,6 +10,7 @@ using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;
+using Game.Arena.Domain.Vitality;
 using NUnit.Framework;
 
 namespace Game.Arena.Application.Tests.Ticks
@@ -243,6 +244,23 @@ namespace Game.Arena.Application.Tests.Ticks
             Assert.That(result.Snapshot.Revision, Is.EqualTo(run.Revision));
         }
 
+        [Test]
+        public void ResultPublishesHudForTheSameSnapshot()
+        {
+            ArenaRunTickResult result = _kit.Coordinator.ExecuteTick();
+
+            Assert.That(result.Hud, Is.Not.Null);
+            Assert.That(
+                result.Hud.HealthCurrent,
+                Is.EqualTo(result.Snapshot.Player.Health.Current));
+            Assert.That(
+                result.Hud.HealthMaximum,
+                Is.EqualTo(result.Snapshot.Player.Health.Maximum));
+            Assert.That(result.Hud.HealthText, Is.EqualTo("100 / 100"));
+            Assert.That(result.Hud.EquippedWeaponText, Is.EqualTo("Firearm"));
+            Assert.That(result.Hud.IsDefeated, Is.False);
+        }
+
         private PlayerAttackStarted CreateStartedEvent(
             ArenaRunId arenaRunId,
             AggregateRevision revision)
@@ -278,7 +296,15 @@ namespace Game.Arena.Application.Tests.Ticks
                 default,
                 default,
                 default,
-                new(default, default, default, default, default, default, default, default),
+                new(
+                    PlayerId.FromValue(1UL),
+                    default,
+                    Health.Full(100),
+                    default,
+                    default,
+                    default,
+                    false,
+                    default),
                 Array.Empty<EnemySnapshot>(),
                 new(WaveNumber.First, Domain.Aggregates.ArenaRun.WavePhase.RegularCombat, 1, Domain.Aggregates.ArenaRun.BossStatus.NotSpawned));
         }
