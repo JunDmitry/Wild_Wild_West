@@ -136,6 +136,8 @@ Presentation renders from the reported ArenaRunSnapshot. The result also publish
 
 An enemy is presented only once it is inside Arena Bounds: Presentation renders it when ArenaBounds.Contains(enemy.Position, enemy.CollisionRadius) holds in the published snapshot. The outside-to-inside transition between successive snapshots is the entry moment; nothing is drawn at the spawn position, and no placeholder, flash, or effect announces it. The entry is derived from published state, not a Domain fact, so no event or notification is added for it. The placement adapter still chooses Spawn Band points outside the current view (§ External Resolution Boundary).
 
+An Enemy Attack's cue window is its windup: the attack starts in stage 7 and its Damage is applied only when its ImpactAt is reached in stage 8, so a started attack is published as pending in every snapshot until it lands. Presentation shows the attack cue from that published state — EnemySnapshot.HasPendingAttack with PendingAttack.StartedAt and PendingAttack.ImpactAt. The cue's duration and form are tuning and design; the ordering is not, and no notification is added for it (ADR-0022). Enemy tuning must keep AttackWindupDuration longer than one tick's delta, or the attack starts and impacts inside a single tick and no snapshot ever reports it pending.
+
 ## Atomicity and Failures
 
 A tick consists of several aggregate operations.
