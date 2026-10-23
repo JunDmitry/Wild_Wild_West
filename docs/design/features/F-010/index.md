@@ -1,8 +1,8 @@
 # F-010 — Defeat and scene restart
 
 - **Source spec:** `docs/product/requirements/F-010-defeat-and-restart.md`
-- **Status:** designed
-- **Handoff:** —
+- **Status:** handed-off
+- **Handoff:** `docs/architect/design-inbox/F-010.md`
 
 ## Artifacts
 
