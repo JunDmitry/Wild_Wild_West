@@ -60,6 +60,20 @@ reset.
 
 A defeated run restarts automatically, without a menu or confirmation.
 
+### BR-121 — Defeat is announced
+
+A defeated run shows a defeat message before the Restart.
+
+### BR-122 — The defeat message names the wave
+
+The defeat message names the Wave Number that was current when the run
+ended.
+
+### BR-123 — The defeat message waits for no input
+
+A defeated run restarts at the end of its tuning delay whether or not the
+player responds to the defeat message.
+
 ### BR-117 — No attack after victory
 
 Once an ArenaRun is Victory, the player can start no Attack.
