@@ -35,6 +35,11 @@ namespace Game.Arena.Presentation.Combat
 
         public int ActiveCount => _active.Count;
 
+        private void Update()
+        {
+            Refresh();
+        }
+
         public bool IsShownFor(EnemyId enemyId)
         {
             return _active.ContainsKey(enemyId);
@@ -96,11 +101,6 @@ namespace Game.Arena.Presentation.Combat
 
             _wasPending.Clear();
             _wasPending.UnionWith(_pending);
-        }
-
-        private void Update()
-        {
-            Refresh();
         }
 
         private void ShowCue(EnemySnapshot enemy)

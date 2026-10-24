@@ -55,6 +55,23 @@ namespace Game.Arena.Presentation.Enemies
             _wasInside.UnionWith(inside);
         }
 
+        private static HashSet<EnemyId> CollectInside(ArenaRunSnapshot snapshot)
+        {
+            HashSet<EnemyId> inside = new();
+
+            for (int index = 0; index < snapshot.Enemies.Count; index++)
+            {
+                EnemySnapshot enemy = snapshot.Enemies[index];
+
+                if (snapshot.Bounds.Contains(enemy.Position, enemy.CollisionRadius))
+                {
+                    inside.Add(enemy.EnemyId);
+                }
+            }
+
+            return inside;
+        }
+
         private void AnnounceEntries(
             ArenaRunSnapshot snapshot,
             HashSet<EnemyId> inside)
@@ -75,23 +92,6 @@ namespace Game.Arena.Presentation.Enemies
 
                 RequireAnnouncer().AnnounceEnemyEnteredOnce(snapshot.ArenaRunId, enemy.EnemyId);
             }
-        }
-
-        private static HashSet<EnemyId> CollectInside(ArenaRunSnapshot snapshot)
-        {
-            HashSet<EnemyId> inside = new();
-
-            for (int index = 0; index < snapshot.Enemies.Count; index++)
-            {
-                EnemySnapshot enemy = snapshot.Enemies[index];
-
-                if (snapshot.Bounds.Contains(enemy.Position, enemy.CollisionRadius))
-                {
-                    inside.Add(enemy.EnemyId);
-                }
-            }
-
-            return inside;
         }
 
         private EnemyViewRegistry RequireRegistry()

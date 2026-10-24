@@ -53,16 +53,6 @@ namespace Game.Arena.Presentation.Camera
 
         public float Pitch => _pitch;
 
-        public void Present(ArenaRunSnapshot snapshot)
-        {
-            if (snapshot == null)
-            {
-                throw new ArgumentNullException(nameof(snapshot));
-            }
-
-            _isLookEnabled = snapshot.Status == ArenaRunStatus.Playing;
-        }
-
         private void Awake()
         {
             _yaw = transform.eulerAngles.y;
@@ -79,6 +69,16 @@ namespace Game.Arena.Presentation.Camera
         private void LateUpdate()
         {
             Follow();
+        }
+
+        public void Present(ArenaRunSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot));
+            }
+
+            _isLookEnabled = snapshot.Status == ArenaRunStatus.Playing;
         }
 
         public void ApplyLook(float mouseX, float mouseY)

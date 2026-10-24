@@ -21,14 +21,11 @@ namespace Game.Arena.Presentation.Accessibility
         public const string VictoryAnnouncement = "Victory; the run has been won";
         public const string DefeatAnnouncement = "Defeat";
 
-        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision)>
-            _announcedVictories = new();
+        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision)> _announcedVictories = new();
 
-        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
-            _announcedEnemyAttackMisses = new();
+        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)> _announcedEnemyAttackMisses = new();
 
-        private readonly HashSet<(ArenaRunId ArenaRunId, EnemyId EnemyId)>
-            _announcedEnemyEntries = new();
+        private readonly HashSet<(ArenaRunId ArenaRunId, EnemyId EnemyId)> _announcedEnemyEntries = new();
 
         private readonly HashSet<ArenaRunId> _announcedDefeats = new();
 

@@ -33,6 +33,8 @@ namespace Game.Arena.Presentation.Combat
 
         public Position3D Position => _view == null ? Position3D.Zero : _view.Position;
 
+        private Transform Root => _root != null ? _root : transform;
+
         public void Present(ArenaRunSnapshot snapshot, ArenaRunHudSnapshot hud)
         {
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
@@ -128,7 +130,5 @@ namespace Game.Arena.Presentation.Combat
 
             return created.AddComponent<BossEntryMarkerView>();
         }
-
-        private Transform Root => _root != null ? _root : transform;
     }
 }
