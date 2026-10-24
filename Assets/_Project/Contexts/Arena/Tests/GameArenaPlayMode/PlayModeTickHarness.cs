@@ -50,7 +50,8 @@ namespace Game.Arena.PlayMode.Tests
             WaveCatalog waveCatalog = null,
             IEnemySpawnPlacementResolver spawnPlacementResolver = null,
             IEnemySpawnPacingPolicy spawnPacingPolicy = null,
-            IArenaRunNotificationSink notificationSink = null)
+            IArenaRunNotificationSink notificationSink = null,
+            IEnemyMovementResolver enemyMovementResolver = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -78,7 +79,7 @@ namespace Game.Arena.PlayMode.Tests
                 _input,
                 playerMovementResolver ?? new StationaryPlayerMovementResolver(),
                 new UnityPlayerAttackTargetingResolver(enemyColliders),
-                new NoEnemyMovementResolver(),
+                enemyMovementResolver ?? new NoEnemyMovementResolver(),
                 spawnPlacementResolver ?? new FixedSpawnPlacementResolver(),
                 new MonotonicEnemyIdSource(),
                 spawnPacingPolicy ?? new NeverSpawnPacingPolicy(),
