@@ -88,7 +88,25 @@ namespace Game.Arena.Application.Hud
 
             Assert.That(hud.WaveCurrent, Is.EqualTo(1));
             Assert.That(hud.WaveTotal, Is.EqualTo(3));
-            Assert.That(hud.WaveText, Is.EqualTo("1 / 3"));
+            Assert.That(hud.WaveText, Is.EqualTo("Wave 1 of 3"));
+        }
+
+        [Test]
+        public void ConstructorDerivesSecondWaveText()
+        {
+            ArenaRunHudSnapshot hud = new ArenaRunHudSnapshot(
+                "Health",
+                1,
+                1,
+                "Equipped weapon",
+                "Firearm",
+                2,
+                3,
+                false);
+
+            Assert.That(hud.WaveCurrent, Is.EqualTo(2));
+            Assert.That(hud.WaveTotal, Is.EqualTo(3));
+            Assert.That(hud.WaveText, Is.EqualTo("Wave 2 of 3"));
         }
 
         [Test]

@@ -65,7 +65,7 @@ namespace Game.Arena.Application.Hud
             WaveTotal = waveTotal;
             WaveText = string.Format(
                 CultureInfo.InvariantCulture,
-                "{0} / {1}",
+                "Wave {0} of {1}",
                 waveCurrent,
                 waveTotal);
             IsDefeated = isDefeated;
