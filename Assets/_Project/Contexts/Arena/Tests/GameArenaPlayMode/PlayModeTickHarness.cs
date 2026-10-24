@@ -49,7 +49,8 @@ namespace Game.Arena.PlayMode.Tests
             GameDuration? restartDelay = null,
             WaveCatalog waveCatalog = null,
             IEnemySpawnPlacementResolver spawnPlacementResolver = null,
-            IEnemySpawnPacingPolicy spawnPacingPolicy = null)
+            IEnemySpawnPacingPolicy spawnPacingPolicy = null,
+            IArenaRunNotificationSink notificationSink = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -82,7 +83,7 @@ namespace Game.Arena.PlayMode.Tests
                 new MonotonicEnemyIdSource(),
                 spawnPacingPolicy ?? new NeverSpawnPacingPolicy(),
                 new FixedIntervalRunRestartDelayPolicy(restartDelay ?? new GameDuration(1000d)),
-                new NoOpNotificationSink());
+                notificationSink ?? new NoOpNotificationSink());
 
             _tickService = new ArenaRunTickService(tickDependencies);
         }

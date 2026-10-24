@@ -6,6 +6,7 @@ using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Combat;
+using Game.Arena.Presentation.Windows;
 using UnityEngine;
 
 namespace Game.Arena.Presentation.Notifications
@@ -14,6 +15,7 @@ namespace Game.Arena.Presentation.Notifications
     {
         [SerializeField] private HitConfirmationPresenter _hitConfirmation;
         [SerializeField] private ArenaRunAnnouncer _announcer;
+        [SerializeField] private VictoryView _victoryView;
 
         private readonly List<IArenaRunNotification> _pending = new();
         private ArenaRunSnapshot _snapshot;
@@ -28,6 +30,12 @@ namespace Game.Arena.Presentation.Notifications
         {
             get => _announcer != null ? _announcer : GetComponentInChildren<ArenaRunAnnouncer>();
             set => _announcer = value;
+        }
+
+        public VictoryView VictoryView
+        {
+            get => _victoryView != null ? _victoryView : GetComponentInChildren<VictoryView>();
+            set => _victoryView = value;
         }
 
         public int PendingCount => _pending.Count;
@@ -73,6 +81,11 @@ namespace Game.Arena.Presentation.Notifications
                 {
                     PresentAttackOutcome(resolved);
                 }
+                else if (pending[index] is ArenaRunVictoryNotification victory
+                    && victory.ArenaRunId == snapshot.ArenaRunId)
+                {
+                    PresentVictory(victory);
+                }
             }
         }
 
@@ -103,6 +116,14 @@ namespace Game.Arena.Presentation.Notifications
                 notification.EnemyId);
         }
 
+        private void PresentVictory(ArenaRunVictoryNotification notification)
+        {
+            RequireVictoryView().Show(notification.ArenaRunId);
+            RequireAnnouncer().AnnounceVictoryOnce(
+                notification.ArenaRunId,
+                notification.Revision);
+        }
+
         private static EnemySnapshot FindEnemy(ArenaRunSnapshot snapshot, EnemyId enemyId)
         {
             IReadOnlyList<EnemySnapshot> enemies = snapshot.Enemies;
@@ -129,6 +150,19 @@ namespace Game.Arena.Presentation.Notifications
             }
 
             return presenter;
+        }
+
+        private VictoryView RequireVictoryView()
+        {
+            VictoryView view = VictoryView;
+
+            if (view == null)
+            {
+                throw new InvalidOperationException(
+                    "ArenaRunNotificationPresenter requires a VictoryView.");
+            }
+
+            return view;
         }
 
         private ArenaRunAnnouncer RequireAnnouncer()

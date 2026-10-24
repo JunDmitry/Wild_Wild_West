@@ -18,6 +18,10 @@ namespace Game.Arena.Presentation.Accessibility
         public const string BossEntersAnnouncement = "Boss enters";
         public const string BossDefeatedAnnouncement = "Boss defeated";
         public const string EnemyEnteredAnnouncement = "Enemy entered the arena";
+        public const string VictoryAnnouncement = "Victory; the run has been won";
+
+        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision)>
+            _announcedVictories = new();
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
             _announcedEnemyAttackMisses = new();
@@ -101,6 +105,21 @@ namespace Game.Arena.Presentation.Accessibility
         public void AnnounceEnemyAttackIncoming()
         {
             Announce(EnemyAttackIncomingAnnouncement);
+        }
+
+        public void AnnounceVictoryOnce(ArenaRunId arenaRunId, AggregateRevision revision)
+        {
+            if (arenaRunId.IsNone)
+            {
+                throw new ArgumentException("ArenaRunId cannot be None.", nameof(arenaRunId));
+            }
+
+            if (_announcedVictories.Add((arenaRunId, revision)) == false)
+            {
+                return;
+            }
+
+            Announce(VictoryAnnouncement);
         }
 
         public void AnnounceWave(string text)
