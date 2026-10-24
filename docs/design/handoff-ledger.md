@@ -22,3 +22,4 @@ yet accounted for.
 | F-009 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-009.md`; S-001 extended with the boss entry marker and the boss health indicator; S-002 reached unchanged; no new screen; no provisional flows |
 | F-010 | product-role | product-inbox | 2026-10-23T18:44:22Z | done | handoff `docs/architect/design-inbox/F-010.md`; S-003 Defeat window minted, distinct from S-002; no provisional flows |
 | F-004 | architect-role | architect-inbox | 2026-10-23T22:55:45Z | done | rework answered by `docs/architect/design-inbox/F-004b.md` (supersedes `architect/design-inbox/F-004.md`); swing now follows the live view direction until impact |
+| F-005 | architect-role | architect-inbox | 2026-10-24T03:35:42Z | acknowledged | rework: the health announcement must speak the Application-formatted HUD text; superseding handoff pending |

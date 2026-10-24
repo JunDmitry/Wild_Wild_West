@@ -2,7 +2,7 @@
 
 - **Source spec:** `docs/product/requirements/F-005-player-health-and-death.md`
 - **Status:** handed-off
-- **Handoff:** `docs/architect/design-inbox/F-005.md`
+- **Handoff:** `docs/architect/design-inbox/F-005b.md`
 
 ## Artifacts
 
@@ -16,7 +16,7 @@ changes.
 | Wireframes | [`wireframes.md`](wireframes.md) | 2026-10-23 |
 | Interaction | [`interaction.md`](interaction.md) | 2026-10-23 |
 | States | [`states.md`](states.md) | 2026-10-23 |
-| Accessibility | [`accessibility.md`](accessibility.md) | 2026-10-23 |
+| Accessibility | [`accessibility.md`](accessibility.md) | 2026-10-24 |
 
 ## Id index
 
