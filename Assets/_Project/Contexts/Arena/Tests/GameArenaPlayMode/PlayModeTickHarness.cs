@@ -44,7 +44,8 @@ namespace Game.Arena.PlayMode.Tests
             float meleeRange = 2f,
             AttackArc? meleeArc = null,
             IPlayerInputSource playerInputSource = null,
-            IPlayerMovementResolver playerMovementResolver = null)
+            IPlayerMovementResolver playerMovementResolver = null,
+            Position3D? playerStart = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -58,7 +59,7 @@ namespace Game.Arena.PlayMode.Tests
                 new ArenaRunFactory(new MovementPathPolicy()),
                 new ArenaRunSnapshotMapper());
 
-            _session = new ArenaRunSession(sessionDependencies, CreateCreationParameters(meleeRange, meleeArc));
+            _session = new ArenaRunSession(sessionDependencies, CreateCreationParameters(meleeRange, meleeArc, playerStart));
             _session.StartInitialRun();
 
             if (_repository.TryGet(_session.ActiveArenaRunId, out _run) == false)
@@ -156,14 +157,15 @@ namespace Game.Arena.PlayMode.Tests
 
         private static ArenaRunCreationParameters CreateCreationParameters(
             float meleeRange,
-            AttackArc? meleeArc)
+            AttackArc? meleeArc,
+            Position3D? playerStart)
         {
             ArenaDefinition arena = new(
                 new ArenaBounds(-20f, 20f, -20f, 20f, 0f),
                 Distance.FromValue(5f));
 
             PlayerDefinition player = new(
-                Position3D.Zero,
+                playerStart ?? Position3D.Zero,
                 Health.Full(100),
                 MovementSpeed.FromUnitsPerSecond(5f),
                 CollisionRadius.FromValue(0.5f));
