@@ -145,7 +145,8 @@ namespace Game.Arena.Presentation.Accessibility
             Announce(DefeatAnnouncement + " — " + waveText);
         }
 
-        public void AnnounceWave(string text)        {
+        public void AnnounceWave(string text)
+        {
             if (string.IsNullOrWhiteSpace(text))
             {
                 throw new ArgumentException("Wave text cannot be empty.", nameof(text));
