@@ -47,7 +47,9 @@ namespace Game.Arena.PlayMode.Tests
             IPlayerMovementResolver playerMovementResolver = null,
             Position3D? playerStart = null,
             GameDuration? restartDelay = null,
-            WaveCatalog waveCatalog = null)
+            WaveCatalog waveCatalog = null,
+            IEnemySpawnPlacementResolver spawnPlacementResolver = null,
+            IEnemySpawnPacingPolicy spawnPacingPolicy = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -76,9 +78,9 @@ namespace Game.Arena.PlayMode.Tests
                 playerMovementResolver ?? new StationaryPlayerMovementResolver(),
                 new UnityPlayerAttackTargetingResolver(enemyColliders),
                 new NoEnemyMovementResolver(),
-                new FixedSpawnPlacementResolver(),
+                spawnPlacementResolver ?? new FixedSpawnPlacementResolver(),
                 new MonotonicEnemyIdSource(),
-                new NeverSpawnPacingPolicy(),
+                spawnPacingPolicy ?? new NeverSpawnPacingPolicy(),
                 new FixedIntervalRunRestartDelayPolicy(restartDelay ?? new GameDuration(1000d)),
                 new NoOpNotificationSink());
 
