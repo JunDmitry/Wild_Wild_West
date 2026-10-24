@@ -204,7 +204,7 @@ The Domain has no restart timer and no delay value. The Application owns no defe
 
 A run reaches the Victory status when the last Wave of its WaveCatalog is completed. The Domain emits ArenaRunVictorious in the same revision as the WaveCompleted that closed that Wave, so one committed transition produces both events.
 
-Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory and enemy damage.
+Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory, enemy damage, and the outcome of an Enemy Attack (below).
 
 IArenaRunNotification marks an Application notification. IArenaRunNotificationSink is the outbound port; Presentation implements it and the CompositionRoot supplies it, so Application never references a view.
 
