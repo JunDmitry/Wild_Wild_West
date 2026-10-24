@@ -96,8 +96,10 @@ and omits Enemies that are defeated, have a pending attack, or already stand
 within their attack range — so the stop-to-attack rule is not the adapter's.
 The adapter may only shorten or stop an intent for scene geometry; it must not
 re-aim it, extend it beyond the requested distance, add an Enemy, or drop one.
-The Domain validates that every accepted position lies on its intent's path
-and inside the Arena Bounds.
+The Domain validates that every accepted position lies on its intent's path.
+The adapter must also keep the Enemy's collision radius inside the Arena
+Bounds — an Enemy spawned in the Spawn Band may legitimately start outside
+them — and the Domain does not re-validate the Bounds for enemy movement.
 
 Player stages are implemented as internal Application collaborators composed by PlayerTickPhase. They are not public API and are not invoked by Presentation or CompositionRoot directly.
 
