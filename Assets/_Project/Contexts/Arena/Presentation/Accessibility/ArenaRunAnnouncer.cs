@@ -13,6 +13,8 @@ namespace Game.Arena.Presentation.Accessibility
         public const string EnemyAttackIncomingAnnouncement = "Enemy attack incoming";
         public const string EnemyAttackMissedAnnouncement = "Enemy attack missed";
         public const string PlayerDefeatedSuffix = "; the player can no longer act";
+        public const string NewWaveLabel = "New wave";
+        public const string NewWaveAnnouncementSuffix = " begins";
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
             _announcedEnemyAttackMisses = new();
@@ -93,6 +95,16 @@ namespace Game.Arena.Presentation.Accessibility
         public void AnnounceEnemyAttackIncoming()
         {
             Announce(EnemyAttackIncomingAnnouncement);
+        }
+
+        public void AnnounceWave(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("Wave text cannot be empty.", nameof(text));
+            }
+
+            Announce(text + NewWaveAnnouncementSuffix);
         }
 
         public void AnnounceEnemyAttackMissedOnce(

@@ -8,6 +8,7 @@ namespace Game.Arena.Presentation.Hud
         [SerializeField] private TextMesh _equippedWeaponText;
         [SerializeField] private TextMesh _healthText;
         [SerializeField] private Transform _healthFill;
+        [SerializeField] private TextMesh _waveText;
 
         public string EquippedWeaponLabel { get; private set; }
 
@@ -25,6 +26,10 @@ namespace Game.Arena.Presentation.Hud
 
         public bool IsDefeated { get; private set; }
 
+        public string WaveLabel { get; private set; }
+
+        public string WaveText { get; private set; }
+
         public bool IsShown => EquippedWeaponText != null;
 
         public TextMesh HealthTextMesh
@@ -37,6 +42,12 @@ namespace Game.Arena.Presentation.Hud
         {
             get => _healthFill;
             set => _healthFill = value;
+        }
+
+        public TextMesh WaveTextMesh
+        {
+            get => _waveText;
+            set => _waveText = value;
         }
 
         public void ShowEquippedWeapon(string label, string text)
@@ -111,6 +122,27 @@ namespace Game.Arena.Presentation.Hud
             {
                 Vector3 scale = _healthFill.localScale;
                 _healthFill.localScale = new Vector3(fraction, scale.y, scale.z);
+            }
+        }
+
+        public void ShowWave(string label, string text)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                throw new ArgumentException("Wave label cannot be empty.", nameof(label));
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("Wave text cannot be empty.", nameof(text));
+            }
+
+            WaveLabel = label;
+            WaveText = text;
+
+            if (_waveText != null)
+            {
+                _waveText.text = text;
             }
         }
 
