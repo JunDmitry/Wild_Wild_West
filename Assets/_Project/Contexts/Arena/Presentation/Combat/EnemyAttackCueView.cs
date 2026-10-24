@@ -24,6 +24,7 @@ namespace Game.Arena.Presentation.Combat
         }
 
         public Position3D Position { get; private set; }
+        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
 
         public void Show(Position3D enemyPosition)
         {
@@ -52,8 +53,6 @@ namespace Game.Arena.Presentation.Combat
 
             gameObject.SetActive(false);
         }
-
-        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
 
         private LineRenderer RequireLine()
         {

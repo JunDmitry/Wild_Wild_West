@@ -11,6 +11,7 @@ using Game.Arena.Domain.Vitality;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Hud;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.PlayMode.Tests
@@ -23,7 +24,7 @@ namespace Game.Arena.PlayMode.Tests
         private ArenaRunAnnouncer _announcer;
         private BossIndicatorPresenter _presenter;
         private HudView _hudView;
-        private TextMesh _bossText;
+        private TextMeshPro _bossText;
         private Transform _bossFill;
 
         [SetUp]
@@ -38,7 +39,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject bossText = Track(new GameObject("BossText"));
             bossText.transform.SetParent(root.transform, false);
-            _bossText = bossText.AddComponent<TextMesh>();
+            _bossText = bossText.AddComponent<TextMeshPro>();
 
             GameObject bossFill = Track(new GameObject("BossFill"));
             bossFill.transform.SetParent(root.transform, false);

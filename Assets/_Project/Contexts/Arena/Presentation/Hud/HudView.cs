@@ -1,15 +1,16 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.Presentation.Hud
 {
     public sealed class HudView : MonoBehaviour
     {
-        [SerializeField] private TextMesh _equippedWeaponText;
-        [SerializeField] private TextMesh _healthText;
+        [SerializeField] private TextMeshPro _equippedWeaponText;
+        [SerializeField] private TextMeshPro _healthText;
         [SerializeField] private Transform _healthFill;
-        [SerializeField] private TextMesh _waveText;
-        [SerializeField] private TextMesh _bossText;
+        [SerializeField] private TextMeshPro _waveText;
+        [SerializeField] private TextMeshPro _bossText;
         [SerializeField] private Transform _bossFill;
 
         public string EquippedWeaponLabel { get; private set; }
@@ -46,7 +47,7 @@ namespace Game.Arena.Presentation.Hud
 
         public bool IsShown => EquippedWeaponText != null;
 
-        public TextMesh HealthTextMesh
+        public TextMeshPro HealthTextMesh
         {
             get => _healthText;
             set => _healthText = value;
@@ -58,13 +59,13 @@ namespace Game.Arena.Presentation.Hud
             set => _healthFill = value;
         }
 
-        public TextMesh WaveTextMesh
+        public TextMeshPro WaveTextMesh
         {
             get => _waveText;
             set => _waveText = value;
         }
 
-        public TextMesh BossTextMesh
+        public TextMeshPro BossTextMesh
         {
             get => _bossText;
             set => _bossText = value;
@@ -75,6 +76,8 @@ namespace Game.Arena.Presentation.Hud
             get => _bossFill;
             set => _bossFill = value;
         }
+
+        private TextMeshPro EquippedWeaponTextMesh => _equippedWeaponText != null ? _equippedWeaponText : GetComponent<TextMeshPro>();
 
         public void ShowEquippedWeapon(string label, string text)
         {
@@ -91,7 +94,7 @@ namespace Game.Arena.Presentation.Hud
             EquippedWeaponLabel = label;
             EquippedWeaponText = text;
 
-            TextMesh textMesh = EquippedWeaponTextMesh;
+            TextMeshPro textMesh = EquippedWeaponTextMesh;
 
             if (textMesh != null)
             {
@@ -127,7 +130,7 @@ namespace Game.Arena.Presentation.Hud
                 throw new ArgumentOutOfRangeException(nameof(current));
             }
 
-            if (fraction < 0f || fraction > 1f)
+            if (fraction is < 0f or > 1f)
             {
                 throw new ArgumentOutOfRangeException(nameof(fraction));
             }
@@ -178,7 +181,7 @@ namespace Game.Arena.Presentation.Hud
                 throw new ArgumentOutOfRangeException(nameof(current));
             }
 
-            if (fraction < 0f || fraction > 1f)
+            if (fraction is < 0f or > 1f)
             {
                 throw new ArgumentOutOfRangeException(nameof(fraction));
             }
@@ -242,8 +245,5 @@ namespace Game.Arena.Presentation.Hud
                 _waveText.text = text;
             }
         }
-
-        private TextMesh EquippedWeaponTextMesh =>
-            _equippedWeaponText != null ? _equippedWeaponText : GetComponent<TextMesh>();
     }
 }

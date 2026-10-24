@@ -19,6 +19,7 @@ using Game.Arena.Presentation.Combat;
 using Game.Arena.Presentation.Notifications;
 using Game.Arena.Presentation.Windows;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.PlayMode.Tests
@@ -34,8 +35,8 @@ namespace Game.Arena.PlayMode.Tests
         private ArenaRunAnnouncer _announcer;
         private VictoryView _view;
         private ArenaRunNotificationPresenter _presenter;
-        private TextMesh _titleText;
-        private TextMesh _messageText;
+        private TextMeshPro _titleText;
+        private TextMeshPro _messageText;
         private FixedInputSource _input;
         private PlayModeTickHarness _harness;
 
@@ -55,11 +56,11 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject title = Track(new GameObject("Title"));
             title.transform.SetParent(root.transform, false);
-            _titleText = title.AddComponent<TextMesh>();
+            _titleText = title.AddComponent<TextMeshPro>();
 
             GameObject message = Track(new GameObject("Message"));
             message.transform.SetParent(root.transform, false);
-            _messageText = message.AddComponent<TextMesh>();
+            _messageText = message.AddComponent<TextMeshPro>();
 
             _view.TitleTextMesh = _titleText;
             _view.MessageTextMesh = _messageText;

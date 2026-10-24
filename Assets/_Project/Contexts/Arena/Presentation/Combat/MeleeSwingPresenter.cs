@@ -30,6 +30,11 @@ namespace Game.Arena.Presentation.Combat
 
         public Direction3D SwingDirection => SwingView != null ? SwingView.Direction : Direction3D.Forward;
 
+        private void Update()
+        {
+            Refresh();
+        }
+
         public void Present(ArenaRunSnapshot snapshot)
         {
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
@@ -60,11 +65,6 @@ namespace Game.Arena.Presentation.Combat
             {
                 SwingView?.Hide();
             }
-        }
-
-        private void Update()
-        {
-            Refresh();
         }
 
         private MeleeSwingView RequireSwingView()

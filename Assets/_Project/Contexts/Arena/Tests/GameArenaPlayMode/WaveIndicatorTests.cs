@@ -11,6 +11,7 @@ using Game.Arena.Infrastructure.Targeting;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Hud;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.PlayMode.Tests
@@ -25,7 +26,7 @@ namespace Game.Arena.PlayMode.Tests
         private WaveIndicatorPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMesh _textMesh;
+        private TextMeshPro _textMesh;
         private TestEnemyColliderRegistry _registry;
         private PlayModeTickHarness _harness;
 
@@ -43,7 +44,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject waveText = Track(new GameObject("WaveText"));
             waveText.transform.SetParent(root.transform, false);
-            _textMesh = waveText.AddComponent<TextMesh>();
+            _textMesh = waveText.AddComponent<TextMeshPro>();
 
             _hudView.WaveTextMesh = _textMesh;
             _presenter.HudView = _hudView;

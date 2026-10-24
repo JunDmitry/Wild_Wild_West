@@ -1,5 +1,6 @@
 using System;
 using Game.Arena.Domain.Identity;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.Presentation.Windows
@@ -9,18 +10,18 @@ namespace Game.Arena.Presentation.Windows
         public const string Statement = "Defeat";
         public const string WaveReachedLabel = "Wave reached";
 
-        [SerializeField] private TextMesh _statementText;
-        [SerializeField] private TextMesh _waveText;
+        [SerializeField] private TextMeshPro _statementText;
+        [SerializeField] private TextMeshPro _waveText;
 
         public string Label => WaveReachedLabel;
 
-        public TextMesh StatementTextMesh
+        public TextMeshPro StatementTextMesh
         {
             get => _statementText;
             set => _statementText = value;
         }
 
-        public TextMesh WaveTextMesh
+        public TextMeshPro WaveTextMesh
         {
             get => _waveText;
             set => _waveText = value;

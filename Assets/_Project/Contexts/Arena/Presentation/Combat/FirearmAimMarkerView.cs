@@ -25,6 +25,8 @@ namespace Game.Arena.Presentation.Combat
             }
         }
 
+        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
+
         public void Show(Position3D origin, Direction3D direction)
         {
             LineRenderer line = RequireLine();
@@ -56,8 +58,6 @@ namespace Game.Arena.Presentation.Combat
                 _endMarker.gameObject.SetActive(false);
             }
         }
-
-        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
 
         private LineRenderer RequireLine()
         {

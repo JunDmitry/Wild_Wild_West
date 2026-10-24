@@ -29,6 +29,7 @@ namespace Game.Architecture.Tests
                 {
                     "Game.Arena.Application",
                     "Game.Arena.Domain",
+                    "Unity.TextMeshPro"
                 },
             ["Game.CompositionRoot"] = new[]
                 {

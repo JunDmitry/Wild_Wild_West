@@ -1,5 +1,6 @@
 using System;
 using Game.Arena.Domain.Identity;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.Presentation.Windows
@@ -9,16 +10,16 @@ namespace Game.Arena.Presentation.Windows
         public const string Title = "Victory";
         public const string Message = "the run was won";
 
-        [SerializeField] private TextMesh _titleText;
-        [SerializeField] private TextMesh _messageText;
+        [SerializeField] private TextMeshPro _titleText;
+        [SerializeField] private TextMeshPro _messageText;
 
-        public TextMesh TitleTextMesh
+        public TextMeshPro TitleTextMesh
         {
             get => _titleText;
             set => _titleText = value;
         }
 
-        public TextMesh MessageTextMesh
+        public TextMeshPro MessageTextMesh
         {
             get => _messageText;
             set => _messageText = value;

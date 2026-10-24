@@ -18,6 +18,7 @@ namespace Game.Arena.Presentation.Notifications
         [SerializeField] private VictoryView _victoryView;
 
         private readonly List<IArenaRunNotification> _pending = new();
+
         private ArenaRunSnapshot _snapshot;
 
         public HitConfirmationPresenter HitConfirmation
@@ -55,6 +56,21 @@ namespace Game.Arena.Presentation.Notifications
 
             _pending.Add(notification);
             Drain();
+        }
+
+        private static EnemySnapshot FindEnemy(ArenaRunSnapshot snapshot, EnemyId enemyId)
+        {
+            IReadOnlyList<EnemySnapshot> enemies = snapshot.Enemies;
+
+            for (int index = 0; index < enemies.Count; index++)
+            {
+                if (enemies[index].EnemyId == enemyId)
+                {
+                    return enemies[index];
+                }
+            }
+
+            return null;
         }
 
         private void Drain()
@@ -122,21 +138,6 @@ namespace Game.Arena.Presentation.Notifications
             RequireAnnouncer().AnnounceVictoryOnce(
                 notification.ArenaRunId,
                 notification.Revision);
-        }
-
-        private static EnemySnapshot FindEnemy(ArenaRunSnapshot snapshot, EnemyId enemyId)
-        {
-            IReadOnlyList<EnemySnapshot> enemies = snapshot.Enemies;
-
-            for (int index = 0; index < enemies.Count; index++)
-            {
-                if (enemies[index].EnemyId == enemyId)
-                {
-                    return enemies[index];
-                }
-            }
-
-            return null;
         }
 
         private HitConfirmationPresenter RequireHitConfirmation()

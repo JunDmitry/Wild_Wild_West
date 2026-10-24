@@ -36,6 +36,11 @@ namespace Game.Arena.Presentation.Combat
 
         public bool IsAimVisible => MarkerView != null && MarkerView.IsVisible;
 
+        private void Update()
+        {
+            Refresh();
+        }
+
         public void Present(ArenaRunSnapshot snapshot)
         {
             _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
@@ -77,11 +82,6 @@ namespace Game.Arena.Presentation.Combat
             }
 
             _wasVisible = isVisible;
-        }
-
-        private void Update()
-        {
-            Refresh();
         }
 
         private ViewDirectionTracker RequireViewDirection()

@@ -29,6 +29,8 @@ namespace Game.Arena.Presentation.Combat
 
         public Direction3D Direction => _direction;
 
+        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
+
         public bool IsVisible
         {
             get
@@ -90,8 +92,6 @@ namespace Game.Arena.Presentation.Combat
             float halfAngle = Mathf.Clamp(_arcDegrees, 0f, 360f) * 0.5f * Mathf.Deg2Rad;
             return _direction.Dot(Direction3D.From(offset)) >= Mathf.Cos(halfAngle);
         }
-
-        private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
 
         private LineRenderer RequireLine()
         {

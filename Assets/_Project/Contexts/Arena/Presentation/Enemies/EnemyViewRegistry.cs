@@ -26,6 +26,8 @@ namespace Game.Arena.Presentation.Enemies
 
         public int Count => _views.Count;
 
+        private Transform Root => _root != null ? _root : transform;
+
         public bool IsRendered(EnemyId enemyId)
         {
             return _views.ContainsKey(enemyId);
@@ -139,7 +141,5 @@ namespace Game.Arena.Presentation.Enemies
 
             return created.AddComponent<EnemyView>();
         }
-
-        private Transform Root => _root != null ? _root : transform;
     }
 }

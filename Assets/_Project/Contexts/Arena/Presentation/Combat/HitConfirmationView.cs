@@ -53,6 +53,7 @@ namespace Game.Arena.Presentation.Combat
             }
 
             Hide();
+
             return true;
         }
     }

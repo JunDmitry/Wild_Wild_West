@@ -3,7 +3,8 @@
     "rootNamespace": "Game.Arena.Presentation",
     "references": [
         "Game.Arena.Application",
-        "Game.Arena.Domain"
+        "Game.Arena.Domain",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

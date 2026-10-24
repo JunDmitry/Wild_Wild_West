@@ -9,6 +9,7 @@ using Game.Arena.Infrastructure.Targeting;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Hud;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.PlayMode.Tests
@@ -20,7 +21,7 @@ namespace Game.Arena.PlayMode.Tests
         private HealthIndicatorPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMesh _textMesh;
+        private TextMeshPro _textMesh;
         private Transform _fill;
 
         [SetUp]
@@ -35,7 +36,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject healthText = Track(new GameObject("HealthText"));
             healthText.transform.SetParent(root.transform, false);
-            _textMesh = healthText.AddComponent<TextMesh>();
+            _textMesh = healthText.AddComponent<TextMeshPro>();
 
             GameObject fill = Track(new GameObject("HealthFill"));
             fill.transform.SetParent(root.transform, false);
