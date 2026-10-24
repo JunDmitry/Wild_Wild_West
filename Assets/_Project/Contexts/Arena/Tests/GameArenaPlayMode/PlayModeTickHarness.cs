@@ -46,7 +46,8 @@ namespace Game.Arena.PlayMode.Tests
             IPlayerInputSource playerInputSource = null,
             IPlayerMovementResolver playerMovementResolver = null,
             Position3D? playerStart = null,
-            GameDuration? restartDelay = null)
+            GameDuration? restartDelay = null,
+            WaveCatalog waveCatalog = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -60,7 +61,7 @@ namespace Game.Arena.PlayMode.Tests
                 new ArenaRunFactory(new MovementPathPolicy()),
                 new ArenaRunSnapshotMapper());
 
-            _session = new ArenaRunSession(sessionDependencies, CreateCreationParameters(meleeRange, meleeArc, playerStart));
+            _session = new ArenaRunSession(sessionDependencies, CreateCreationParameters(meleeRange, meleeArc, playerStart, waveCatalog));
             _session.StartInitialRun();
 
             if (_repository.TryGet(_session.ActiveArenaRunId, out _run) == false)
@@ -159,7 +160,8 @@ namespace Game.Arena.PlayMode.Tests
         private static ArenaRunCreationParameters CreateCreationParameters(
             float meleeRange,
             AttackArc? meleeArc,
-            Position3D? playerStart)
+            Position3D? playerStart,
+            WaveCatalog waveCatalog)
         {
             ArenaDefinition arena = new(
                 new ArenaBounds(-20f, 20f, -20f, 20f, 0f),
@@ -206,7 +208,8 @@ namespace Game.Arena.PlayMode.Tests
                     new GameDuration(1.1d),
                     new GameDuration(0.4d)));
 
-            WaveCatalog waves = new(new[] { new WaveDefinition(WaveNumber.First, 10) });
+            WaveCatalog waves = waveCatalog
+                ?? new WaveCatalog(new[] { new WaveDefinition(WaveNumber.First, 10) });
 
             return new ArenaRunCreationParameters(arena, player, weapons, enemies, waves);
         }
