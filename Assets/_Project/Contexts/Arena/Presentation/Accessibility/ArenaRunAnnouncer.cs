@@ -19,6 +19,7 @@ namespace Game.Arena.Presentation.Accessibility
         public const string BossDefeatedAnnouncement = "Boss defeated";
         public const string EnemyEnteredAnnouncement = "Enemy entered the arena";
         public const string VictoryAnnouncement = "Victory; the run has been won";
+        public const string DefeatAnnouncement = "Defeat";
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision)>
             _announcedVictories = new();
@@ -28,6 +29,8 @@ namespace Game.Arena.Presentation.Accessibility
 
         private readonly HashSet<(ArenaRunId ArenaRunId, EnemyId EnemyId)>
             _announcedEnemyEntries = new();
+
+        private readonly HashSet<ArenaRunId> _announcedDefeats = new();
 
         private bool _hasAnnouncedHit;
         private ArenaRunId _announcedRunId;
@@ -122,8 +125,27 @@ namespace Game.Arena.Presentation.Accessibility
             Announce(VictoryAnnouncement);
         }
 
-        public void AnnounceWave(string text)
+        public void AnnounceDefeatOnce(ArenaRunId arenaRunId, string waveText)
         {
+            if (arenaRunId.IsNone)
+            {
+                throw new ArgumentException("ArenaRunId cannot be None.", nameof(arenaRunId));
+            }
+
+            if (string.IsNullOrWhiteSpace(waveText))
+            {
+                throw new ArgumentException("Wave text cannot be empty.", nameof(waveText));
+            }
+
+            if (_announcedDefeats.Add(arenaRunId) == false)
+            {
+                return;
+            }
+
+            Announce(DefeatAnnouncement + " — " + waveText);
+        }
+
+        public void AnnounceWave(string text)        {
             if (string.IsNullOrWhiteSpace(text))
             {
                 throw new ArgumentException("Wave text cannot be empty.", nameof(text));
