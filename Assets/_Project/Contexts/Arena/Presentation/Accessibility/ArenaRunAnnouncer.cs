@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Identity;
 using UnityEngine;
@@ -9,6 +10,11 @@ namespace Game.Arena.Presentation.Accessibility
     {
         public const string AimDirectionAnnouncement = "Aim direction";
         public const string HitAnnouncement = "Hit";
+        public const string EnemyAttackIncomingAnnouncement = "Enemy attack incoming";
+        public const string EnemyAttackMissedAnnouncement = "Enemy attack missed";
+
+        private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
+            _announcedEnemyAttackMisses = new();
 
         private bool _hasAnnouncedHit;
         private ArenaRunId _announcedRunId;
@@ -59,6 +65,34 @@ namespace Game.Arena.Presentation.Accessibility
             _announcedRevision = revision;
 
             Announce(HitAnnouncement);
+        }
+
+        public void AnnounceEnemyAttackIncoming()
+        {
+            Announce(EnemyAttackIncomingAnnouncement);
+        }
+
+        public void AnnounceEnemyAttackMissedOnce(
+            ArenaRunId arenaRunId,
+            AggregateRevision revision,
+            EnemyId enemyId)
+        {
+            if (arenaRunId.IsNone)
+            {
+                throw new ArgumentException("ArenaRunId cannot be None.", nameof(arenaRunId));
+            }
+
+            if (enemyId.IsNone)
+            {
+                throw new ArgumentException("EnemyId cannot be None.", nameof(enemyId));
+            }
+
+            if (_announcedEnemyAttackMisses.Add((arenaRunId, revision, enemyId)) == false)
+            {
+                return;
+            }
+
+            Announce(EnemyAttackMissedAnnouncement);
         }
 
         private void Announce(string announcement)

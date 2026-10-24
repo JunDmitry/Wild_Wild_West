@@ -68,6 +68,11 @@ namespace Game.Arena.Presentation.Notifications
                 {
                     PresentDamage(snapshot, damaged);
                 }
+                else if (pending[index] is ArenaRunEnemyAttackResolvedNotification resolved
+                    && resolved.ArenaRunId == snapshot.ArenaRunId)
+                {
+                    PresentAttackOutcome(resolved);
+                }
             }
         }
 
@@ -83,6 +88,19 @@ namespace Game.Arena.Presentation.Notifications
             }
 
             RequireAnnouncer().AnnounceHitOnce(notification.ArenaRunId, notification.Revision);
+        }
+
+        private void PresentAttackOutcome(ArenaRunEnemyAttackResolvedNotification notification)
+        {
+            if (notification.Outcome == ArenaRunEnemyAttackOutcome.Hit)
+            {
+                return;
+            }
+
+            RequireAnnouncer().AnnounceEnemyAttackMissedOnce(
+                notification.ArenaRunId,
+                notification.Revision,
+                notification.EnemyId);
         }
 
         private static EnemySnapshot FindEnemy(ArenaRunSnapshot snapshot, EnemyId enemyId)
