@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Events;
 
 namespace Game.Arena.Application.Notifications
@@ -39,6 +40,24 @@ namespace Game.Arena.Application.Notifications
                         damaged.ArenaRunId,
                         damaged.AggregateRevision,
                         damaged.EnemyId));
+                }
+                else if (domainEvent is EnemyAttackCompleted completed)
+                {
+                    notifications.Add(new ArenaRunEnemyAttackResolvedNotification(
+                        completed.ArenaRunId,
+                        completed.AggregateRevision,
+                        completed.EnemyId,
+                        completed.Outcome == AttackOutcome.Hit
+                            ? ArenaRunEnemyAttackOutcome.Hit
+                            : ArenaRunEnemyAttackOutcome.Miss));
+                }
+                else if (domainEvent is EnemyAttackCancelled cancelled)
+                {
+                    notifications.Add(new ArenaRunEnemyAttackResolvedNotification(
+                        cancelled.ArenaRunId,
+                        cancelled.AggregateRevision,
+                        cancelled.EnemyId,
+                        ArenaRunEnemyAttackOutcome.Cancelled));
                 }
             }
 
