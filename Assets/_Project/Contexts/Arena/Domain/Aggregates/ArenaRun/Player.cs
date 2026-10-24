@@ -142,6 +142,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 attackId,
                 Id,
                 SelectedWeapon,
+                weapon.Range,
+                weapon.Arc,
                 now,
                 now + weapon.WindupDuration);
 

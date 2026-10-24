@@ -162,6 +162,23 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
         }
 
         [Test]
+        public void PendingPlayerAttackCarriesTheWeaponShape()
+        {
+            AttackArc arc = AttackArc.FromDegrees(90f);
+            ArenaRun run = _kit.StartRunInSmallArena(_kit.WeaponsWithMeleeArc(arc));
+
+            run.SwitchWeapon();
+            run.StartPlayerAttack();
+
+            ArenaRunStateSnapshot snapshot = run.CreateSnapshot();
+            PendingPlayerAttack attack = snapshot.Player.PendingAttack;
+
+            Assert.That(attack.WeaponKind, Is.EqualTo(WeaponKind.Melee));
+            Assert.That(attack.Range, Is.EqualTo(Distance.FromValue(2f)));
+            Assert.That(attack.Arc, Is.EqualTo(arc));
+        }
+
+        [Test]
         public void SnapshotContainsPendingEnemyAttack()
         {
             ArenaRun run = _kit.StartRunInCompactArena();

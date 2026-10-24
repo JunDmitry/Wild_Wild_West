@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;
 
@@ -10,6 +11,8 @@ namespace Game.Arena.Domain.Combat
             AttackId id,
             PlayerId playerId,
             WeaponKind weaponKind,
+            Distance range,
+            AttackArc arc,
             GameTimePoint startedAt,
             GameTimePoint impactAt)
         {
@@ -23,6 +26,16 @@ namespace Game.Arena.Domain.Combat
                 throw new ArgumentException("PlayerId cannot be None.", nameof(id));
             }
 
+            if (range.IsZero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(range));
+            }
+
+            if (arc.IsValid == false)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arc));
+            }
+
             if (impactAt < startedAt)
             {
                 throw new ArgumentOutOfRangeException(nameof(impactAt));
@@ -31,6 +44,8 @@ namespace Game.Arena.Domain.Combat
             Id = id;
             PlayerId = playerId;
             WeaponKind = weaponKind;
+            Range = range;
+            Arc = arc;
             StartedAt = startedAt;
             ImpactAt = impactAt;
         }
@@ -38,6 +53,8 @@ namespace Game.Arena.Domain.Combat
         public AttackId Id { get; }
         public PlayerId PlayerId { get; }
         public WeaponKind WeaponKind { get; }
+        public Distance Range { get; }
+        public AttackArc Arc { get; }
         public GameTimePoint StartedAt { get; }
         public GameTimePoint ImpactAt { get; }
 
@@ -51,6 +68,8 @@ namespace Game.Arena.Domain.Combat
             return Id.Equals(other.Id)
                 && PlayerId.Equals(other.PlayerId)
                 && WeaponKind == other.WeaponKind
+                && Range.Equals(other.Range)
+                && Arc.Equals(other.Arc)
                 && StartedAt.Equals(other.StartedAt)
                 && ImpactAt.Equals(other.ImpactAt);
         }
@@ -66,6 +85,8 @@ namespace Game.Arena.Domain.Combat
                 Id,
                 PlayerId,
                 WeaponKind,
+                Range,
+                Arc,
                 StartedAt,
                 ImpactAt);
         }

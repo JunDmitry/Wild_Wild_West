@@ -1,5 +1,6 @@
 ﻿using System;
 using Game.Arena.Domain.Combat;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;
 using NUnit.Framework;
@@ -19,6 +20,8 @@ namespace Game.Arena.Domain.Tests._Combat
                         AttackId.None,
                         PlayerId.FromValue(1UL),
                         WeaponKind.Ranged,
+                        Distance.FromValue(1f),
+                        AttackArc.Full,
                         new GameTimePoint(0d),
                         new GameTimePoint(0d));
                 });
@@ -34,6 +37,8 @@ namespace Game.Arena.Domain.Tests._Combat
                         AttackId.None.Next(),
                         PlayerId.None,
                         WeaponKind.Ranged,
+                        Distance.FromValue(1f),
+                        AttackArc.Full,
                         new GameTimePoint(0d),
                         new GameTimePoint(0d));
                 });
@@ -63,6 +68,8 @@ namespace Game.Arena.Domain.Tests._Combat
                         AttackId.None.Next(),
                         PlayerId.FromValue(1UL),
                         WeaponKind.Melee,
+                        Distance.FromValue(1f),
+                        AttackArc.Full,
                         new GameTimePoint(2d),
                         new GameTimePoint(1d));
                 });
@@ -85,11 +92,47 @@ namespace Game.Arena.Domain.Tests._Combat
                 AttackId.None.Next(),
                 PlayerId.FromValue(1UL),
                 WeaponKind.Ranged,
+                Distance.FromValue(1f),
+                AttackArc.Full,
                 new GameTimePoint(1d),
                 new GameTimePoint(2d));
 
             Assert.That(attack.IsReadyToImpact(new GameTimePoint(1.9d)), Is.False);
             Assert.That(attack.IsReadyToImpact(new GameTimePoint(2d)), Is.True);
+        }
+
+        [Test]
+        public void PendingPlayerAttackRejectsZeroRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    PendingPlayerAttack unused = new PendingPlayerAttack(
+                        AttackId.None.Next(),
+                        PlayerId.FromValue(1UL),
+                        WeaponKind.Melee,
+                        Distance.Zero,
+                        AttackArc.Full,
+                        new GameTimePoint(0d),
+                        new GameTimePoint(1d));
+                });
+        }
+
+        [Test]
+        public void PendingPlayerAttackRejectsInvalidArc()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    PendingPlayerAttack unused = new PendingPlayerAttack(
+                        AttackId.None.Next(),
+                        PlayerId.FromValue(1UL),
+                        WeaponKind.Melee,
+                        Distance.FromValue(1f),
+                        default(AttackArc),
+                        new GameTimePoint(0d),
+                        new GameTimePoint(1d));
+                });
         }
 
         [Test]
