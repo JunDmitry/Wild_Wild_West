@@ -1,3 +1,6 @@
+using System;
+using Game.Arena.Application.ReadModels;
+using Game.Arena.Domain.Aggregates.ArenaRun;
 using UnityEngine;
 
 namespace Game.Arena.Presentation.Camera
@@ -18,6 +21,7 @@ namespace Game.Arena.Presentation.Camera
 
         private float _yaw;
         private float _pitch;
+        private bool _isLookEnabled = true;
 
         public Transform Target
         {
@@ -49,6 +53,16 @@ namespace Game.Arena.Presentation.Camera
 
         public float Pitch => _pitch;
 
+        public void Present(ArenaRunSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot));
+            }
+
+            _isLookEnabled = snapshot.Status == ArenaRunStatus.Playing;
+        }
+
         private void Awake()
         {
             _yaw = transform.eulerAngles.y;
@@ -69,6 +83,11 @@ namespace Game.Arena.Presentation.Camera
 
         public void ApplyLook(float mouseX, float mouseY)
         {
+            if (_isLookEnabled == false)
+            {
+                return;
+            }
+
             _yaw += mouseX * _yawSensitivity;
             _pitch = Mathf.Clamp(_pitch - (mouseY * _pitchSensitivity), _minimumPitch, _maximumPitch);
         }
