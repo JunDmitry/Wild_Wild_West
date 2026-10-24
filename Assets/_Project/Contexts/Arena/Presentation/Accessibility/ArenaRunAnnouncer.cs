@@ -25,6 +25,21 @@ namespace Game.Arena.Presentation.Accessibility
             Announce(AimDirectionAnnouncement);
         }
 
+        public void AnnounceEquippedWeapon(string label, string text)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                throw new ArgumentException("Equipped weapon label cannot be empty.", nameof(label));
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("Equipped weapon text cannot be empty.", nameof(text));
+            }
+
+            Announce(label + ": " + text);
+        }
+
         public void AnnounceHitOnce(ArenaRunId arenaRunId, AggregateRevision revision)
         {
             if (arenaRunId.IsNone)
