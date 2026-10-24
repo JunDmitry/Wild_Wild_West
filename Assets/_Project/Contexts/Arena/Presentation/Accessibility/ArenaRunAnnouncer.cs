@@ -15,6 +15,8 @@ namespace Game.Arena.Presentation.Accessibility
         public const string PlayerDefeatedSuffix = "; the player can no longer act";
         public const string NewWaveLabel = "New wave";
         public const string NewWaveAnnouncementSuffix = " begins";
+        public const string BossEntersAnnouncement = "Boss enters";
+        public const string BossDefeatedAnnouncement = "Boss defeated";
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
             _announcedEnemyAttackMisses = new();
@@ -105,6 +107,16 @@ namespace Game.Arena.Presentation.Accessibility
             }
 
             Announce(text + NewWaveAnnouncementSuffix);
+        }
+
+        public void AnnounceBossEnters()
+        {
+            Announce(BossEntersAnnouncement);
+        }
+
+        public void AnnounceBossDefeated()
+        {
+            Announce(BossDefeatedAnnouncement);
         }
 
         public void AnnounceEnemyAttackMissedOnce(

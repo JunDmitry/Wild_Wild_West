@@ -9,6 +9,8 @@ namespace Game.Arena.Presentation.Hud
         [SerializeField] private TextMesh _healthText;
         [SerializeField] private Transform _healthFill;
         [SerializeField] private TextMesh _waveText;
+        [SerializeField] private TextMesh _bossText;
+        [SerializeField] private Transform _bossFill;
 
         public string EquippedWeaponLabel { get; private set; }
 
@@ -30,6 +32,18 @@ namespace Game.Arena.Presentation.Hud
 
         public string WaveText { get; private set; }
 
+        public string BossLabel { get; private set; }
+
+        public int BossHealthCurrent { get; private set; }
+
+        public int BossHealthMaximum { get; private set; }
+
+        public string BossHealthText { get; private set; }
+
+        public float BossHealthFraction { get; private set; }
+
+        public bool IsBossPresent { get; private set; }
+
         public bool IsShown => EquippedWeaponText != null;
 
         public TextMesh HealthTextMesh
@@ -48,6 +62,18 @@ namespace Game.Arena.Presentation.Hud
         {
             get => _waveText;
             set => _waveText = value;
+        }
+
+        public TextMesh BossTextMesh
+        {
+            get => _bossText;
+            set => _bossText = value;
+        }
+
+        public Transform BossFill
+        {
+            get => _bossFill;
+            set => _bossFill = value;
         }
 
         public void ShowEquippedWeapon(string label, string text)
@@ -122,6 +148,77 @@ namespace Game.Arena.Presentation.Hud
             {
                 Vector3 scale = _healthFill.localScale;
                 _healthFill.localScale = new Vector3(fraction, scale.y, scale.z);
+            }
+        }
+
+        public void ShowBoss(
+            string label,
+            string text,
+            int current,
+            int maximum,
+            float fraction)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                throw new ArgumentException("Boss label cannot be empty.", nameof(label));
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("Boss text cannot be empty.", nameof(text));
+            }
+
+            if (maximum <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maximum));
+            }
+
+            if (current < 0 || current > maximum)
+            {
+                throw new ArgumentOutOfRangeException(nameof(current));
+            }
+
+            if (fraction < 0f || fraction > 1f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(fraction));
+            }
+
+            BossLabel = label;
+            BossHealthCurrent = current;
+            BossHealthMaximum = maximum;
+            BossHealthText = text;
+            BossHealthFraction = fraction;
+            IsBossPresent = true;
+
+            if (_bossText != null)
+            {
+                _bossText.text = label + ": " + text;
+            }
+
+            if (_bossFill != null)
+            {
+                Vector3 scale = _bossFill.localScale;
+                _bossFill.localScale = new Vector3(fraction, scale.y, scale.z);
+            }
+        }
+
+        public void HideBoss()
+        {
+            BossHealthCurrent = 0;
+            BossHealthMaximum = 0;
+            BossHealthText = string.Empty;
+            BossHealthFraction = 0f;
+            IsBossPresent = false;
+
+            if (_bossText != null)
+            {
+                _bossText.text = string.Empty;
+            }
+
+            if (_bossFill != null)
+            {
+                Vector3 scale = _bossFill.localScale;
+                _bossFill.localScale = new Vector3(0f, scale.y, scale.z);
             }
         }
 
