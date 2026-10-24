@@ -56,6 +56,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0023 | Allow sliding along Arena Bounds in the Domain movement contract | Accepted | 2026-10-23 | [ADR-0023](ADR-0023-arena-bounds-sliding.md) |
 | ADR-0024 | Prepare HUD text in an Application-owned HUD model | Accepted | 2026-10-23 | [ADR-0024](ADR-0024-application-owned-hud-model.md) |
 | ADR-0025 | Derive the defeat window from published run state | Accepted | 2026-10-23 | [ADR-0025](ADR-0025-derive-defeat-window-from-published-state.md) |
+| ADR-0026 | Publish the weapon's attack shape with the pending attack | Accepted | 2026-10-24 | [ADR-0026](ADR-0026-publish-weapon-shape-with-pending-attack.md) |
 
 ## New ADR Template
 
