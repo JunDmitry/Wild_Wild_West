@@ -12,6 +12,7 @@ namespace Game.Arena.Presentation.Accessibility
         public const string HitAnnouncement = "Hit";
         public const string EnemyAttackIncomingAnnouncement = "Enemy attack incoming";
         public const string EnemyAttackMissedAnnouncement = "Enemy attack missed";
+        public const string PlayerDefeatedSuffix = "; the player can no longer act";
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
             _announcedEnemyAttackMisses = new();
@@ -44,6 +45,28 @@ namespace Game.Arena.Presentation.Accessibility
             }
 
             Announce(label + ": " + text);
+        }
+
+        public void AnnounceHealth(string label, string text, bool isDefeated)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                throw new ArgumentException("Health label cannot be empty.", nameof(label));
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException("Health text cannot be empty.", nameof(text));
+            }
+
+            string announcement = label + ": " + text;
+
+            if (isDefeated)
+            {
+                announcement += PlayerDefeatedSuffix;
+            }
+
+            Announce(announcement);
         }
 
         public void AnnounceHitOnce(ArenaRunId arenaRunId, AggregateRevision revision)
