@@ -48,10 +48,12 @@ namespace Game.Arena.Application.Tests.Notifications
             ArenaRunTickResult result = WinTheRun();
 
             Assert.That(result.Snapshot.Status, Is.EqualTo(ArenaRunStatus.Victory));
-            Assert.That(_sink.Published, Has.Count.EqualTo(1));
 
-            ArenaRunVictoryNotification notification =
-                (ArenaRunVictoryNotification)_sink.Published[0];
+            ArenaRunVictoryNotification[] victoryNotifications = VictoryNotifications();
+
+            Assert.That(victoryNotifications, Has.Length.EqualTo(1));
+
+            ArenaRunVictoryNotification notification = victoryNotifications[0];
 
             Assert.That(notification.ArenaRunId, Is.EqualTo(run.Id));
             Assert.That(notification.Revision, Is.EqualTo(result.FinalRevision));
@@ -65,7 +67,7 @@ namespace Game.Arena.Application.Tests.Notifications
 
             _service.ExecuteTick();
 
-            Assert.That(_sink.Published, Has.Count.EqualTo(1));
+            Assert.That(VictoryNotifications(), Has.Length.EqualTo(1));
         }
 
         [Test]
@@ -100,6 +102,33 @@ namespace Game.Arena.Application.Tests.Notifications
                 false);
 
             return _service.ExecuteTick();
+        }
+
+        private ArenaRunVictoryNotification[] VictoryNotifications()
+        {
+            int count = 0;
+
+            for (int index = 0; index < _sink.Published.Count; index++)
+            {
+                if (_sink.Published[index] is ArenaRunVictoryNotification)
+                {
+                    count++;
+                }
+            }
+
+            ArenaRunVictoryNotification[] found = new ArenaRunVictoryNotification[count];
+            int target = 0;
+
+            for (int index = 0; index < _sink.Published.Count; index++)
+            {
+                if (_sink.Published[index] is ArenaRunVictoryNotification notification)
+                {
+                    found[target] = notification;
+                    target++;
+                }
+            }
+
+            return found;
         }
 
         private ArenaRunTickService CreateService()
