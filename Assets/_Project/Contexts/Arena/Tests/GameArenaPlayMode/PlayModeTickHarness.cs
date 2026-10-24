@@ -45,7 +45,8 @@ namespace Game.Arena.PlayMode.Tests
             AttackArc? meleeArc = null,
             IPlayerInputSource playerInputSource = null,
             IPlayerMovementResolver playerMovementResolver = null,
-            Position3D? playerStart = null)
+            Position3D? playerStart = null,
+            GameDuration? restartDelay = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -77,7 +78,7 @@ namespace Game.Arena.PlayMode.Tests
                 new FixedSpawnPlacementResolver(),
                 new MonotonicEnemyIdSource(),
                 new NeverSpawnPacingPolicy(),
-                new FixedIntervalRunRestartDelayPolicy(new GameDuration(1000d)),
+                new FixedIntervalRunRestartDelayPolicy(restartDelay ?? new GameDuration(1000d)),
                 new NoOpNotificationSink());
 
             _tickService = new ArenaRunTickService(tickDependencies);
