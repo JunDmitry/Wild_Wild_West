@@ -17,9 +17,13 @@ namespace Game.Arena.Presentation.Accessibility
         public const string NewWaveAnnouncementSuffix = " begins";
         public const string BossEntersAnnouncement = "Boss enters";
         public const string BossDefeatedAnnouncement = "Boss defeated";
+        public const string EnemyEnteredAnnouncement = "Enemy entered the arena";
 
         private readonly HashSet<(ArenaRunId ArenaRunId, AggregateRevision Revision, EnemyId EnemyId)>
             _announcedEnemyAttackMisses = new();
+
+        private readonly HashSet<(ArenaRunId ArenaRunId, EnemyId EnemyId)>
+            _announcedEnemyEntries = new();
 
         private bool _hasAnnouncedHit;
         private ArenaRunId _announcedRunId;
@@ -117,6 +121,28 @@ namespace Game.Arena.Presentation.Accessibility
         public void AnnounceBossDefeated()
         {
             Announce(BossDefeatedAnnouncement);
+        }
+
+        public void AnnounceEnemyEnteredOnce(
+            ArenaRunId arenaRunId,
+            EnemyId enemyId)
+        {
+            if (arenaRunId.IsNone)
+            {
+                throw new ArgumentException("ArenaRunId cannot be None.", nameof(arenaRunId));
+            }
+
+            if (enemyId.IsNone)
+            {
+                throw new ArgumentException("EnemyId cannot be None.", nameof(enemyId));
+            }
+
+            if (_announcedEnemyEntries.Add((arenaRunId, enemyId)) == false)
+            {
+                return;
+            }
+
+            Announce(EnemyEnteredAnnouncement);
         }
 
         public void AnnounceEnemyAttackMissedOnce(
