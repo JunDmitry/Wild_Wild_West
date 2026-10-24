@@ -12,6 +12,8 @@ namespace Game.Arena.Presentation.Windows
         [SerializeField] private TextMesh _statementText;
         [SerializeField] private TextMesh _waveText;
 
+        public string Label => WaveReachedLabel;
+
         public TextMesh StatementTextMesh
         {
             get => _statementText;
