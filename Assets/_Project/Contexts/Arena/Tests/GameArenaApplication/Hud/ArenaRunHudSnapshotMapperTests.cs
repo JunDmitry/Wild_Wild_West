@@ -123,11 +123,90 @@ namespace Game.Arena.Application.Hud
             Assert.That(hud.WaveText, Is.EqualTo("Wave 1 of 3"));
         }
 
+        [Test]
+        public void MapShowsTheBossHealthWhenTheBossIsInsideBounds()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(
+                    100,
+                    100,
+                    WeaponKind.Ranged,
+                    ArenaRunStatus.Playing,
+                    Enemy(2UL, EnemyKind.Boss, 4f, 0f, 180, 300)));
+
+            Assert.That(hud.BossLabel, Is.EqualTo("Boss"));
+            Assert.That(hud.IsBossPresent, Is.True);
+            Assert.That(hud.BossHealthCurrent, Is.EqualTo(180));
+            Assert.That(hud.BossHealthMaximum, Is.EqualTo(300));
+            Assert.That(hud.BossHealthText, Is.EqualTo("180 / 300"));
+            Assert.That(hud.BossHealthFraction, Is.EqualTo(0.6f));
+        }
+
+        [Test]
+        public void MapHidesTheBossWhileItIsStillOutsideBounds()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(
+                    100,
+                    100,
+                    WeaponKind.Ranged,
+                    ArenaRunStatus.Playing,
+                    Enemy(2UL, EnemyKind.Boss, 25f, 0f, 300, 300)));
+
+            Assert.That(hud.IsBossPresent, Is.False);
+            Assert.That(hud.BossHealthCurrent, Is.Zero);
+            Assert.That(hud.BossHealthMaximum, Is.Zero);
+            Assert.That(hud.BossHealthText, Is.Empty);
+            Assert.That(hud.BossHealthFraction, Is.Zero);
+        }
+
+        [Test]
+        public void MapHidesTheBossWhenOnlyRegularEnemiesArePresent()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(
+                    100,
+                    100,
+                    WeaponKind.Ranged,
+                    ArenaRunStatus.Playing,
+                    Enemy(1UL, EnemyKind.Regular, 2f, 0f, 50, 50)));
+
+            Assert.That(hud.IsBossPresent, Is.False);
+            Assert.That(hud.BossHealthText, Is.Empty);
+        }
+
+        [Test]
+        public void MapHidesTheBossWhenThereAreNoEnemies()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(100, 100, WeaponKind.Ranged, ArenaRunStatus.Playing));
+
+            Assert.That(hud.IsBossPresent, Is.False);
+            Assert.That(hud.BossLabel, Is.EqualTo("Boss"));
+        }
+
+        [Test]
+        public void MapPrefersThePresentedBossOverAnOutsideOne()
+        {
+            ArenaRunHudSnapshot hud = _mapper.Map(
+                CreateSnapshot(
+                    100,
+                    100,
+                    WeaponKind.Ranged,
+                    ArenaRunStatus.Playing,
+                    Enemy(2UL, EnemyKind.Boss, 25f, 0f, 300, 300),
+                    Enemy(3UL, EnemyKind.Boss, 5f, 0f, 120, 300)));
+
+            Assert.That(hud.IsBossPresent, Is.True);
+            Assert.That(hud.BossHealthCurrent, Is.EqualTo(120));
+        }
+
         private static ArenaRunSnapshot CreateSnapshot(
             int currentHealth,
             int maximumHealth,
             WeaponKind weapon,
-            ArenaRunStatus status)
+            ArenaRunStatus status,
+            params EnemySnapshot[] enemies)
         {
             Health health = Health.Full(maximumHealth);
             int damage = maximumHealth - currentHealth;
@@ -156,13 +235,42 @@ namespace Game.Arena.Application.Hud
                 new GameTimePoint(0d),
                 new ArenaBounds(-10f, 10f, -10f, 10f, 0f),
                 player,
-                Array.Empty<EnemySnapshot>(),
+                enemies,
                 new WaveSnapshot(
                     WaveNumber.First,
                     WavePhase.RegularCombat,
                     0,
                     BossStatus.NotSpawned),
                 WaveNumber.FromValue(3));
+        }
+
+        private static EnemySnapshot Enemy(
+            ulong id,
+            EnemyKind kind,
+            float x,
+            float z,
+            int currentHealth,
+            int maximumHealth)
+        {
+            Health health = Health.Full(maximumHealth);
+            int damage = maximumHealth - currentHealth;
+
+            if (damage > 0)
+            {
+                health = health
+                    .ApplyDamage(DamageAmount.FromPoints(damage))
+                    .RemainingHealth;
+            }
+
+            return new EnemySnapshot(
+                EnemyId.FromValue(id),
+                kind,
+                new Position3D(x, 0f, z),
+                health,
+                CollisionRadius.FromValue(0.5f),
+                new GameTimePoint(0d),
+                false,
+                default);
         }
     }
 }

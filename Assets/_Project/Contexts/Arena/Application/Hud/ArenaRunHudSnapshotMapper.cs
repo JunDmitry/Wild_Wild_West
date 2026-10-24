@@ -10,6 +10,7 @@ namespace Game.Arena.Application.Hud
     {
         private const string HealthLabel = "Health";
         private const string EquippedWeaponLabel = "Equipped weapon";
+        private const string BossLabel = "Boss";
 
         public ArenaRunHudSnapshot Map(ArenaRunSnapshot source)
         {
@@ -19,6 +20,7 @@ namespace Game.Arena.Application.Hud
             }
 
             Health health = source.Player.Health;
+            EnemySnapshot boss = FindPresentedBoss(source);
 
             return new ArenaRunHudSnapshot(
                 HealthLabel,
@@ -28,7 +30,31 @@ namespace Game.Arena.Application.Hud
                 MapWeapon(source.Player.SelectedWeapon),
                 source.Wave.Number.Value,
                 source.WaveTotal.Value,
-                source.Status == ArenaRunStatus.Defeat);
+                source.Status == ArenaRunStatus.Defeat,
+                BossLabel,
+                boss == null ? 0 : boss.Health.Current,
+                boss == null ? 0 : boss.Health.Maximum,
+                boss != null);
+        }
+
+        private static EnemySnapshot FindPresentedBoss(ArenaRunSnapshot source)
+        {
+            foreach (EnemySnapshot enemy in source.Enemies)
+            {
+                if (enemy.Kind != EnemyKind.Boss)
+                {
+                    continue;
+                }
+
+                if (source.Bounds.Contains(enemy.Position, enemy.CollisionRadius) == false)
+                {
+                    continue;
+                }
+
+                return enemy;
+            }
+
+            return null;
         }
 
         private static string MapWeapon(WeaponKind weapon)

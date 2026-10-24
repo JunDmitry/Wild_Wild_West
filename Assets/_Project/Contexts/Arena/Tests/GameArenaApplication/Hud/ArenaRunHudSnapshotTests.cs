@@ -59,6 +59,10 @@ namespace Game.Arena.Application.Hud
                         "Firearm",
                         1,
                         3,
+                        false,
+                        "Boss",
+                        0,
+                        0,
                         false);
                 });
         }
@@ -77,6 +81,10 @@ namespace Game.Arena.Application.Hud
                         string.Empty,
                         1,
                         3,
+                        false,
+                        "Boss",
+                        0,
+                        0,
                         false);
                 });
         }
@@ -102,6 +110,10 @@ namespace Game.Arena.Application.Hud
                 "Firearm",
                 2,
                 3,
+                false,
+                "Boss",
+                0,
+                0,
                 false);
 
             Assert.That(hud.WaveCurrent, Is.EqualTo(2));
@@ -123,6 +135,10 @@ namespace Game.Arena.Application.Hud
                         "Firearm",
                         0,
                         3,
+                        false,
+                        "Boss",
+                        0,
+                        0,
                         false);
                 });
         }
@@ -141,6 +157,110 @@ namespace Game.Arena.Application.Hud
                         "Firearm",
                         3,
                         2,
+                        false,
+                        "Boss",
+                        0,
+                        0,
+                        false);
+                });
+        }
+
+        [Test]
+        public void ConstructorDerivesBossTextAndFraction()
+        {
+            ArenaRunHudSnapshot hud = CreateWithBoss(180, 300);
+
+            Assert.That(hud.BossLabel, Is.EqualTo("Boss"));
+            Assert.That(hud.BossHealthCurrent, Is.EqualTo(180));
+            Assert.That(hud.BossHealthMaximum, Is.EqualTo(300));
+            Assert.That(hud.BossHealthText, Is.EqualTo("180 / 300"));
+            Assert.That(hud.BossHealthFraction, Is.EqualTo(0.6f));
+            Assert.That(hud.IsBossPresent, Is.True);
+        }
+
+        [Test]
+        public void ConstructorCarriesAnAbsentBossWithoutValues()
+        {
+            ArenaRunHudSnapshot hud = Create(25, 50);
+
+            Assert.That(hud.BossLabel, Is.EqualTo("Boss"));
+            Assert.That(hud.BossHealthCurrent, Is.Zero);
+            Assert.That(hud.BossHealthMaximum, Is.Zero);
+            Assert.That(hud.BossHealthText, Is.Empty);
+            Assert.That(hud.BossHealthFraction, Is.Zero);
+            Assert.That(hud.IsBossPresent, Is.False);
+        }
+
+        [Test]
+        public void ConstructorRejectsEmptyBossLabel()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _ = new ArenaRunHudSnapshot(
+                        "Health",
+                        1,
+                        1,
+                        "Equipped weapon",
+                        "Firearm",
+                        1,
+                        3,
+                        false,
+                        " ",
+                        300,
+                        300,
+                        true);
+                });
+        }
+
+        [Test]
+        public void ConstructorRejectsNonPositiveBossMaximum()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    _ = CreateWithBoss(0, 0);
+                });
+        }
+
+        [Test]
+        public void ConstructorRejectsBossCurrentAboveMaximum()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    _ = CreateWithBoss(301, 300);
+                });
+        }
+
+        [Test]
+        public void ConstructorRejectsNegativeBossCurrent()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () =>
+                {
+                    _ = CreateWithBoss(-1, 300);
+                });
+        }
+
+        [Test]
+        public void ConstructorRejectsBossHealthWhenNoBossIsPresent()
+        {
+            Assert.Throws<ArgumentException>(
+                () =>
+                {
+                    _ = new ArenaRunHudSnapshot(
+                        "Health",
+                        1,
+                        1,
+                        "Equipped weapon",
+                        "Firearm",
+                        1,
+                        3,
+                        false,
+                        "Boss",
+                        300,
+                        300,
                         false);
                 });
         }
@@ -155,7 +275,28 @@ namespace Game.Arena.Application.Hud
                 "Firearm",
                 1,
                 3,
+                false,
+                "Boss",
+                0,
+                0,
                 false);
+        }
+
+        private static ArenaRunHudSnapshot CreateWithBoss(int bossCurrent, int bossMaximum)
+        {
+            return new ArenaRunHudSnapshot(
+                "Health",
+                1,
+                1,
+                "Equipped weapon",
+                "Firearm",
+                1,
+                3,
+                false,
+                "Boss",
+                bossCurrent,
+                bossMaximum,
+                true);
         }
     }
 }

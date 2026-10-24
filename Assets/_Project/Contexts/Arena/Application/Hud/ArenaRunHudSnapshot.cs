@@ -13,7 +13,11 @@ namespace Game.Arena.Application.Hud
             string equippedWeaponText,
             int waveCurrent,
             int waveTotal,
-            bool isDefeated)
+            bool isDefeated,
+            string bossLabel,
+            int bossHealthCurrent,
+            int bossHealthMaximum,
+            bool isBossPresent)
         {
             if (string.IsNullOrWhiteSpace(healthLabel))
             {
@@ -50,6 +54,30 @@ namespace Game.Arena.Application.Hud
                 throw new ArgumentException("Wave total cannot precede the current wave.", nameof(waveTotal));
             }
 
+            if (string.IsNullOrWhiteSpace(bossLabel))
+            {
+                throw new ArgumentException("Boss label cannot be empty.", nameof(bossLabel));
+            }
+
+            if (isBossPresent)
+            {
+                if (bossHealthMaximum <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(bossHealthMaximum));
+                }
+
+                if (bossHealthCurrent < 0 || bossHealthCurrent > bossHealthMaximum)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(bossHealthCurrent));
+                }
+            }
+            else if (bossHealthCurrent != 0 || bossHealthMaximum != 0)
+            {
+                throw new ArgumentException(
+                    "Boss health values must be zero when no boss is present.",
+                    nameof(bossHealthCurrent));
+            }
+
             HealthLabel = healthLabel;
             HealthCurrent = healthCurrent;
             HealthMaximum = healthMaximum;
@@ -69,6 +97,20 @@ namespace Game.Arena.Application.Hud
                 waveCurrent,
                 waveTotal);
             IsDefeated = isDefeated;
+            BossLabel = bossLabel;
+            BossHealthCurrent = bossHealthCurrent;
+            BossHealthMaximum = bossHealthMaximum;
+            BossHealthText = isBossPresent
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0} / {1}",
+                    bossHealthCurrent,
+                    bossHealthMaximum)
+                : string.Empty;
+            BossHealthFraction = isBossPresent
+                ? (float)bossHealthCurrent / bossHealthMaximum
+                : 0f;
+            IsBossPresent = isBossPresent;
         }
 
         public string HealthLabel { get; }
@@ -92,5 +134,17 @@ namespace Game.Arena.Application.Hud
         public string WaveText { get; }
 
         public bool IsDefeated { get; }
+
+        public string BossLabel { get; }
+
+        public int BossHealthCurrent { get; }
+
+        public int BossHealthMaximum { get; }
+
+        public string BossHealthText { get; }
+
+        public float BossHealthFraction { get; }
+
+        public bool IsBossPresent { get; }
     }
 }
