@@ -70,6 +70,65 @@ Rules for its contents:
   `dotnet test` suites.
 - Existing Editor-only test assemblies are unchanged.
 
+## Amendment 2026-10-25 — composition-root PlayMode test assembly
+
+T-8.1's composition fixture cannot live in `Game.Arena.PlayMode.Tests`. C#
+assembly references are not transitive, so the fixture cannot reach
+`Game.CompositionRoot` or `VContainer` through the Arena layer references, and
+widening the Arena assembly would put the composing layer inside a test
+assembly that owns Arena behavior. A second PlayMode test assembly is added
+instead:
+
+`Assets/_Project/CompositionRoot/Tests/GameCompositionRootPlayMode/Game.CompositionRoot.PlayMode.Tests.asmdef`
+
+```json
+{
+    "name": "Game.CompositionRoot.PlayMode.Tests",
+    "rootNamespace": "Game.CompositionRoot.PlayMode.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Game.CompositionRoot",
+        "Game.Arena.Domain",
+        "Game.Arena.Application",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
+```
+
+Rules:
+
+- It holds only composition-root PlayMode tests: scope building, registration
+  completeness, missing-seam failures, and singleton identity.
+- It is test-only — `UNITY_INCLUDE_TESTS`, `autoReferenced: false`, and a name
+  ending in `.Tests` — so `AssemblyBoundaryTests` exempts it from the production
+  dependency contract, exactly as for the Arena test assembly.
+- `Game.Arena.PlayMode.Tests` is unchanged; Arena behavior tests stay there.
+- It references the Arena Domain and Application layers it composes, plus
+  `Game.CompositionRoot` and `VContainer`. Infrastructure and Presentation are
+  not referenced until a fixture names their types.
+- The architect owns the `.asmdef`; `coder-role` adds only test sources and
+  their `.meta` files inside the assembly folder.
+
+The one-assembly preference above is narrowed, not revoked: one PlayMode
+assembly per owning assembly under test — Arena behavior in
+`Game.Arena.PlayMode.Tests`, composition in
+`Game.CompositionRoot.PlayMode.Tests`. No production assembly gains a
+reference.
+
 ## Rationale
 
 - One test-only assembly keeps the production dependency graph intact; the
@@ -132,6 +191,8 @@ Rules for its contents:
 ## References
 
 - `docs/architect/coder-inbox/c1.md` — the coder's deferral
+- `docs/architect/coder-inbox/t8-1-composition-root.md` — the T-8.1 deferral
+  behind the 2026-10-25 amendment
 - `docs/coder/architect-inbox/F-001.md`, `docs/coder/architect-inbox/F-003.md`
 - `docs/coder/delivery-plan.md` — T-6.10, T-7.7
 - `Assets/_Project/Tests/Architecture/AssemblyBoundaryTests.cs` — test
