@@ -37,6 +37,7 @@ namespace Game.Architecture.Tests
                     "Game.Arena.Application",
                     "Game.Arena.Infrastructure",
                     "Game.Arena.Presentation",
+                    "VContainer",
                 },
         };
 
