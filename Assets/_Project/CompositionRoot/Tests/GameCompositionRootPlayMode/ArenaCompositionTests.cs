@@ -63,7 +63,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
             ContainerBuilder builder = new();
             ArenaGameConfiguration configuration = ArenaGameConfiguration.CreateDefault();
             ArenaRegistrations.RegisterProcessLifetime(builder, configuration);
-            ArenaRegistrations.RegisterSceneLifetime(builder, CreateSceneObjects(configuration));
+            ArenaRegistrations.RegisterSceneLifetime(builder, CreateSceneObjects());
 
             using IObjectResolver container = builder.Build();
 
@@ -92,7 +92,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
             ContainerBuilder builder = new();
             ArenaGameConfiguration configuration = ArenaGameConfiguration.CreateDefault();
             ArenaRegistrations.RegisterProcessLifetime(builder, configuration);
-            ArenaRegistrations.RegisterSceneLifetime(builder, CreateSceneObjects(configuration));
+            ArenaRegistrations.RegisterSceneLifetime(builder, CreateSceneObjects());
 
             using IObjectResolver container = builder.Build();
 
@@ -119,7 +119,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
             Assert.Throws<InvalidOperationException>(() => scope.Build());
         }
 
-        private ArenaSceneObjects CreateSceneObjects(ArenaGameConfiguration configuration)
+        private ArenaSceneObjects CreateSceneObjects()
         {
             GameObject cameraObject = new("Composition Test Camera");
             _objects.Add(cameraObject);
@@ -129,7 +129,6 @@ namespace Game.CompositionRoot.PlayMode.Tests
             _objects.Add(playerObject);
 
             return new ArenaSceneObjects(
-                configuration,
                 camera,
                 playerObject.transform,
                 new FakePlayerInputSource(),

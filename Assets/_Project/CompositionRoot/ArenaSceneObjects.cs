@@ -8,19 +8,17 @@ namespace Game.CompositionRoot
     /// <summary>
     /// The Unity objects the Arena scene scope needs, supplied explicitly by the
     /// scene binder. Nothing is discovered through a global object search.
+    /// Configuration is not part of the seam: it is a process-lifetime service
+    /// the child scope resolves from its parent (ADR-0031).
     /// </summary>
     public sealed class ArenaSceneObjects
     {
         public ArenaSceneObjects(
-            ArenaGameConfiguration configuration,
             Camera camera,
             Transform player,
             IPlayerInputSource inputSource,
             IEnemyTransformRegistry enemyTransforms)
         {
-            Configuration = configuration
-                ?? throw new ArgumentNullException(nameof(configuration));
-
             Camera = camera != null
                 ? camera
                 : throw new ArgumentNullException(nameof(camera));
@@ -35,8 +33,6 @@ namespace Game.CompositionRoot
             EnemyTransforms = enemyTransforms
                 ?? throw new ArgumentNullException(nameof(enemyTransforms));
         }
-
-        public ArenaGameConfiguration Configuration { get; }
 
         public Camera Camera { get; }
 

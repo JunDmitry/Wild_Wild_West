@@ -18,6 +18,7 @@ using Game.Arena.Infrastructure.Spawning;
 using Game.Arena.Infrastructure.Targeting;
 using Game.Arena.Infrastructure.Time;
 using VContainer;
+using VContainer.Unity;
 
 namespace Game.CompositionRoot
 {
@@ -80,8 +81,6 @@ namespace Game.CompositionRoot
                 throw new ArgumentNullException(nameof(sceneObjects));
             }
 
-            ArenaGameConfiguration configuration = sceneObjects.Configuration;
-
             builder.RegisterInstance(sceneObjects);
             builder.RegisterInstance(sceneObjects.EnemyTransforms);
 
@@ -99,19 +98,23 @@ namespace Game.CompositionRoot
                 _ => new UnityPlayerAttackTargetingResolver(colliders),
                 Lifetime.Singleton);
             builder.Register<IEnemyMovementResolver>(
-                _ => new UnityEnemyMovementResolver(sceneObjects.EnemyTransforms, configuration.Arena),
+                container => new UnityEnemyMovementResolver(
+                    sceneObjects.EnemyTransforms,
+                    container.Resolve<ArenaGameConfiguration>().Arena),
                 Lifetime.Singleton);
             builder.Register<IEnemySpawnPlacementResolver>(
-                _ => new UnityEnemySpawnPlacementResolver(
-                    configuration.Arena,
+                container => new UnityEnemySpawnPlacementResolver(
+                    container.Resolve<ArenaGameConfiguration>().Arena,
                     sceneObjects.Camera,
                     sceneObjects.Player),
                 Lifetime.Singleton);
             builder.Register<IArenaSceneReloader>(
-                _ => new UnityArenaSceneReloader(configuration.ArenaSceneName),
+                container => new UnityArenaSceneReloader(
+                    container.Resolve<ArenaGameConfiguration>().ArenaSceneName),
                 Lifetime.Singleton);
             builder.Register<IEnemySpawnPacingPolicy>(
-                _ => new FixedIntervalSpawnPacingPolicy(configuration.SpawnInterval),
+                container => new FixedIntervalSpawnPacingPolicy(
+                    container.Resolve<ArenaGameConfiguration>().SpawnInterval),
                 Lifetime.Singleton);
 
             builder.Register<IArenaRunDispatchDiagnostics, NoOpArenaRunDispatchDiagnostics>(
@@ -122,6 +125,8 @@ namespace Game.CompositionRoot
 
             builder.Register<ArenaRunTickServiceDependencies>(Lifetime.Singleton);
             builder.Register<ArenaRunTickService>(Lifetime.Singleton);
+
+            builder.RegisterEntryPoint<ArenaTickDriver>(Lifetime.Singleton);
         }
     }
 }
