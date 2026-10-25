@@ -215,6 +215,40 @@ Exit criteria:
 - Application references no Presentation type. — Met
 - Existing notification-sink call sites are either migrated or recorded as an adapter with a removal follow-up. — Met (migrated; the sink is gone)
 
+### T-6. Unity Infrastructure
+
+Status: Completed
+
+Goal:
+
+Implement Unity adapters for Application ports.
+
+Substages:
+
+- T-6.1: Unity clock adapter. — Done (`FrameDeltaGameClock` over `IFrameTimeSource`; `UnityFrameTimeSource` reads `Time.unscaledDeltaTime`, game-owned scale and pause).
+- T-6.2: Unity input adapter. — Done (`UnityPlayerInputSource` over `IUnityInputDevice`).
+- T-6.3: Unity player movement resolver. — Done (`UnityPlayerMovementResolver`).
+- T-6.4: Unity ranged attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveRanged`).
+- T-6.5: Unity melee attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveMelee`).
+- T-6.6: Unity enemy movement resolver. — Done (`UnityEnemyMovementResolver` over `IEnemyTransformRegistry`).
+- T-6.7: Unity spawn point provider. — Done (`UnityEnemySpawnPlacementResolver`).
+- T-6.8: Collider identity registry. — Done (`EnemyColliderRegistry` implements `IEnemyColliderRegistry` and `IEnemyColliderRegistration` over a two-direction collider↔`EnemyId` map, populated from `EnemyViewRegistry` lifecycle callbacks (ADR-0028); unknown, null, and destroyed colliders resolve to `EnemyId.None`; 9-test PlayMode fixture including the live seam).
+- T-6.9: Unity scene lifecycle adapter. — Done (`UnityArenaSceneReloader` over `SceneManager.LoadScene` in single mode; `DefeatRestartStage` requests the reload once through `IArenaSceneReloader` after a restart; 4-test PlayMode fixture proves exactly one reload; ADR-0029).
+- T-6.10: Infrastructure PlayMode tests. — Done for the delivered adapters; each new adapter carries its own PlayMode coverage.
+
+Substage exit criteria:
+
+- T-6.1: an `IGameClock` implementation advances from Unity frame time, never wall-clock time; a PlayMode test proves monotonic advance across frames. — Met
+- T-6.8: an `IEnemyColliderRegistry` implementation populated from live enemy views; an unknown collider resolves to `EnemyId.None`; a PlayMode test covers registration, unregistration, and lookup. — Met
+- T-6.9: an Application port for scene reload (defeat delay and restart) implemented with `SceneManager`; a PlayMode test proves a defeated run triggers the configured reload exactly once. — Met
+
+Exit criteria:
+
+- Every Application port consumed by the tick service has a Unity adapter. — Met
+- No adapter decides gameplay rules; it supplies data or applies an already-made decision. — Met
+- Adapters are constructible without a running scene and are covered by PlayMode tests. — Met
+- Domain and Application still reference no Unity type. — Met
+
 ### T-7. Unity Presentation
 
 Status: Completed
@@ -245,49 +279,13 @@ Exit criteria:
 
 T-5 is complete. The typed result dispatcher is delivered end to end: Application contracts, the six-stage dispatcher, the tick service dispatch, and the Presentation handler set with PlayMode order coverage.
 
-T-6.1 is complete. The Arena tick advances from engine-independent game time: `FrameDeltaGameClock` applies the game's own scale and pause to the frame elapsed time reported by `UnityFrameTimeSource`, and `Time.timeScale` plays no part in gameplay.
+T-6 is complete. Every Application port consumed by the tick service has a Unity adapter: the clock, input, player movement, both attack resolvers, enemy movement, spawn placement, the collider identity registry (ADR-0028), and the scene lifecycle adapter. `UnityArenaSceneReloader` calls `SceneManager.LoadScene` in single mode, and `DefeatRestartStage` requests the reload once through `IArenaSceneReloader` immediately after a defeated run restarts (ADR-0029); a 4-test PlayMode fixture proves exactly one reload at that edge and none otherwise.
 
-T-6.8 is complete. `EnemyColliderRegistry` is the production collider identity map, populated from `EnemyViewRegistry` view-created/view-destroyed callbacks and covered by a 9-test PlayMode fixture that includes the live view seam (ADR-0028). The T-8 composition root will subscribe the two callbacks.
-
-Next in T-6: the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
+Next is T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
 ## Remaining Stages
-
-### T-6. Unity Infrastructure
-
-Status: In Progress
-
-Goal:
-
-Implement Unity adapters for Application ports.
-
-Substages:
-
-- T-6.1: Unity clock adapter. — Done (`FrameDeltaGameClock` over `IFrameTimeSource`; `UnityFrameTimeSource` reads `Time.unscaledDeltaTime`, game-owned scale and pause).
-- T-6.2: Unity input adapter. — Done (`UnityPlayerInputSource` over `IUnityInputDevice`).
-- T-6.3: Unity player movement resolver. — Done (`UnityPlayerMovementResolver`).
-- T-6.4: Unity ranged attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveRanged`).
-- T-6.5: Unity melee attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveMelee`).
-- T-6.6: Unity enemy movement resolver. — Done (`UnityEnemyMovementResolver` over `IEnemyTransformRegistry`).
-- T-6.7: Unity spawn point provider. — Done (`UnityEnemySpawnPlacementResolver`).
-- T-6.8: Collider identity registry. — Done (`EnemyColliderRegistry` implements `IEnemyColliderRegistry` and `IEnemyColliderRegistration` over a two-direction collider↔`EnemyId` map, populated from `EnemyViewRegistry` lifecycle callbacks (ADR-0028); unknown, null, and destroyed colliders resolve to `EnemyId.None`; 9-test PlayMode fixture including the live seam).
-- T-6.9: Unity scene lifecycle adapter. — Open.
-- T-6.10: Infrastructure PlayMode tests. — Done for the delivered adapters; each new adapter carries its own PlayMode coverage.
-
-Substage exit criteria:
-
-- T-6.1: an `IGameClock` implementation advances from Unity frame time, never wall-clock time; a PlayMode test proves monotonic advance across frames.
-- T-6.8: an `IEnemyColliderRegistry` implementation populated from live enemy views; an unknown collider resolves to `EnemyId.None`; a PlayMode test covers registration, unregistration, and lookup.
-- T-6.9: an Application port for scene reload (defeat delay and restart) implemented with `SceneManager`; a PlayMode test proves a defeated run triggers the configured reload exactly once.
-
-Exit criteria:
-
-- Every Application port consumed by the tick service has a Unity adapter.
-- No adapter decides gameplay rules; it supplies data or applies an already-made decision.
-- Adapters are constructible without a running scene and are covered by PlayMode tests.
-- Domain and Application still reference no Unity type.
 
 ### T-8. Bootstrap and Arena Session Lifecycle
 
