@@ -39,7 +39,7 @@ Infrastructure adapts Unity systems: input, player and enemy movement, attack ta
 
 Presentation renders snapshots and consumes Application notifications through typed handlers registered on the result dispatcher (ADR-0027).
 
-CompositionRoot does not wire anything yet; DI composition is T-8.
+CompositionRoot owns the VContainer composition: the persistent root scope, the arena scene scope, one registration catalogue, and the scene binder that wires the Arena scene (ADR-0030, ADR-0031).
 
 ## Completed Stages
 
@@ -281,7 +281,7 @@ T-5 is complete. The typed result dispatcher is delivered end to end: Applicatio
 
 T-6 is complete. Every Application port consumed by the tick service has a Unity adapter: the clock, input, player movement, both attack resolvers, enemy movement, spawn placement, the collider identity registry (ADR-0028), and the scene lifecycle adapter. `UnityArenaSceneReloader` calls `SceneManager.LoadScene` in single mode, and `DefeatRestartStage` requests the reload once through `IArenaSceneReloader` immediately after a defeated run restarts (ADR-0029); a 4-test PlayMode fixture proves exactly one reload at that edge and none otherwise.
 
-Next is T-8.2. T-8.1 is complete: one VContainer composition root owns every Arena registration. `BootstrapLifetimeScope` holds the process-lifetime graph, `ArenaSceneLifetimeScope` registers the scene graph behind the explicit `ArenaSceneObjects` seam, and a single `ArenaRegistrations` catalogue plus a code-defined `ArenaGameConfiguration` feed both (ADR-0030). A 4-test PlayMode fixture proves both graphs resolve, that singletons are shared, and that a missing seam fails loudly. T-8.2 supplies the scene objects and presenters and creates the BootstrapScene and ArenaScene assets; T-8.3–T-8.6 follow.
+T-8.1 and T-8.2 are complete. One VContainer composition root owns every Arena registration: `BootstrapLifetimeScope` holds the process-lifetime graph, `ArenaSceneLifetimeScope` registers the scene graph behind the explicit `ArenaSceneObjects` seam, and a single `ArenaRegistrations` catalogue plus a code-defined `ArenaGameConfiguration` feed both (ADR-0030). A 4-test PlayMode fixture proves both graphs resolve, that singletons are shared, and that a missing seam fails loudly. The Arena scene is now bound: `ArenaSceneBinder` supplies the scene objects, registers every presenter at its ADR-0027 dispatch stage, wires the enemy view registry to the collider registration port, and releases `ArenaTickDriver` as the single frame-loop entry point; a missing reference or dependency throws before gameplay (ADR-0031). `BootstrapScene`, `ArenaScene`, and `EnemyView.prefab` exist, and a 5-test PlayMode `ArenaSceneBinderTests` fixture proves the binder end to end. Next is T-8.3: entering the Arena scene creates exactly one active run with fresh identities; T-8.4–T-8.6 follow.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
@@ -298,7 +298,7 @@ Connect BootstrapScene, ArenaScene, Application Session, Repository, Unity adapt
 Substages:
 
 - T-8.1: Bootstrap Composition Root with VContainer LifetimeScope. — Done (`Game.CompositionRoot` carries the code-first root: `BootstrapLifetimeScope` registers the process-lifetime graph and `ArenaSceneLifetimeScope` the scene graph behind the explicit `ArenaSceneObjects` seam, both fed by one `ArenaRegistrations` catalogue and a code-defined `ArenaGameConfiguration`; ADR-0030; the scene scope registers a production no-op dispatch diagnostics; a 4-test PlayMode `ArenaCompositionTests` fixture in the test-only `Game.CompositionRoot.PlayMode.Tests` assembly proves both graphs, singleton identity, and missing-seam failures).
-- T-8.2: ArenaScene binder. — Open
+- T-8.2: ArenaScene binder. — Done (`ArenaSceneBinder` on the Arena scene with eighteen serialized references, `ArenaTickDriver` as a scene-scope entry point, `EnemyViewTransformRegistry` bridging the Presentation view registry to the Infrastructure transform port, and thin `ArenaSnapshotHandler`/`ArenaHudHandler` adapters registering every presenter at its ADR-0027 stage; no scene object resolves through a global search, and a missing reference throws naming the field; ADR-0031. `BootstrapScene`, `ArenaScene`, and `EnemyView.prefab` assets; a 5-test PlayMode `ArenaSceneBinderTests` fixture proves scope construction, both failure guards, stage placement, and one end-to-end dispatch).
 - T-8.3: ArenaRun creation flow. — Open
 - T-8.4: Defeat delay and ArenaScene reload. — Open
 - T-8.5: Victory lifecycle. — Open
@@ -307,7 +307,7 @@ Substages:
 Substage exit criteria:
 
 - T-8.1: VContainer is installed and every Arena dependency is registered in one composition root; no scene object resolves a service through a global object search. — Met
-- T-8.2: the scene binder resolves the tick service and the presenters; a missing dependency fails loudly at startup.
+- T-8.2: the scene binder resolves the tick service and the presenters; a missing dependency fails loudly at startup. — Met
 - T-8.3: entering the scene from bootstrap creates exactly one active run with fresh identities and no state carried over from a previous run; entering it after a defeat reload presents the active run the tick already restarted, and creates nothing (ADR-0029).
 - T-8.4: defeat waits the configured delay, requests the arena scene reload exactly once through the Application port (ADR-0029), and the reloaded scene presents the already-restarted run.
 - T-8.5: victory stops combat, shows the window once, and does not reload.
