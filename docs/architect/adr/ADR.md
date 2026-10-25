@@ -62,6 +62,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0029 | Request an Arena scene reload through an Application port at the restart edge | Accepted | 2026-10-25 | [ADR-0029](ADR-0029-scene-reload-through-application-port.md) |
 | ADR-0030 | Compose the Arena graph in a persistent root scope and a per-scene child scope | Accepted | 2026-10-25 | [ADR-0030](ADR-0030-composition-root-scopes.md) |
 | ADR-0031 | Bind the Arena scene explicitly and drive the tick from a scene entry point | Accepted | 2026-10-25 | [ADR-0031](ADR-0031-scene-binder-and-frame-driver.md) |
+| ADR-0032 | Load the Arena scene from bootstrap and create the initial run on scene entry | Accepted | 2026-10-25 | [ADR-0032](ADR-0032-bootstrap-scene-load-and-initial-run.md) |
 
 ## New ADR Template
 
