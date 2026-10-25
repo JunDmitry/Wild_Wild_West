@@ -91,6 +91,7 @@ instead:
         "Game.CompositionRoot",
         "Game.Arena.Domain",
         "Game.Arena.Application",
+        "Game.Arena.Infrastructure",
         "VContainer"
     ],
     "includePlatforms": [],
@@ -118,8 +119,10 @@ Rules:
   dependency contract, exactly as for the Arena test assembly.
 - `Game.Arena.PlayMode.Tests` is unchanged; Arena behavior tests stay there.
 - It references the Arena Domain and Application layers it composes, plus
-  `Game.CompositionRoot` and `VContainer`. Infrastructure and Presentation are
-  not referenced until a fixture names their types.
+  `Game.CompositionRoot` and `VContainer`. `Game.Arena.Infrastructure` is
+  referenced because the `ArenaSceneObjects` seam names
+  `IEnemyTransformRegistry`, which the fixture must fake (2026-10-25
+  follow-up); Presentation stays unreferenced.
 - The architect owns the `.asmdef`; `coder-role` adds only test sources and
   their `.meta` files inside the assembly folder.
 
