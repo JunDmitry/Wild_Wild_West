@@ -9,6 +9,7 @@ using Game.Arena.Infrastructure.Targeting;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Hud;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 
 namespace Game.Arena.PlayMode.Tests
@@ -23,7 +24,7 @@ namespace Game.Arena.PlayMode.Tests
         private EquippedWeaponPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMesh _textMesh;
+        private TextMeshPro _textMesh;
 
         [SetUp]
         public void SetUp()
@@ -31,7 +32,7 @@ namespace Game.Arena.PlayMode.Tests
             _objects.Clear();
 
             GameObject root = Track(new GameObject("Hud"));
-            _textMesh = root.AddComponent<TextMesh>();
+            _textMesh = root.AddComponent<TextMeshPro>();
             _hudView = root.AddComponent<HudView>();
             _announcer = root.AddComponent<ArenaRunAnnouncer>();
             _presenter = root.AddComponent<EquippedWeaponPresenter>();
