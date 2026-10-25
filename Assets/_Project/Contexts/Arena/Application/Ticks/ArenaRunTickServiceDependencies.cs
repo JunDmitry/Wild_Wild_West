@@ -1,4 +1,5 @@
 ﻿using System;
+using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Identity;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.Restart;
@@ -20,7 +21,7 @@ namespace Game.Arena.Application.Ticks
             IEnemyIdSource enemyIdSource,
             IEnemySpawnPacingPolicy pacingPolicy,
             IRunRestartDelayPolicy restartDelayPolicy,
-            IArenaRunNotificationSink notificationSink)
+            IArenaRunDispatch dispatcher)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -32,7 +33,7 @@ namespace Game.Arena.Application.Ticks
             EnemyIdSource = enemyIdSource ?? throw new ArgumentNullException(nameof(enemyIdSource));
             PacingPolicy = pacingPolicy ?? throw new ArgumentNullException(nameof(pacingPolicy));
             RestartDelayPolicy = restartDelayPolicy ?? throw new ArgumentNullException(nameof(restartDelayPolicy));
-            NotificationSink = notificationSink ?? throw new ArgumentNullException(nameof(notificationSink));
+            Dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
         public ArenaRunSession Session { get; }
@@ -55,6 +56,6 @@ namespace Game.Arena.Application.Ticks
 
         public IRunRestartDelayPolicy RestartDelayPolicy { get; }
 
-        public IArenaRunNotificationSink NotificationSink { get; }
+        public IArenaRunDispatch Dispatcher { get; }
     }
 }

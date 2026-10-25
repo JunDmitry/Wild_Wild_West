@@ -1,6 +1,6 @@
 ﻿using System;
 using Game.Arena.Application.Input;
-using Game.Arena.Application.Tests.Notifications;
+using Game.Arena.Application.Tests.Dispatch;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Geometry;
@@ -12,15 +12,15 @@ namespace Game.Arena.Application.Tests.Ticks
     public sealed class ArenaRunTickServiceTests
     {
         private TickCoordinatorTestKit _kit;
-        private RecordingNotificationSink _sink;
+        private RecordingDispatch _dispatch;
         private ArenaRunTickService _service;
 
         [SetUp]
         public void SetUp()
         {
             _kit = new TickCoordinatorTestKit();
-            _sink = new RecordingNotificationSink();
-            _service = CreateService(_kit, _sink);
+            _dispatch = new RecordingDispatch();
+            _service = CreateService(_kit, _dispatch);
             _kit.Session.StartInitialRun();
 
             _kit.Input.Input = new PlayerFrameInput(
@@ -74,7 +74,7 @@ namespace Game.Arena.Application.Tests.Ticks
                 new TickCoordinatorTestKit();
 
             ArenaRunTickService freshService =
-                CreateService(freshKit, new RecordingNotificationSink());
+                CreateService(freshKit, new RecordingDispatch());
 
             Assert.Throws<InvalidOperationException>(
                 () =>
@@ -114,11 +114,20 @@ namespace Game.Arena.Application.Tests.Ticks
         }
 
         [Test]
-        public void TickWithoutVictoryPublishesNoNotifications()
+        public void TickIsDispatchedOnceWithItsResult()
         {
-            _service.ExecuteTick();
+            ArenaRunTickResult result = _service.ExecuteTick();
 
-            Assert.That(_sink.Published, Is.Empty);
+            Assert.That(_dispatch.Dispatched, Has.Count.EqualTo(1));
+            Assert.That(_dispatch.Dispatched[0], Is.SameAs(result));
+        }
+
+        [Test]
+        public void TickWithoutVictoryProducesNoNotifications()
+        {
+            ArenaRunTickResult result = _service.ExecuteTick();
+
+            Assert.That(result.Notifications, Is.Empty);
         }
 
         [Test]
@@ -138,13 +147,13 @@ namespace Game.Arena.Application.Tests.Ticks
                         _kit.EnemyIds,
                         _kit.Pacing,
                         _kit.RestartDelayPolicy,
-                        _sink);
+                        _dispatch);
                 });
         }
 
         private ArenaRunTickService CreateService(
             TickCoordinatorTestKit kit,
-            RecordingNotificationSink sink)
+            RecordingDispatch dispatch)
         {
             ArenaRunTickServiceDependencies dependencies =
                 new ArenaRunTickServiceDependencies(
@@ -158,7 +167,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     kit.EnemyIds,
                     kit.Pacing,
                     kit.RestartDelayPolicy,
-                    sink);
+                    dispatch);
 
             return new ArenaRunTickService(dependencies);
         }

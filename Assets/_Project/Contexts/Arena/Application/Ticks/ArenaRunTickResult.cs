@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Game.Arena.Application.Hud;
+using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
@@ -13,6 +14,7 @@ namespace Game.Arena.Application.Ticks
     {
         private readonly ReadOnlyCollection<IArenaDomainEvent> _domainEvents;
         private readonly ReadOnlyCollection<ArenaRunTickStage> _executedStages;
+        private readonly ReadOnlyCollection<IArenaRunNotification> _notifications;
 
         public ArenaRunTickResult(
             ArenaRunId arenaRunId,
@@ -53,6 +55,7 @@ namespace Game.Arena.Application.Ticks
 
             IArenaDomainEvent[] copiedEvents = CopyEvents(arenaRunId, finalRevision, domainEvents);
             ArenaRunTickStage[] copiedStages = CopyStages(executedStages);
+            IArenaRunNotification[] copiedNotifications = CopyNotifications(copiedEvents);
 
             ArenaRunId = arenaRunId;
             FinalRevision = finalRevision;
@@ -60,6 +63,7 @@ namespace Game.Arena.Application.Ticks
             Hud = new ArenaRunHudSnapshotMapper().Map(snapshot);
             _domainEvents = Array.AsReadOnly(copiedEvents);
             _executedStages = Array.AsReadOnly(copiedStages);
+            _notifications = Array.AsReadOnly(copiedNotifications);
         }
 
         public ArenaRunId ArenaRunId { get; }
@@ -69,6 +73,7 @@ namespace Game.Arena.Application.Ticks
 
         public IReadOnlyList<IArenaDomainEvent> DomainEvents => _domainEvents;
         public IReadOnlyList<ArenaRunTickStage> ExecutedStages => _executedStages;
+        public IReadOnlyList<IArenaRunNotification> Notifications => _notifications;
 
         private static IArenaDomainEvent[] CopyEvents(ArenaRunId arenaRunId, AggregateRevision finalRevision, IReadOnlyList<IArenaDomainEvent> domainEvents)
         {
@@ -104,6 +109,23 @@ namespace Game.Arena.Application.Ticks
             }
 
             return copiedEvents;
+        }
+
+        private static IArenaRunNotification[] CopyNotifications(
+            IReadOnlyList<IArenaDomainEvent> domainEvents)
+        {
+            IReadOnlyList<IArenaRunNotification> mapped =
+                new ArenaRunNotificationMapper().Map(domainEvents);
+
+            IArenaRunNotification[] copiedNotifications =
+                new IArenaRunNotification[mapped.Count];
+
+            for (int index = 0; index < mapped.Count; index++)
+            {
+                copiedNotifications[index] = mapped[index];
+            }
+
+            return copiedNotifications;
         }
 
         private static ArenaRunTickStage[] CopyStages(IReadOnlyList<ArenaRunTickStage> executedStages)

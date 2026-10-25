@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Game.Arena.Application.Input;
+using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
@@ -61,6 +62,45 @@ namespace Game.Arena.Application.Tests.Ticks
 
             Assert.That(result.DomainEvents[0], Is.TypeOf<PlayerAttackStarted>());
             Assert.That(result.ExecutedStages[0], Is.EqualTo(ArenaRunTickStage.PlayerAttackStart));
+        }
+
+        [Test]
+        public void ResultCarriesMappedNotifications()
+        {
+            ArenaRunTickResult result = new(
+                _arenaRunId,
+                _firstRevision,
+                Create(_arenaRunId, _firstRevision),
+                new IArenaDomainEvent[]
+                {
+                    CreateDamagedEvent(_firstRevision),
+                },
+                Array.Empty<ArenaRunTickStage>());
+
+            Assert.That(result.Notifications, Has.Count.EqualTo(1));
+            Assert.That(
+                result.Notifications[0],
+                Is.TypeOf<ArenaRunEnemyDamagedNotification>());
+        }
+
+        [Test]
+        public void NotificationsCannotBeModifiedThroughCollectionInterfaces()
+        {
+            ArenaRunTickResult result = new(
+                _arenaRunId,
+                _firstRevision,
+                Create(_arenaRunId, _firstRevision),
+                new IArenaDomainEvent[]
+                {
+                    CreateDamagedEvent(_firstRevision),
+                },
+                Array.Empty<ArenaRunTickStage>());
+
+            Assert.Throws<NotSupportedException>(
+                () =>
+                {
+                    ((IList<IArenaRunNotification>)result.Notifications).Clear();
+                });
         }
 
         [Test]
@@ -259,6 +299,17 @@ namespace Game.Arena.Application.Tests.Ticks
             Assert.That(result.Hud.HealthText, Is.EqualTo("100 / 100"));
             Assert.That(result.Hud.EquippedWeaponText, Is.EqualTo("Firearm"));
             Assert.That(result.Hud.IsDefeated, Is.False);
+        }
+
+        private EnemyDamaged CreateDamagedEvent(
+            AggregateRevision revision)
+        {
+            return new EnemyDamaged(
+                _arenaRunId,
+                revision,
+                EnemyId.FromValue(1UL),
+                DamageAmount.FromPoints(10),
+                Health.Full(30));
         }
 
         private PlayerAttackStarted CreateStartedEvent(
