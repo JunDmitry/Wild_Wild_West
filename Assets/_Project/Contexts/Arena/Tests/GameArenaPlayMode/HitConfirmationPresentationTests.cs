@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
+using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
+using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;
@@ -54,27 +57,40 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_BeforeSnapshot_IsBufferedUntilPresent()
+        public void Handle_Dispatcher_DeliversSnapshotBeforeNotification()
         {
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            ArenaRunResultDispatcher dispatcher = new();
+            dispatcher.RegisterSnapshotHandler(
+                ArenaRunDispatchStage.EntityViewSynchronization,
+                _presenter);
+            dispatcher.RegisterNotificationHandler<ArenaRunEnemyDamagedNotification>(
+                ArenaRunDispatchStage.GameplayVisual,
+                _presenter);
 
-            Assert.That(_presenter.PendingCount, Is.EqualTo(1));
-            Assert.That(_hitConfirmation.ActiveCount, Is.EqualTo(0));
-            Assert.That(_announcer.AnnouncementCount, Is.EqualTo(0));
+            ArenaRunTickResult result = CreateTickResult(
+                CreateSnapshot(Enemy(1UL, 3f, 4f)),
+                new EnemyDamaged(
+                    RunId,
+                    AggregateRevision.Initial,
+                    EnemyId.FromValue(1UL),
+                    DamageAmount.FromPoints(10),
+                    Health.Full(PlayModeTickHarness.EnemyHealth - 10)));
 
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            dispatcher.Dispatch(result);
 
-            Assert.That(_presenter.PendingCount, Is.EqualTo(0));
             Assert.That(_hitConfirmation.IsShownFor(EnemyId.FromValue(1UL)), Is.True);
+            Assert.That(
+                _hitConfirmation.PositionOf(EnemyId.FromValue(1UL)).X,
+                Is.EqualTo(3f).Within(1e-4f));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Publish_ShowsMarkAtDamageEnemyPosition()
+        public void Handle_ShowsMarkAtDamageEnemyPosition()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
 
             Position3D position = _hitConfirmation.PositionOf(EnemyId.FromValue(1UL));
 
@@ -84,12 +100,12 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_TwoEnemiesInOneImpact_ShowsMarkForEach()
+        public void Handle_TwoEnemiesInOneImpact_ShowsMarkForEach()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f), Enemy(2UL, -5f, 6f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f), Enemy(2UL, -5f, 6f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
-            _presenter.Publish(Damaged(EnemyId.FromValue(2UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(2UL), Revision(1UL)));
 
             Assert.That(_hitConfirmation.ActiveCount, Is.EqualTo(2));
             Assert.That(_hitConfirmation.IsShownFor(EnemyId.FromValue(1UL)), Is.True);
@@ -97,62 +113,79 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_TwoEnemiesInOneImpact_AnnouncesHitOnce()
+        public void Handle_TwoEnemiesInOneImpact_AnnouncesHitOnce()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f), Enemy(2UL, -5f, 6f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f), Enemy(2UL, -5f, 6f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
-            _presenter.Publish(Damaged(EnemyId.FromValue(2UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(2UL), Revision(1UL)));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
             Assert.That(_announcer.LastAnnouncement, Is.EqualTo(ArenaRunAnnouncer.HitAnnouncement));
         }
 
         [Test]
-        public void Publish_SameNotificationTwice_AnnouncesOnceAndKeepsOneMark()
+        public void Handle_SameNotificationTwice_AnnouncesOnceAndKeepsOneMark()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
             Assert.That(_hitConfirmation.ActiveCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Publish_NextImpact_AnnouncesAgain()
+        public void Handle_NextImpact_AnnouncesAgain()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(2UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(2UL)));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(2));
         }
 
         [Test]
-        public void Publish_EnemyMissingFromSnapshot_ShowsNoMarkButAnnounces()
+        public void Handle_EnemyMissingFromBothSnapshots_ShowsNoMarkButAnnounces()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
 
-            _presenter.Publish(Damaged(EnemyId.FromValue(9UL), Revision(1UL)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(9UL), Revision(1UL)));
 
             Assert.That(_hitConfirmation.ActiveCount, Is.EqualTo(0));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Publish_ForeignRun_IsIgnored()
+        public void Handle_KillingBlow_ShowsMarkAtPreviousSnapshotPosition()
         {
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(CreateSnapshot());
+
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+
+            Position3D position = _hitConfirmation.PositionOf(EnemyId.FromValue(1UL));
+
+            Assert.That(_hitConfirmation.IsShownFor(EnemyId.FromValue(1UL)), Is.True);
+            Assert.That(position.X, Is.EqualTo(3f).Within(1e-4f));
+            Assert.That(position.Z, Is.EqualTo(4f).Within(1e-4f));
+            Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Handle_ForeignRun_IsIgnored()
+        {
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
 
             ArenaRunEnemyDamagedNotification notification = new(
                 ArenaRunId.FromValue(2UL),
                 Revision(1UL),
                 EnemyId.FromValue(1UL));
 
-            _presenter.Publish(notification);
+            _presenter.Handle(notification);
 
             Assert.That(_hitConfirmation.ActiveCount, Is.EqualTo(0));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(0));
@@ -162,8 +195,8 @@ namespace Game.Arena.PlayMode.Tests
         public void Advance_ExpiresMark()
         {
             _hitConfirmation.LifetimeSeconds = 1f;
-            _presenter.Present(CreateSnapshot(Enemy(1UL, 3f, 4f)));
-            _presenter.Publish(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
+            _presenter.Handle(CreateSnapshot(Enemy(1UL, 3f, 4f)));
+            _presenter.Handle(Damaged(EnemyId.FromValue(1UL), Revision(1UL)));
 
             _hitConfirmation.Advance(0.5f);
 
@@ -176,9 +209,16 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_NullNotification_Throws()
+        public void Handle_NullArguments_Throw()
         {
-            Assert.Throws<ArgumentNullException>(() => _presenter.Publish(null));
+            Assert.Throws<ArgumentNullException>(
+                () => _presenter.Handle((ArenaRunSnapshot)null));
+            Assert.Throws<ArgumentNullException>(
+                () => _presenter.Handle((ArenaRunEnemyDamagedNotification)null));
+            Assert.Throws<ArgumentNullException>(
+                () => _presenter.Handle((ArenaRunEnemyAttackResolvedNotification)null));
+            Assert.Throws<ArgumentNullException>(
+                () => _presenter.Handle((ArenaRunVictoryNotification)null));
         }
 
         private static ArenaRunEnemyDamagedNotification Damaged(
@@ -198,6 +238,18 @@ namespace Game.Arena.PlayMode.Tests
             }
 
             return revision;
+        }
+
+        private static ArenaRunTickResult CreateTickResult(
+            ArenaRunSnapshot snapshot,
+            IArenaDomainEvent domainEvent)
+        {
+            return new ArenaRunTickResult(
+                RunId,
+                AggregateRevision.Initial,
+                snapshot,
+                new[] { domainEvent },
+                Array.Empty<ArenaRunTickStage>());
         }
 
         private static EnemySnapshot Enemy(ulong value, float x, float z)
