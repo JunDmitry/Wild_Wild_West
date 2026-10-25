@@ -7,6 +7,7 @@
         "Game.CompositionRoot",
         "Game.Arena.Domain",
         "Game.Arena.Application",
+        "Game.Arena.Infrastructure",
         "VContainer"
     ],
     "includePlatforms": [],
