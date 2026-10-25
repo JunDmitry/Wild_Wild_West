@@ -5,6 +5,7 @@ using System.Reflection;
 using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Hud;
 using Game.Arena.Application.ReadModels;
+using Game.Arena.Application.Sessions;
 using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
@@ -12,6 +13,7 @@ using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
+using Game.Arena.Domain.Repositories;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
 using Game.Arena.Infrastructure.Input;
@@ -70,6 +72,41 @@ namespace Game.CompositionRoot.PlayMode.Tests
             Assert.That(
                 rig.Scope.Container.Resolve<ArenaRunResultDispatcher>(),
                 Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator EnteringTheArena_CreatesTheRunAndTheTickAdvancesIt()
+        {
+            ArenaSceneRig rig = CreateRig();
+
+            rig.BinderObject.SetActive(true);
+
+            // Entry points start at the next Startup and ticks run in Update, so
+            // one frame later the scene scope owns a live run and the tick has
+            // already operated on it (ADR-0032).
+            yield return null;
+            yield return null;
+            yield return null;
+
+            ArenaRunSession session =
+                rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            Assert.That(
+                session.HasActiveRun,
+                Is.True,
+                "The scene-scope startup driver creates the run when the scope builds.");
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            Assert.That(
+                run.Revision,
+                Is.GreaterThan(AggregateRevision.Initial),
+                "The tick advanced the run the startup driver created.");
         }
 
         [Test]
@@ -142,16 +179,23 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 Is.EqualTo(3));
         }
 
-        [UnityTest]
-        public IEnumerator Dispatch_DrivesEntityHudAndNotificationHandlers()
+        [Test]
+        public void Dispatch_DrivesEntityHudAndNotificationHandlers()
         {
             ArenaSceneRig rig = CreateRig();
 
-            rig.BinderObject.SetActive(true);
-            yield return null;
+            // Start (and with it BuildScope) only runs on the first frame of an
+            // active object. Invoking it directly keeps this fixture off the
+            // frame loop, so the recorder is registered before the startup
+            // driver's first dispatch closes registration.
+            InvokeAwake(rig.Binder);
+            InvokeStart(rig.Binder);
 
             ArenaRunResultDispatcher dispatcher =
                 rig.Scope.Container.Resolve<ArenaRunResultDispatcher>();
+
+            RecordingHudHandler recorder = new();
+            dispatcher.RegisterHudHandler(ArenaRunDispatchStage.Hud, recorder);
 
             ArenaRunSnapshot snapshot = CreateSnapshot(
                 new Position3D(3f, 0f, 4f),
@@ -163,9 +207,6 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 snapshot,
                 new IArenaDomainEvent[] { new ArenaRunVictorious(RunId, AggregateRevision.Initial) },
                 Array.Empty<ArenaRunTickStage>());
-
-            RecordingHudHandler recorder = new();
-            dispatcher.RegisterHudHandler(ArenaRunDispatchStage.Hud, recorder);
 
             dispatcher.Dispatch(result);
 
@@ -199,7 +240,15 @@ namespace Game.CompositionRoot.PlayMode.Tests
             if (withBootstrap)
             {
                 GameObject bootstrapObject = Track(new GameObject("Bootstrap Scope"));
+
+                // VContainer starts entry points on every Build, so an active
+                // bootstrap would load the Arena scene mid-test (ADR-0032).
+                // Awake does not run on an inactive object, which is the only
+                // window in which the flag can be turned off.
+                bootstrapObject.SetActive(false);
                 rig.Bootstrap = bootstrapObject.AddComponent<BootstrapLifetimeScope>();
+                rig.Bootstrap.LoadArenaOnStart = false;
+                bootstrapObject.SetActive(true);
             }
 
             GameObject scopeObject = Track(new GameObject("Arena Scene Scope"));
@@ -369,6 +418,17 @@ namespace Game.CompositionRoot.PlayMode.Tests
             Assert.That(awake, Is.Not.Null, "ArenaSceneBinder has no Awake method.");
 
             awake.Invoke(binder, null);
+        }
+
+        private static void InvokeStart(ArenaSceneBinder binder)
+        {
+            MethodInfo start = typeof(ArenaSceneBinder).GetMethod(
+                "Start",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(start, Is.Not.Null, "ArenaSceneBinder has no Start method.");
+
+            start.Invoke(binder, null);
         }
 
         private static IList<object> SnapshotHandlerTargets(
