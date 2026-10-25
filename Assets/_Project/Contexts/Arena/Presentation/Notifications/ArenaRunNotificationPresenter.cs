@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Notifications;
-using Game.Arena.Application.Ports;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Presentation.Accessibility;
@@ -11,15 +11,18 @@ using UnityEngine;
 
 namespace Game.Arena.Presentation.Notifications
 {
-    public sealed class ArenaRunNotificationPresenter : MonoBehaviour, IArenaRunNotificationSink
+    public sealed class ArenaRunNotificationPresenter : MonoBehaviour,
+        IArenaRunSnapshotHandler,
+        IArenaRunNotificationHandler<ArenaRunEnemyDamagedNotification>,
+        IArenaRunNotificationHandler<ArenaRunEnemyAttackResolvedNotification>,
+        IArenaRunNotificationHandler<ArenaRunVictoryNotification>
     {
         [SerializeField] private HitConfirmationPresenter _hitConfirmation;
         [SerializeField] private ArenaRunAnnouncer _announcer;
         [SerializeField] private VictoryView _victoryView;
 
-        private readonly List<IArenaRunNotification> _pending = new();
-
         private ArenaRunSnapshot _snapshot;
+        private ArenaRunSnapshot _previousSnapshot;
 
         public HitConfirmationPresenter HitConfirmation
         {
@@ -39,23 +42,95 @@ namespace Game.Arena.Presentation.Notifications
             set => _victoryView = value;
         }
 
-        public int PendingCount => _pending.Count;
-
-        public void Present(ArenaRunSnapshot snapshot)
+        public void Handle(ArenaRunSnapshot snapshot)
         {
-            _snapshot = snapshot ?? throw new ArgumentNullException(nameof(snapshot));
-            Drain();
+            if (snapshot == null)
+            {
+                throw new ArgumentNullException(nameof(snapshot));
+            }
+
+            _previousSnapshot = _snapshot;
+            _snapshot = snapshot;
         }
 
-        public void Publish(IArenaRunNotification notification)
+        public void Handle(ArenaRunEnemyDamagedNotification notification)
         {
             if (notification == null)
             {
                 throw new ArgumentNullException(nameof(notification));
             }
 
-            _pending.Add(notification);
-            Drain();
+            if (BelongsToCurrentRun(notification.ArenaRunId) == false)
+            {
+                return;
+            }
+
+            EnemySnapshot enemy = FindEnemy(
+                PositionSnapshot(notification.ArenaRunId),
+                notification.EnemyId);
+
+            if (enemy != null)
+            {
+                RequireHitConfirmation().Show(notification.EnemyId, enemy.Position);
+            }
+
+            RequireAnnouncer().AnnounceHitOnce(notification.ArenaRunId, notification.Revision);
+        }
+
+        public void Handle(ArenaRunEnemyAttackResolvedNotification notification)
+        {
+            if (notification == null)
+            {
+                throw new ArgumentNullException(nameof(notification));
+            }
+
+            if (BelongsToCurrentRun(notification.ArenaRunId) == false)
+            {
+                return;
+            }
+
+            if (notification.Outcome == ArenaRunEnemyAttackOutcome.Hit)
+            {
+                return;
+            }
+
+            RequireAnnouncer().AnnounceEnemyAttackMissedOnce(
+                notification.ArenaRunId,
+                notification.Revision,
+                notification.EnemyId);
+        }
+
+        public void Handle(ArenaRunVictoryNotification notification)
+        {
+            if (notification == null)
+            {
+                throw new ArgumentNullException(nameof(notification));
+            }
+
+            if (BelongsToCurrentRun(notification.ArenaRunId) == false)
+            {
+                return;
+            }
+
+            RequireVictoryView().Show(notification.ArenaRunId);
+            RequireAnnouncer().AnnounceVictoryOnce(
+                notification.ArenaRunId,
+                notification.Revision);
+        }
+
+        private bool BelongsToCurrentRun(ArenaRunId arenaRunId)
+        {
+            return _snapshot != null && _snapshot.ArenaRunId == arenaRunId;
+        }
+
+        private ArenaRunSnapshot PositionSnapshot(ArenaRunId arenaRunId)
+        {
+            if (_previousSnapshot != null && _previousSnapshot.ArenaRunId == arenaRunId)
+            {
+                return _previousSnapshot;
+            }
+
+            return _snapshot;
         }
 
         private static EnemySnapshot FindEnemy(ArenaRunSnapshot snapshot, EnemyId enemyId)
@@ -71,73 +146,6 @@ namespace Game.Arena.Presentation.Notifications
             }
 
             return null;
-        }
-
-        private void Drain()
-        {
-            ArenaRunSnapshot snapshot = _snapshot;
-
-            if (snapshot == null || _pending.Count == 0)
-            {
-                return;
-            }
-
-            IArenaRunNotification[] pending = _pending.ToArray();
-            _pending.Clear();
-
-            for (int index = 0; index < pending.Length; index++)
-            {
-                if (pending[index] is ArenaRunEnemyDamagedNotification damaged
-                    && damaged.ArenaRunId == snapshot.ArenaRunId)
-                {
-                    PresentDamage(snapshot, damaged);
-                }
-                else if (pending[index] is ArenaRunEnemyAttackResolvedNotification resolved
-                    && resolved.ArenaRunId == snapshot.ArenaRunId)
-                {
-                    PresentAttackOutcome(resolved);
-                }
-                else if (pending[index] is ArenaRunVictoryNotification victory
-                    && victory.ArenaRunId == snapshot.ArenaRunId)
-                {
-                    PresentVictory(victory);
-                }
-            }
-        }
-
-        private void PresentDamage(
-            ArenaRunSnapshot snapshot,
-            ArenaRunEnemyDamagedNotification notification)
-        {
-            EnemySnapshot enemy = FindEnemy(snapshot, notification.EnemyId);
-
-            if (enemy != null)
-            {
-                RequireHitConfirmation().Show(notification.EnemyId, enemy.Position);
-            }
-
-            RequireAnnouncer().AnnounceHitOnce(notification.ArenaRunId, notification.Revision);
-        }
-
-        private void PresentAttackOutcome(ArenaRunEnemyAttackResolvedNotification notification)
-        {
-            if (notification.Outcome == ArenaRunEnemyAttackOutcome.Hit)
-            {
-                return;
-            }
-
-            RequireAnnouncer().AnnounceEnemyAttackMissedOnce(
-                notification.ArenaRunId,
-                notification.Revision,
-                notification.EnemyId);
-        }
-
-        private void PresentVictory(ArenaRunVictoryNotification notification)
-        {
-            RequireVictoryView().Show(notification.ArenaRunId);
-            RequireAnnouncer().AnnounceVictoryOnce(
-                notification.ArenaRunId,
-                notification.Revision);
         }
 
         private HitConfirmationPresenter RequireHitConfirmation()
