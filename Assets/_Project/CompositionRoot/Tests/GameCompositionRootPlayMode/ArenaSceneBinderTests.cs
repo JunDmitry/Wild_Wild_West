@@ -16,20 +16,10 @@ using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Repositories;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
-using Game.Arena.Infrastructure.Input;
-using Game.Arena.Presentation.Accessibility;
-using Game.Arena.Presentation.Combat;
-using Game.Arena.Presentation.Enemies;
-using Game.Arena.Presentation.Hud;
-using Game.Arena.Presentation.Notifications;
-using Game.Arena.Presentation.Player;
-using Game.Arena.Presentation.Windows;
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.TestTools;
 using VContainer;
 using VContainer.Unity;
-using CameraController = Game.Arena.Presentation.Camera.ThirdPersonCameraController;
 
 namespace Game.CompositionRoot.PlayMode.Tests
 {
@@ -44,23 +34,23 @@ namespace Game.CompositionRoot.PlayMode.Tests
     {
         private static readonly ArenaRunId RunId = ArenaRunId.FromValue(7UL);
 
-        private readonly List<GameObject> _objects = new();
+        private readonly List<ArenaSceneTestRig> _rigs = new();
 
         [TearDown]
         public void TearDown()
         {
-            for (int index = 0; index < _objects.Count; index++)
+            for (int index = 0; index < _rigs.Count; index++)
             {
-                UnityEngine.Object.DestroyImmediate(_objects[index]);
+                _rigs[index].Dispose();
             }
 
-            _objects.Clear();
+            _rigs.Clear();
         }
 
         [UnityTest]
         public IEnumerator Binder_BuildsTheSceneScope_AndResolvesTheTickService()
         {
-            ArenaSceneRig rig = CreateRig();
+            ArenaSceneTestRig rig = CreateRig();
 
             rig.BinderObject.SetActive(true);
             yield return null;
@@ -77,7 +67,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
         [UnityTest]
         public IEnumerator EnteringTheArena_CreatesTheRunAndTheTickAdvancesIt()
         {
-            ArenaSceneRig rig = CreateRig();
+            ArenaSceneTestRig rig = CreateRig();
 
             rig.BinderObject.SetActive(true);
 
@@ -112,10 +102,10 @@ namespace Game.CompositionRoot.PlayMode.Tests
         [Test]
         public void Binder_MissingReference_ThrowsNamingTheField()
         {
-            ArenaSceneRig rig = CreateRig(omittedField: "_defeatWindow");
+            ArenaSceneTestRig rig = CreateRig(omittedField: "_defeatWindow");
 
             TargetInvocationException thrown = Assert.Throws<TargetInvocationException>(
-                () => InvokeAwake(rig.Binder));
+                () => rig.InvokeAwake());
 
             Assert.That(thrown.InnerException, Is.TypeOf<InvalidOperationException>());
             Assert.That(thrown.InnerException.Message, Does.Contain("_defeatWindow"));
@@ -124,9 +114,9 @@ namespace Game.CompositionRoot.PlayMode.Tests
         [Test]
         public void SceneScope_WithoutLiveBootstrap_FailsLoudly()
         {
-            ArenaSceneRig rig = CreateRig(withBootstrap: false);
+            ArenaSceneTestRig rig = CreateRig(withBootstrap: false);
 
-            InvokeAwake(rig.Binder);
+            rig.InvokeAwake();
             rig.Scope.Bind(rig.CreateSceneObjects());
 
             Assert.Throws<VContainerParentTypeReferenceNotFound>(() => rig.Scope.Build());
@@ -135,7 +125,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
         [UnityTest]
         public IEnumerator Binder_RegistersHandlersOnTheAdrStages()
         {
-            ArenaSceneRig rig = CreateRig();
+            ArenaSceneTestRig rig = CreateRig();
 
             rig.BinderObject.SetActive(true);
             yield return null;
@@ -182,14 +172,14 @@ namespace Game.CompositionRoot.PlayMode.Tests
         [Test]
         public void Dispatch_DrivesEntityHudAndNotificationHandlers()
         {
-            ArenaSceneRig rig = CreateRig();
+            ArenaSceneTestRig rig = CreateRig();
 
             // Start (and with it BuildScope) only runs on the first frame of an
             // active object. Invoking it directly keeps this fixture off the
             // frame loop, so the recorder is registered before the startup
             // driver's first dispatch closes registration.
-            InvokeAwake(rig.Binder);
-            InvokeStart(rig.Binder);
+            rig.InvokeAwake();
+            rig.InvokeStart();
 
             ArenaRunResultDispatcher dispatcher =
                 rig.Scope.Container.Resolve<ArenaRunResultDispatcher>();
@@ -231,204 +221,15 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 "A terminal snapshot stops the camera from following look input.");
         }
 
-        private ArenaSceneRig CreateRig(
+        private ArenaSceneTestRig CreateRig(
             bool withBootstrap = true,
             string omittedField = null)
         {
-            ArenaSceneRig rig = new();
+            ArenaSceneTestRig rig = ArenaSceneTestRig.Create(withBootstrap, omittedField);
 
-            if (withBootstrap)
-            {
-                GameObject bootstrapObject = Track(new GameObject("Bootstrap Scope"));
-
-                // VContainer starts entry points on every Build, so an active
-                // bootstrap would load the Arena scene mid-test (ADR-0032).
-                // Awake does not run on an inactive object, which is the only
-                // window in which the flag can be turned off.
-                bootstrapObject.SetActive(false);
-                rig.Bootstrap = bootstrapObject.AddComponent<BootstrapLifetimeScope>();
-                rig.Bootstrap.LoadArenaOnStart = false;
-                bootstrapObject.SetActive(true);
-            }
-
-            GameObject scopeObject = Track(new GameObject("Arena Scene Scope"));
-            rig.Scope = scopeObject.AddComponent<ArenaSceneLifetimeScope>();
-
-            GameObject cameraObject = Track(new GameObject("Scene Camera"));
-            rig.Camera = cameraObject.AddComponent<Camera>();
-            rig.CameraController = cameraObject.AddComponent<CameraController>();
-
-            GameObject playerObject = Track(new GameObject("Player"));
-            rig.PlayerTransform = playerObject.transform;
-            playerObject.AddComponent<PlayerView>();
-            rig.PlayerPresenter = playerObject.AddComponent<PlayerPresenter>();
-            rig.CameraController.Target = rig.PlayerTransform;
-
-            GameObject inputObject = Track(new GameObject("Input Source"));
-            rig.InputSource = inputObject.AddComponent<UnityPlayerInputSource>();
-            rig.InputSource.ViewTransform = cameraObject.transform;
-
-            GameObject enemyViewsObject = Track(new GameObject("Enemy Views"));
-            rig.EnemyViews = enemyViewsObject.AddComponent<EnemyViewRegistry>();
-
-            GameObject announcerObject = Track(new GameObject("Announcer"));
-            rig.Announcer = announcerObject.AddComponent<ArenaRunAnnouncer>();
-
-            rig.EnemyPresenter = enemyViewsObject.AddComponent<EnemyPresenter>();
-            rig.EnemyPresenter.Registry = rig.EnemyViews;
-            rig.EnemyPresenter.Announcer = rig.Announcer;
-
-            CreateHud(rig);
-            CreateCombatVisuals(rig, cameraObject.transform);
-            CreateWindows(rig);
-
-            GameObject binderObject = Track(new GameObject("Scene Binder"));
-            binderObject.SetActive(false);
-            rig.BinderObject = binderObject;
-            rig.Binder = binderObject.AddComponent<ArenaSceneBinder>();
-
-            Wire(rig, omittedField);
+            _rigs.Add(rig);
 
             return rig;
-        }
-
-        private void CreateHud(ArenaSceneRig rig)
-        {
-            GameObject hudObject = Track(new GameObject("Hud View"));
-            rig.Hud = hudObject.AddComponent<HudView>();
-
-            GameObject presentersObject = Track(new GameObject("Hud Presenters"));
-
-            rig.Health = presentersObject.AddComponent<HealthIndicatorPresenter>();
-            rig.Health.HudView = rig.Hud;
-            rig.Health.Announcer = rig.Announcer;
-
-            rig.EquippedWeapon = presentersObject.AddComponent<EquippedWeaponPresenter>();
-            rig.EquippedWeapon.HudView = rig.Hud;
-            rig.EquippedWeapon.Announcer = rig.Announcer;
-
-            rig.WaveIndicator = presentersObject.AddComponent<WaveIndicatorPresenter>();
-            rig.WaveIndicator.HudView = rig.Hud;
-            rig.WaveIndicator.Announcer = rig.Announcer;
-
-            rig.BossIndicator = presentersObject.AddComponent<BossIndicatorPresenter>();
-            rig.BossIndicator.HudView = rig.Hud;
-            rig.BossIndicator.Announcer = rig.Announcer;
-
-            GameObject defeatObject = Track(new GameObject("Defeat Window"));
-            rig.DefeatView = defeatObject.AddComponent<DefeatView>();
-
-            rig.DefeatWindow = presentersObject.AddComponent<DefeatWindowPresenter>();
-            rig.DefeatWindow.DefeatView = rig.DefeatView;
-            rig.DefeatWindow.Announcer = rig.Announcer;
-        }
-
-        private void CreateCombatVisuals(ArenaSceneRig rig, Transform viewTransform)
-        {
-            GameObject trackerObject = Track(new GameObject("View Direction"));
-            rig.ViewDirection = trackerObject.AddComponent<ViewDirectionTracker>();
-            rig.ViewDirection.ViewTransform = viewTransform;
-
-            GameObject aimObject = Track(new GameObject("Firearm Aim"));
-            aimObject.AddComponent<LineRenderer>();
-            rig.FirearmAimView = aimObject.AddComponent<FirearmAimMarkerView>();
-            rig.FirearmAim = aimObject.AddComponent<FirearmAimPresenter>();
-            rig.FirearmAim.MarkerView = rig.FirearmAimView;
-            rig.FirearmAim.ViewDirection = rig.ViewDirection;
-            rig.FirearmAim.Announcer = rig.Announcer;
-
-            GameObject swingObject = Track(new GameObject("Melee Swing"));
-            swingObject.AddComponent<LineRenderer>();
-            rig.MeleeSwingView = swingObject.AddComponent<MeleeSwingView>();
-            rig.MeleeSwing = swingObject.AddComponent<MeleeSwingPresenter>();
-            rig.MeleeSwing.SwingView = rig.MeleeSwingView;
-            rig.MeleeSwing.ViewDirection = rig.ViewDirection;
-
-            GameObject cueObject = Track(new GameObject("Attack Cue"));
-            rig.AttackCue = cueObject.AddComponent<EnemyAttackCuePresenter>();
-            rig.AttackCue.Announcer = rig.Announcer;
-
-            GameObject bossObject = Track(new GameObject("Boss Entry"));
-            rig.BossEntryMarker = bossObject.AddComponent<BossEntryMarkerPresenter>();
-        }
-
-        private void CreateWindows(ArenaSceneRig rig)
-        {
-            GameObject victoryObject = Track(new GameObject("Victory Window"));
-            rig.VictoryView = victoryObject.AddComponent<VictoryView>();
-
-            GameObject notificationObject = Track(new GameObject("Notifications"));
-            rig.NotificationPresenter =
-                notificationObject.AddComponent<ArenaRunNotificationPresenter>();
-            rig.NotificationPresenter.Announcer = rig.Announcer;
-            rig.NotificationPresenter.VictoryView = rig.VictoryView;
-        }
-
-        private void Wire(ArenaSceneRig rig, string omittedField)
-        {
-            WireField(rig.Binder, "_scope", rig.Scope, omittedField);
-            WireField(rig.Binder, "_camera", rig.Camera, omittedField);
-            WireField(rig.Binder, "_player", rig.PlayerTransform, omittedField);
-            WireField(rig.Binder, "_inputSource", rig.InputSource, omittedField);
-            WireField(rig.Binder, "_enemyViews", rig.EnemyViews, omittedField);
-            WireField(rig.Binder, "_cameraController", rig.CameraController, omittedField);
-            WireField(rig.Binder, "_playerPresenter", rig.PlayerPresenter, omittedField);
-            WireField(rig.Binder, "_enemyPresenter", rig.EnemyPresenter, omittedField);
-            WireField(rig.Binder, "_firearmAim", rig.FirearmAim, omittedField);
-            WireField(rig.Binder, "_meleeSwing", rig.MeleeSwing, omittedField);
-            WireField(rig.Binder, "_attackCue", rig.AttackCue, omittedField);
-            WireField(rig.Binder, "_bossEntryMarker", rig.BossEntryMarker, omittedField);
-            WireField(rig.Binder, "_notificationPresenter", rig.NotificationPresenter, omittedField);
-            WireField(rig.Binder, "_healthIndicator", rig.Health, omittedField);
-            WireField(rig.Binder, "_equippedWeapon", rig.EquippedWeapon, omittedField);
-            WireField(rig.Binder, "_waveIndicator", rig.WaveIndicator, omittedField);
-            WireField(rig.Binder, "_bossIndicator", rig.BossIndicator, omittedField);
-            WireField(rig.Binder, "_defeatWindow", rig.DefeatWindow, omittedField);
-        }
-
-        private static void WireField(
-            ArenaSceneBinder binder,
-            string fieldName,
-            UnityEngine.Object value,
-            string omittedField)
-        {
-            if (string.Equals(fieldName, omittedField, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            FieldInfo field = typeof(ArenaSceneBinder).GetField(
-                fieldName,
-                BindingFlags.Instance | BindingFlags.NonPublic);
-
-            Assert.That(
-                field,
-                Is.Not.Null,
-                "ArenaSceneBinder has no serialized field named " + fieldName + ".");
-
-            field.SetValue(binder, value);
-        }
-
-        private static void InvokeAwake(ArenaSceneBinder binder)
-        {
-            MethodInfo awake = typeof(ArenaSceneBinder).GetMethod(
-                "Awake",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-
-            Assert.That(awake, Is.Not.Null, "ArenaSceneBinder has no Awake method.");
-
-            awake.Invoke(binder, null);
-        }
-
-        private static void InvokeStart(ArenaSceneBinder binder)
-        {
-            MethodInfo start = typeof(ArenaSceneBinder).GetMethod(
-                "Start",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-
-            Assert.That(start, Is.Not.Null, "ArenaSceneBinder has no Start method.");
-
-            start.Invoke(binder, null);
         }
 
         private static IList<object> SnapshotHandlerTargets(
@@ -546,13 +347,6 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 WaveNumber.FromValue(3));
         }
 
-        private GameObject Track(GameObject gameObject)
-        {
-            _objects.Add(gameObject);
-
-            return gameObject;
-        }
-
         private sealed class RecordingHudHandler : IArenaRunHudHandler
         {
             public ArenaRunSnapshot Snapshot { get; private set; }
@@ -563,47 +357,6 @@ namespace Game.CompositionRoot.PlayMode.Tests
             {
                 Snapshot = snapshot;
                 Hud = hud;
-            }
-        }
-
-        private sealed class ArenaSceneRig
-        {
-            public GameObject BinderObject;
-            public BootstrapLifetimeScope Bootstrap;
-            public ArenaSceneBinder Binder;
-            public ArenaSceneLifetimeScope Scope;
-            public Camera Camera;
-            public CameraController CameraController;
-            public Transform PlayerTransform;
-            public PlayerPresenter PlayerPresenter;
-            public UnityPlayerInputSource InputSource;
-            public EnemyViewRegistry EnemyViews;
-            public EnemyPresenter EnemyPresenter;
-            public ArenaRunAnnouncer Announcer;
-            public HudView Hud;
-            public HealthIndicatorPresenter Health;
-            public EquippedWeaponPresenter EquippedWeapon;
-            public WaveIndicatorPresenter WaveIndicator;
-            public BossIndicatorPresenter BossIndicator;
-            public DefeatView DefeatView;
-            public DefeatWindowPresenter DefeatWindow;
-            public ViewDirectionTracker ViewDirection;
-            public FirearmAimMarkerView FirearmAimView;
-            public FirearmAimPresenter FirearmAim;
-            public MeleeSwingView MeleeSwingView;
-            public MeleeSwingPresenter MeleeSwing;
-            public EnemyAttackCuePresenter AttackCue;
-            public BossEntryMarkerPresenter BossEntryMarker;
-            public VictoryView VictoryView;
-            public ArenaRunNotificationPresenter NotificationPresenter;
-
-            public ArenaSceneObjects CreateSceneObjects()
-            {
-                return new ArenaSceneObjects(
-                    Camera,
-                    PlayerTransform,
-                    InputSource,
-                    new EnemyViewTransformRegistry(EnemyViews));
             }
         }
     }
