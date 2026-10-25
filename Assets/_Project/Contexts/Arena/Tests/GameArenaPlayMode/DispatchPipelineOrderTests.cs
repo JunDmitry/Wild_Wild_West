@@ -99,7 +99,7 @@ namespace Game.Arena.PlayMode.Tests
             Assert.That(_notificationHandler.LastNotification.EnemyId, Is.EqualTo(enemyId));
         }
 
-        private GameObject CreateCollider(string name, Vector3 position)
+        private Collider CreateCollider(string name, Vector3 position)
         {
             GameObject gameObject = new(name);
             gameObject.transform.position = position;
@@ -110,7 +110,7 @@ namespace Game.Arena.PlayMode.Tests
             _objects.Add(gameObject);
             Physics.SyncTransforms();
 
-            return gameObject;
+            return collider;
         }
 
         private sealed class RecordingSnapshotHandler : IArenaRunSnapshotHandler
