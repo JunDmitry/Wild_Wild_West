@@ -29,6 +29,15 @@ The View Direction remains available when no new attack is requested because an 
 
 A zero delta must not be passed to ArenaRun.AdvanceTime.
 
+## Game Time
+
+The tick's delta comes from `IGameClock`. The Application owns gameplay time; the engine contributes one number per frame.
+
+- `IFrameTimeSource.GetFrameElapsed()` reports the frame's raw elapsed time. Its Unity adapter reads `Time.unscaledDeltaTime`; no Application or Domain type references Unity.
+- `FrameDeltaGameClock` implements `IGameClock` over that port and applies the game's own time control: a scale (finite, at least zero, default one) and a pause flag. The delta it reports is the frame elapsed time multiplied by the scale, or zero while paused.
+- `Time.timeScale` is not used for gameplay. Pausing, slow motion, or any other time change is made through the game clock's scale and pause state.
+- A zero delta is a legitimate tick delta. It advances nothing: `TimeAdvanceStage` passes no delta to `ArenaRun.AdvanceTime`, and the Defeat Restart delay does not advance either. Whether a paused game should also skip calling the tick is the scene driver's decision, not the clock's.
+
 ## Stage Order
 
 Before every normal tick, Pending Interaction Recovery runs.
