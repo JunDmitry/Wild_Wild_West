@@ -119,6 +119,10 @@ namespace Game.CompositionRoot.PlayMode.Tests
             rig.BinderObject = binderObject;
             rig.Binder = binderObject.AddComponent<ArenaSceneBinder>();
 
+            // The binder builds the scene scope in Start from this seam; the rig
+            // hands it the same objects plus its recording reloader.
+            rig.Binder.SceneObjectsOverride = rig.CreateSceneObjects();
+
             rig.Wire(omittedField);
 
             return rig;

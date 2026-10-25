@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Game.Arena.Application.Ports;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
@@ -8,11 +9,14 @@ using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
+using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Interactions.Spawn;
 using Game.Arena.Domain.Repositories;
 using Game.Arena.Domain.Time;
+using Game.Arena.Domain.Vitality;
 using Game.Arena.Infrastructure.Input;
 using Game.Arena.Infrastructure.Targeting;
+using Game.Arena.Presentation.Accessibility;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -27,12 +31,10 @@ namespace Game.CompositionRoot.PlayMode.Tests
     /// public <see cref="UnityPlayerInputSource.Device"/> seam.
     ///
     /// Scenarios 5-7 of the request (wave progression, defeat plus reload, and
-    /// victory) need production seams: a configurable multi-wave
-    /// <see cref="ArenaGameConfiguration"/> and a substitutable
-    /// <c>IArenaSceneReloader</c>. Wave progression is covered here through the
-    /// configuration seam. The recording reloader never reaches the scope the
-    /// binder builds, so defeat plus reload and victory are recorded in
-    /// <c>docs/architect/coder-inbox/t8-6-arena-smoke-c.md</c> instead.
+    /// victory) drive the same graph through the configuration seam and the
+    /// binder's scene-objects override: the rig hands the binder a recording
+    /// <c>IArenaSceneReloader</c>, so defeat and victory are observed without a
+    /// real scene load.
     /// </summary>
     [TestFixture]
     public sealed class ArenaSandboxSmokeTests
@@ -403,9 +405,206 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 "The HUD presents the Application-formatted second-wave text.");
         }
 
-        private ArenaSceneTestRig CreateRig(ArenaGameConfiguration configuration = null)
+        [UnityTest]
+        public IEnumerator DefeatingTheRun_ShowsTheDefeatWindowAndReloadsExactlyOnce()
         {
-            ArenaSceneTestRig rig = ArenaSceneTestRig.Create(configuration: configuration);
+            RecordingArenaSceneReloader reloader = new();
+            ArenaSceneTestRig rig = CreateRig(CreateDefeatConfiguration(), reloader);
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            // No attack input: the seeded wave closes and defeats the player.
+            float deadline = Time.realtimeSinceStartup + 30f;
+
+            while (run.Status != ArenaRunStatus.Defeat
+                && Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(
+                run.Status,
+                Is.EqualTo(ArenaRunStatus.Defeat),
+                "The regular wave defeated the player through the real tick stages.");
+
+            float defeatedAt = Time.realtimeSinceStartup;
+            ArenaRunId defeatedRunId = session.ActiveArenaRunId;
+
+            Assert.That(
+                rig.DefeatView.IsShown,
+                Is.True,
+                "The defeat window is shown over the published defeat state.");
+            Assert.That(rig.DefeatView.ShownRunId, Is.EqualTo(defeatedRunId));
+
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "The defeated tick itself requests no reload.");
+
+            yield return WaitUntil(() => reloader.ReloadCount > 0, 5f);
+
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(1),
+                "Defeat requests exactly one scene reload.");
+            Assert.That(
+                Time.realtimeSinceStartup - defeatedAt,
+                Is.GreaterThanOrEqualTo(0.4f),
+                "The reload waits for the configured restart delay.");
+
+            Assert.That(
+                session.ActiveArenaRunId,
+                Is.Not.EqualTo(defeatedRunId),
+                "A fresh run replaces the defeated one on the reload edge.");
+
+            yield return WaitForSeconds(0.5f);
+
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(1),
+                "Later frames do not request another reload.");
+        }
+
+        [UnityTest]
+        public IEnumerator ClearingTheLastWave_ShowsVictoryOnceWithoutReloading()
+        {
+            RecordingArenaSceneReloader reloader = new();
+            ArenaSceneTestRig rig = CreateRig(CreateBossOnlyVictoryConfiguration(), reloader);
+
+            int victoryAnnouncements = 0;
+
+            rig.Announcer.Announced += announcement =>
+            {
+                if (announcement == ArenaRunAnnouncer.VictoryAnnouncement)
+                {
+                    victoryAnnouncements++;
+                }
+            };
+
+            // The attack aim is read from the camera; this scenario points the
+            // view at the boss instead of letting the controller follow the player.
+            rig.CameraController.enabled = false;
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            IEnemyColliderRegistration colliders =
+                rig.Scope.Container.Resolve<IEnemyColliderRegistration>();
+
+            Dictionary<EnemyId, GameObject> tracked = new();
+            EnemyId bossId = EnemyId.None;
+            float deadline = Time.realtimeSinceStartup + 45f;
+
+            while (run.Status == ArenaRunStatus.Playing
+                && Time.realtimeSinceStartup < deadline)
+            {
+                if (bossId.IsNone && TryFindBoss(run, out EnemyId spawnedBoss))
+                {
+                    bossId = spawnedBoss;
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.ContainsKey(bossId) == false
+                    && run.TryGetEnemyPosition(bossId, out Position3D spawn))
+                {
+                    tracked[bossId] = RegisterCollider(
+                        colliders,
+                        bossId,
+                        new Vector3(spawn.X, spawn.Y, spawn.Z));
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.TryGetValue(bossId, out GameObject bossCollider))
+                {
+                    SyncColliders(run, tracked);
+
+                    // The boss spawns outside the arena, so no production view
+                    // exists for it yet. Registering the synced collider on every
+                    // frame keeps the aim ray resolving the boss after it walks
+                    // in and the production view takes the mapping over.
+                    colliders.Register(bossId, bossCollider.GetComponent<Collider>());
+
+                    AimAt(rig, run, bossId);
+                }
+
+                if (run.IsSelectedWeaponReady)
+                {
+                    yield return Strike();
+                    continue;
+                }
+
+                yield return null;
+            }
+
+            Assert.That(
+                run.Status,
+                Is.EqualTo(ArenaRunStatus.Victory),
+                "Clearing the last wave won the run.");
+
+            Assert.That(
+                rig.VictoryView.IsShown,
+                Is.True,
+                "The victory window is shown over the published victory.");
+            Assert.That(
+                rig.VictoryView.ShownRunId,
+                Is.EqualTo(session.ActiveArenaRunId));
+            Assert.That(
+                victoryAnnouncements,
+                Is.EqualTo(1),
+                "Victory is presented exactly once.");
+
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "The victory tick requests no scene reload.");
+
+            ArenaRunId shownRunId = rig.VictoryView.ShownRunId;
+
+            yield return WaitForSeconds(0.5f);
+
+            Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Victory));
+            Assert.That(rig.VictoryView.IsShown, Is.True);
+            Assert.That(rig.VictoryView.ShownRunId, Is.EqualTo(shownRunId));
+            Assert.That(
+                victoryAnnouncements,
+                Is.EqualTo(1),
+                "Terminal frames do not present victory again.");
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "Terminal frames request no scene reload.");
+        }
+
+        private ArenaSceneTestRig CreateRig(
+            ArenaGameConfiguration configuration = null,
+            IArenaSceneReloader reloader = null)
+        {
+            ArenaSceneTestRig rig = ArenaSceneTestRig.Create(
+                configuration: configuration,
+                reloader: reloader);
 
             _rigs.Add(rig);
 
@@ -444,6 +643,90 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 defaults.Arena,
                 parameters,
                 new GameDuration(1d),
+                new GameDuration(0.1d),
+                defaults.ArenaSceneName);
+        }
+
+        /// <summary>
+        /// Shrinks the arena, weakens the player, and strengthens the regular
+        /// enemies so the first wave closes and defeats the player quickly. The
+        /// short restart delay keeps the single reload edge inside the scenario.
+        /// </summary>
+        private static ArenaGameConfiguration CreateDefeatConfiguration()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+            ArenaRunCreationParameters defaultsParameters = defaults.CreationParameters;
+
+            ArenaDefinition arena = new(
+                new ArenaBounds(-4f, 4f, -4f, 4f, 0f),
+                Distance.FromValue(5f));
+
+            PlayerDefinition player = new(
+                Position3D.Zero,
+                Health.Full(10),
+                MovementSpeed.FromUnitsPerSecond(5f),
+                CollisionRadius.FromValue(0.5f));
+
+            EnemyCatalog enemies = new(
+                new EnemyDefinition(
+                    EnemyKind.Regular,
+                    Health.Full(50),
+                    MovementSpeed.FromUnitsPerSecond(20f),
+                    CollisionRadius.FromValue(0.5f),
+                    DamageAmount.FromPoints(100),
+                    Distance.FromValue(2f),
+                    new GameDuration(1d),
+                    new GameDuration(0.2d)),
+                new EnemyDefinition(
+                    EnemyKind.Boss,
+                    Health.Full(300),
+                    MovementSpeed.FromUnitsPerSecond(1.75f),
+                    CollisionRadius.FromValue(1f),
+                    DamageAmount.FromPoints(25),
+                    Distance.FromValue(3f),
+                    new GameDuration(1.1d),
+                    new GameDuration(0.4d)));
+
+            WaveCatalog waves = new(new[] { new WaveDefinition(WaveNumber.First, 3) });
+
+            ArenaRunCreationParameters parameters = new(
+                arena,
+                player,
+                defaultsParameters.WeaponCatalog,
+                enemies,
+                waves);
+
+            return new ArenaGameConfiguration(
+                arena,
+                parameters,
+                new GameDuration(0.5d),
+                new GameDuration(0.1d),
+                defaults.ArenaSceneName);
+        }
+
+        /// <summary>
+        /// A single boss-only wave, the mechanism scenario 5 uses for its bosses:
+        /// clearing it ends the run in victory.
+        /// </summary>
+        private static ArenaGameConfiguration CreateBossOnlyVictoryConfiguration()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+            ArenaRunCreationParameters defaultsParameters = defaults.CreationParameters;
+
+            WaveCatalog waves = new(
+                new[] { new WaveDefinition(WaveNumber.First, 0) });
+
+            ArenaRunCreationParameters parameters = new(
+                defaultsParameters.ArenaDefinition,
+                defaultsParameters.PlayerDefinition,
+                defaultsParameters.WeaponCatalog,
+                defaultsParameters.EnemyCatalog,
+                waves);
+
+            return new ArenaGameConfiguration(
+                defaults.Arena,
+                parameters,
+                defaults.RestartDelay,
                 new GameDuration(0.1d),
                 defaults.ArenaSceneName);
         }
@@ -616,6 +899,16 @@ namespace Game.CompositionRoot.PlayMode.Tests
             while (Time.realtimeSinceStartup < deadline)
             {
                 yield return null;
+            }
+        }
+
+        private sealed class RecordingArenaSceneReloader : IArenaSceneReloader
+        {
+            public int ReloadCount { get; private set; }
+
+            public void ReloadArenaScene()
+            {
+                ReloadCount++;
             }
         }
 
