@@ -140,3 +140,24 @@ and T-8.3).
 - `Assets/_Project/Contexts/Arena/Tests/GameArenaPlayMode/PlayModeTickHarness.cs`
 - `Assets/_Project/Contexts/Arena/Infrastructure/`
 - `Library/PackageCache/jp.hadashikick.vcontainer@5401e5a7eb/`
+
+## Amendment 2026-10-25 — the optional dispatch diagnostics port
+
+`ArenaRunResultDispatcher` declares two constructors: parameterless and
+`(IArenaRunDispatchDiagnostics diagnostics)`. VContainer's `TypeAnalyzer`
+selects the declared constructor with the most parameters when none carries
+`[Inject]` — and ADR-0014 forbids attribute injection here — so the
+diagnostics overload is chosen and the scene graph could not resolve
+`IArenaRunDispatch` until that port had a registration.
+
+The port ADR-0027 calls optional is satisfied explicitly: the scene scope
+registers a production null object, `NoOpArenaRunDispatchDiagnostics`
+(`Game.CompositionRoot`), as `IArenaRunDispatchDiagnostics` (singleton). The
+dispatcher keeps its `Register<IArenaRunDispatch, ArenaRunResultDispatcher>`
+registration with `.AsSelf()`; both constructors, the lazy singleton, and the
+"as the interface and as itself" surface are unchanged. Handler failures are
+therefore still isolated from gameplay, and a later adapter with a logging
+policy replaces that one registration line.
+
+This is the only production change authorized for the T-8.1 composition
+fixture beyond the two test fakes the standing request names.
