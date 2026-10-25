@@ -21,6 +21,7 @@ namespace Game.Arena.Application.Ticks
             IEnemyIdSource enemyIdSource,
             IEnemySpawnPacingPolicy pacingPolicy,
             IRunRestartDelayPolicy restartDelayPolicy,
+            IArenaSceneReloader sceneReloader,
             IArenaRunDispatch dispatcher)
         {
             Session = session ?? throw new ArgumentNullException(nameof(session));
@@ -33,6 +34,7 @@ namespace Game.Arena.Application.Ticks
             EnemyIdSource = enemyIdSource ?? throw new ArgumentNullException(nameof(enemyIdSource));
             PacingPolicy = pacingPolicy ?? throw new ArgumentNullException(nameof(pacingPolicy));
             RestartDelayPolicy = restartDelayPolicy ?? throw new ArgumentNullException(nameof(restartDelayPolicy));
+            SceneReloader = sceneReloader ?? throw new ArgumentNullException(nameof(sceneReloader));
             Dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
@@ -55,6 +57,8 @@ namespace Game.Arena.Application.Ticks
         public IEnemySpawnPacingPolicy PacingPolicy { get; }
 
         public IRunRestartDelayPolicy RestartDelayPolicy { get; }
+
+        public IArenaSceneReloader SceneReloader { get; }
 
         public IArenaRunDispatch Dispatcher { get; }
     }

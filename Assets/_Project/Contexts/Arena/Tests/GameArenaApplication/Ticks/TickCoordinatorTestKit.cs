@@ -31,6 +31,7 @@ namespace Game.Arena.Application.Tests.Ticks
             Pacing = new FixedIntervalSpawnPacingPolicy(new Domain.Time.GameDuration(1d));
             RestartDelayPolicy = new FixedIntervalRunRestartDelayPolicy(
                 new Domain.Time.GameDuration(restartDelaySeconds));
+            SceneReloader = new RecordingArenaSceneReloader();
             Clock = new FixedGameClock(new Domain.Time.GameDuration(0.1d));
             Input = new FixedPlayerInputSource();
             Tracker = new PendingInteractionTracker();
@@ -61,7 +62,7 @@ namespace Game.Arena.Application.Tests.Ticks
 
             RecoveryStage = new PendingInteractionRecoveryStage(Tracker);
             TimeAdvanceStage = new TimeAdvanceStage();
-            DefeatRestartStage = new DefeatRestartStage(Session, RestartDelayPolicy);
+            DefeatRestartStage = new DefeatRestartStage(Session, RestartDelayPolicy, SceneReloader);
             SnapshotMapper = new();
 
             ArenaRunTickCoordinatorDependencies dependencies = new(
@@ -99,6 +100,8 @@ namespace Game.Arena.Application.Tests.Ticks
         public FixedIntervalSpawnPacingPolicy Pacing { get; }
 
         public FixedIntervalRunRestartDelayPolicy RestartDelayPolicy { get; }
+
+        public RecordingArenaSceneReloader SceneReloader { get; }
 
         public FixedGameClock Clock { get; }
 

@@ -1,4 +1,5 @@
 using System;
+using Game.Arena.Application.Ports;
 using Game.Arena.Application.Restart;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
@@ -10,15 +11,20 @@ namespace Game.Arena.Application.Ticks.Stages
     {
         private readonly ArenaRunSession _session;
         private readonly IRunRestartDelayPolicy _restartDelayPolicy;
+        private readonly IArenaSceneReloader _sceneReloader;
 
         public DefeatRestartStage(
             ArenaRunSession session,
-            IRunRestartDelayPolicy restartDelayPolicy)
+            IRunRestartDelayPolicy restartDelayPolicy,
+            IArenaSceneReloader sceneReloader)
         {
             _session = session ?? throw new ArgumentNullException(nameof(session));
 
             _restartDelayPolicy = restartDelayPolicy
                 ?? throw new ArgumentNullException(nameof(restartDelayPolicy));
+
+            _sceneReloader = sceneReloader
+                ?? throw new ArgumentNullException(nameof(sceneReloader));
         }
 
         public bool Execute(
@@ -55,6 +61,10 @@ namespace Game.Arena.Application.Ticks.Stages
                 throw new InvalidOperationException(
                     "The defeated ArenaRun could not be restarted.");
             }
+
+            // The restarted run exists now; request its scene exactly once, on
+            // the only edge where a defeat becomes a live run.
+            _sceneReloader.ReloadArenaScene();
 
             return true;
         }

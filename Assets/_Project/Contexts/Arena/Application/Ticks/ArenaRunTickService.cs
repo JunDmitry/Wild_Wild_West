@@ -29,7 +29,8 @@ namespace Game.Arena.Application.Ticks
             TimeAdvanceStage timeAdvanceStage = new();
             DefeatRestartStage defeatRestartStage = new(
                     dependencies.Session,
-                    dependencies.RestartDelayPolicy);
+                    dependencies.RestartDelayPolicy,
+                    dependencies.SceneReloader);
 
             PlayerTickPhase playerPhase = new(
                     dependencies.MovementResolver,

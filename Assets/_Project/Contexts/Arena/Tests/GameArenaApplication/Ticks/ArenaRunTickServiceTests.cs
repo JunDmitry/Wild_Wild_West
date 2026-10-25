@@ -147,6 +147,7 @@ namespace Game.Arena.Application.Tests.Ticks
                         _kit.EnemyIds,
                         _kit.Pacing,
                         _kit.RestartDelayPolicy,
+                        _kit.SceneReloader,
                         _dispatch);
                 });
         }
@@ -167,6 +168,7 @@ namespace Game.Arena.Application.Tests.Ticks
                     kit.EnemyIds,
                     kit.Pacing,
                     kit.RestartDelayPolicy,
+                    kit.SceneReloader,
                     dispatch);
 
             return new ArenaRunTickService(dependencies);
