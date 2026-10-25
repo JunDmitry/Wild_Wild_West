@@ -108,6 +108,9 @@ namespace Game.CompositionRoot
                 _ => new FixedIntervalSpawnPacingPolicy(configuration.SpawnInterval),
                 Lifetime.Singleton);
 
+            builder.Register<IArenaRunDispatchDiagnostics, NoOpArenaRunDispatchDiagnostics>(
+                Lifetime.Singleton);
+
             builder.Register<IArenaRunDispatch, ArenaRunResultDispatcher>(Lifetime.Singleton)
                 .AsSelf();
 
