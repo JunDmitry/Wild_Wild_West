@@ -65,6 +65,13 @@ namespace Game.CompositionRoot
             builder.Register<IRunRestartDelayPolicy>(
                 _ => new FixedIntervalRunRestartDelayPolicy(configuration.RestartDelay),
                 Lifetime.Singleton);
+
+            // Both the bootstrap entry point and the defeat restart need the
+            // port, and the adapter depends on configuration only (ADR-0032).
+            builder.Register<IArenaSceneReloader>(
+                container => new UnityArenaSceneReloader(
+                    container.Resolve<ArenaGameConfiguration>().ArenaSceneName),
+                Lifetime.Singleton);
         }
 
         public static void RegisterSceneLifetime(
@@ -108,10 +115,6 @@ namespace Game.CompositionRoot
                     sceneObjects.Camera,
                     sceneObjects.Player),
                 Lifetime.Singleton);
-            builder.Register<IArenaSceneReloader>(
-                container => new UnityArenaSceneReloader(
-                    container.Resolve<ArenaGameConfiguration>().ArenaSceneName),
-                Lifetime.Singleton);
             builder.Register<IEnemySpawnPacingPolicy>(
                 container => new FixedIntervalSpawnPacingPolicy(
                     container.Resolve<ArenaGameConfiguration>().SpawnInterval),
@@ -126,6 +129,7 @@ namespace Game.CompositionRoot
             builder.Register<ArenaRunTickServiceDependencies>(Lifetime.Singleton);
             builder.Register<ArenaRunTickService>(Lifetime.Singleton);
 
+            builder.RegisterEntryPoint<ArenaRunStartupDriver>(Lifetime.Singleton);
             builder.RegisterEntryPoint<ArenaTickDriver>(Lifetime.Singleton);
         }
     }
