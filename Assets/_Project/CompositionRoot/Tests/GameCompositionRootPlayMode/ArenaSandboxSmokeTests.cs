@@ -5,10 +5,12 @@ using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Combat;
+using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Spawn;
 using Game.Arena.Domain.Repositories;
+using Game.Arena.Domain.Time;
 using Game.Arena.Infrastructure.Input;
 using Game.Arena.Infrastructure.Targeting;
 using NUnit.Framework;
@@ -25,10 +27,12 @@ namespace Game.CompositionRoot.PlayMode.Tests
     /// public <see cref="UnityPlayerInputSource.Device"/> seam.
     ///
     /// Scenarios 5-7 of the request (wave progression, defeat plus reload, and
-    /// victory) need production seams the request forbids adding: a configurable
-    /// multi-wave <see cref="ArenaGameConfiguration"/> and a substitutable
-    /// <c>IArenaSceneReloader</c>. They are recorded in
-    /// <c>docs/architect/coder-inbox/t8-6-arena-smoke.md</c> instead.
+    /// victory) need production seams: a configurable multi-wave
+    /// <see cref="ArenaGameConfiguration"/> and a substitutable
+    /// <c>IArenaSceneReloader</c>. Wave progression is covered here through the
+    /// configuration seam. The recording reloader never reaches the scope the
+    /// binder builds, so defeat plus reload and victory are recorded in
+    /// <c>docs/architect/coder-inbox/t8-6-arena-smoke-c.md</c> instead.
     /// </summary>
     [TestFixture]
     public sealed class ArenaSandboxSmokeTests
@@ -314,9 +318,94 @@ namespace Game.CompositionRoot.PlayMode.Tests
             Assert.That(HealthOf(run, MeleeThirdId), Is.EqualTo(damagedHealth));
         }
 
-        private ArenaSceneTestRig CreateRig()
+        [UnityTest]
+        public IEnumerator ClearingWaveOne_AdvancesToWaveTwoAndPresentsItsWaveText()
         {
-            ArenaSceneTestRig rig = ArenaSceneTestRig.Create();
+            ArenaSceneTestRig rig = CreateRig(CreateTwoWaveConfiguration());
+
+            // The camera controller pins the yaw of the view the attack aim is
+            // read from; this scenario points the view at the boss instead.
+            rig.CameraController.enabled = false;
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            IEnemyColliderRegistration colliders =
+                rig.Scope.Container.Resolve<IEnemyColliderRegistration>();
+
+            Dictionary<EnemyId, GameObject> tracked = new();
+            EnemyId bossId = EnemyId.None;
+            float deadline = Time.realtimeSinceStartup + 45f;
+
+            while (run.CurrentWaveNumber.Value == 1
+                && Time.realtimeSinceStartup < deadline)
+            {
+                if (bossId.IsNone && TryFindBoss(run, out EnemyId spawnedBoss))
+                {
+                    bossId = spawnedBoss;
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.ContainsKey(bossId) == false
+                    && run.TryGetEnemyPosition(bossId, out Position3D spawn))
+                {
+                    tracked[bossId] = RegisterCollider(
+                        colliders,
+                        bossId,
+                        new Vector3(spawn.X, spawn.Y, spawn.Z));
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.TryGetValue(bossId, out GameObject bossCollider))
+                {
+                    SyncColliders(run, tracked);
+
+                    // The boss spawns outside the arena, so no production view
+                    // exists for it yet. Registering the synced collider on
+                    // every frame keeps the aim ray resolving the boss after it
+                    // walks in and the production view takes the mapping over.
+                    colliders.Register(bossId, bossCollider.GetComponent<Collider>());
+
+                    AimAt(rig, run, bossId);
+                }
+
+                if (run.IsSelectedWeaponReady)
+                {
+                    yield return Strike();
+                    continue;
+                }
+
+                yield return null;
+            }
+
+            Assert.That(
+                run.CurrentWaveNumber.Value,
+                Is.EqualTo(2),
+                "Clearing wave one advanced the run to the second wave.");
+
+            yield return WaitUntil(() => rig.Hud.WaveText == "Wave 2 of 2", 2f);
+
+            Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Playing));
+            Assert.That(
+                rig.Hud.WaveText,
+                Is.EqualTo("Wave 2 of 2"),
+                "The HUD presents the Application-formatted second-wave text.");
+        }
+
+        private ArenaSceneTestRig CreateRig(ArenaGameConfiguration configuration = null)
+        {
+            ArenaSceneTestRig rig = ArenaSceneTestRig.Create(configuration: configuration);
 
             _rigs.Add(rig);
 
@@ -324,6 +413,77 @@ namespace Game.CompositionRoot.PlayMode.Tests
             rig.InputSource.Device = _device;
 
             return rig;
+        }
+
+        /// <summary>
+        /// Keeps the production arena, player, weapons, and enemies, and varies
+        /// only the wave catalogue (two boss-only waves), the restart delay, and
+        /// the spawn interval.
+        /// </summary>
+        private static ArenaGameConfiguration CreateTwoWaveConfiguration()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+
+            WaveCatalog waves = new(
+                new[]
+                {
+                    new WaveDefinition(WaveNumber.First, 0),
+                    new WaveDefinition(WaveNumber.First.Next(), 0),
+                });
+
+            ArenaRunCreationParameters defaultsParameters = defaults.CreationParameters;
+
+            ArenaRunCreationParameters parameters = new(
+                defaultsParameters.ArenaDefinition,
+                defaultsParameters.PlayerDefinition,
+                defaultsParameters.WeaponCatalog,
+                defaultsParameters.EnemyCatalog,
+                waves);
+
+            return new ArenaGameConfiguration(
+                defaults.Arena,
+                parameters,
+                new GameDuration(1d),
+                new GameDuration(0.1d),
+                defaults.ArenaSceneName);
+        }
+
+        private static bool TryFindBoss(ArenaRun run, out EnemyId bossId)
+        {
+            ArenaRunSnapshot snapshot = new ArenaRunSnapshotMapper().Map(run.CreateSnapshot());
+
+            for (int index = 0; index < snapshot.Enemies.Count; index++)
+            {
+                if (snapshot.Enemies[index].Kind == EnemyKind.Boss)
+                {
+                    bossId = snapshot.Enemies[index].EnemyId;
+                    return true;
+                }
+            }
+
+            bossId = EnemyId.None;
+            return false;
+        }
+
+        private static void AimAt(ArenaSceneTestRig rig, ArenaRun run, EnemyId enemyId)
+        {
+            if (run.TryGetEnemyPosition(enemyId, out Position3D enemy) == false)
+            {
+                return;
+            }
+
+            Vector3 offset = new(
+                enemy.X - run.PlayerPosition.X,
+                0f,
+                enemy.Z - run.PlayerPosition.Z);
+
+            if (offset.sqrMagnitude < 1e-4f)
+            {
+                return;
+            }
+
+            rig.Camera.transform.rotation =
+                Quaternion.LookRotation(offset.normalized, Vector3.up);
         }
 
         private static void SeedEnemy(ArenaRun run, EnemyId enemyId, Position3D position)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Game.Arena.Application.Ports;
 using Game.Arena.Infrastructure.Input;
 using Game.Arena.Presentation.Accessibility;
 using Game.Arena.Presentation.Combat;
@@ -26,6 +27,8 @@ namespace Game.CompositionRoot.PlayMode.Tests
     internal sealed class ArenaSceneTestRig : IDisposable
     {
         private readonly List<GameObject> _objects = new();
+
+        private IArenaSceneReloader _reloader;
 
         public GameObject BinderObject;
         public BootstrapLifetimeScope Bootstrap;
@@ -58,9 +61,12 @@ namespace Game.CompositionRoot.PlayMode.Tests
 
         public static ArenaSceneTestRig Create(
             bool withBootstrap = true,
-            string omittedField = null)
+            string omittedField = null,
+            ArenaGameConfiguration configuration = null,
+            IArenaSceneReloader reloader = null)
         {
             ArenaSceneTestRig rig = new();
+            rig._reloader = reloader;
 
             if (withBootstrap)
             {
@@ -69,10 +75,11 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 // VContainer starts entry points on every Build, so an active
                 // bootstrap would load the Arena scene mid-test (ADR-0032).
                 // Awake does not run on an inactive object, which is the only
-                // window in which the flag can be turned off.
+                // window in which the flag and the configuration can be assigned.
                 bootstrapObject.SetActive(false);
                 rig.Bootstrap = bootstrapObject.AddComponent<BootstrapLifetimeScope>();
                 rig.Bootstrap.LoadArenaOnStart = false;
+                rig.Bootstrap.Configuration = configuration;
                 bootstrapObject.SetActive(true);
             }
 
@@ -123,7 +130,8 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 Camera,
                 PlayerTransform,
                 InputSource,
-                new EnemyViewTransformRegistry(EnemyViews));
+                new EnemyViewTransformRegistry(EnemyViews),
+                _reloader);
         }
 
         public void InvokeAwake()
