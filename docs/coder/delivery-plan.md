@@ -245,7 +245,9 @@ Exit criteria:
 
 T-5 is complete. The typed result dispatcher is delivered end to end: Application contracts, the six-stage dispatcher, the tick service dispatch, and the Presentation handler set with PlayMode order coverage.
 
-Next is T-6: the Unity clock (T-6.1), the collider registry implementation (T-6.8), and the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
+T-6.1 is complete. The Arena tick advances from engine-independent game time: `FrameDeltaGameClock` applies the game's own scale and pause to the frame elapsed time reported by `UnityFrameTimeSource`, and `Time.timeScale` plays no part in gameplay.
+
+Next in T-6: the collider identity registry (T-6.8) and the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
@@ -261,7 +263,7 @@ Implement Unity adapters for Application ports.
 
 Substages:
 
-- T-6.1: Unity clock adapter. — Open
+- T-6.1: Unity clock adapter. — Done (`FrameDeltaGameClock` over `IFrameTimeSource`; `UnityFrameTimeSource` reads `Time.unscaledDeltaTime`, game-owned scale and pause).
 - T-6.2: Unity input adapter. — Done (`UnityPlayerInputSource` over `IUnityInputDevice`).
 - T-6.3: Unity player movement resolver. — Done (`UnityPlayerMovementResolver`).
 - T-6.4: Unity ranged attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveRanged`).
