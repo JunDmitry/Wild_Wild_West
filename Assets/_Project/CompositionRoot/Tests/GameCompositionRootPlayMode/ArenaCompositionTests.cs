@@ -10,10 +10,12 @@ using Game.Arena.Application.Ticks;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Repositories;
+using Game.Arena.Domain.Time;
 using Game.Arena.Infrastructure.Movement;
 using NUnit.Framework;
 using UnityEngine;
 using VContainer;
+using VContainer.Unity;
 
 namespace Game.CompositionRoot.PlayMode.Tests
 {
@@ -102,6 +104,76 @@ namespace Game.CompositionRoot.PlayMode.Tests
             Assert.AreSame(
                 container.Resolve<IArenaRunDispatch>(),
                 container.Resolve<IArenaRunDispatch>());
+        }
+
+        [Test]
+        public void ProcessGraph_PolicyWaitsTheConfiguredRestartDelay()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+            ArenaGameConfiguration configuration = new(
+                defaults.Arena,
+                defaults.CreationParameters,
+                new GameDuration(4d),
+                defaults.SpawnInterval,
+                defaults.ArenaSceneName);
+
+            ContainerBuilder builder = new();
+            ArenaRegistrations.RegisterProcessLifetime(builder, configuration);
+
+            using IObjectResolver container = builder.Build();
+
+            Assert.AreSame(configuration, container.Resolve<ArenaGameConfiguration>());
+
+            IRunRestartDelayPolicy policy = container.Resolve<IRunRestartDelayPolicy>();
+
+            Assert.That(
+                policy.ShouldRestart(new GameDuration(3.5d)),
+                Is.False,
+                "The registered policy must hold the configured 4 s delay, not the 3 s default.");
+
+            Assert.That(
+                policy.ShouldRestart(new GameDuration(0.5d)),
+                Is.True,
+                "The accumulated 4 s reaches the configured delay.");
+        }
+
+        [Test]
+        public void SceneScope_ResolvesTheSameRestartDelayPolicyAsTheProcessGraph()
+        {
+            GameObject bootstrapObject = new("Composition Test Bootstrap");
+            bootstrapObject.SetActive(false);
+            _objects.Add(bootstrapObject);
+
+            BootstrapLifetimeScope bootstrap =
+                bootstrapObject.AddComponent<BootstrapLifetimeScope>();
+            bootstrap.LoadArenaOnStart = false;
+            bootstrapObject.SetActive(true);
+
+            GameObject scopeObject = new("Composition Test Scene Scope");
+            _objects.Add(scopeObject);
+            ArenaSceneLifetimeScope scope = scopeObject.AddComponent<ArenaSceneLifetimeScope>();
+            scope.parentReference = ParentReference.Create<BootstrapLifetimeScope>();
+            scope.Bind(CreateSceneObjects());
+            scope.Build();
+
+            IRunRestartDelayPolicy processPolicy =
+                bootstrap.Container.Resolve<IRunRestartDelayPolicy>();
+
+            IRunRestartDelayPolicy scenePolicy =
+                scope.Container.Resolve<IRunRestartDelayPolicy>();
+
+            Assert.AreSame(
+                processPolicy,
+                scenePolicy,
+                "The scene scope resolves the process-lifetime singleton (ADR-0032).");
+
+            ArenaRunTickServiceDependencies dependencies =
+                scope.Container.Resolve<ArenaRunTickServiceDependencies>();
+
+            Assert.AreSame(
+                processPolicy,
+                dependencies.RestartDelayPolicy,
+                "The scene graph's consumer holds the process-lifetime instance.");
         }
 
         [Test]
