@@ -37,7 +37,7 @@ The Application layer owns use-case orchestration, identity allocation, reposito
 
 Infrastructure adapts Unity systems: input, player and enemy movement, attack targeting, and spawn placement.
 
-Presentation renders snapshots and consumes Application notifications through the notification sink.
+Presentation renders snapshots and consumes Application notifications through typed handlers registered on the result dispatcher (ADR-0027).
 
 CompositionRoot does not wire anything yet; DI composition is T-8.
 
@@ -181,6 +181,40 @@ Exit criteria:
 - Continuous state is rendered from snapshots. — Met
 - One-shot facts are delivered through notifications. — Met
 
+### T-5. Typed Result Dispatcher
+
+Status: Completed
+
+Goal:
+
+Dispatch the tick result through explicit typed handlers in six ordered pipeline stages (ADR-0027).
+
+Delivered:
+
+- T-5.1: Define dispatcher pipeline stages. — Done (`ArenaRunDispatchStage`, six ordered values).
+- T-5.2: Define typed notification handler contracts. — Done (`IArenaRunSnapshotHandler`, `IArenaRunNotificationHandler<TNotification>`).
+- T-5.3: Implement deterministic handler ordering between stages. — Done (`ArenaRunResultDispatcher`: stage order, publication order, registration order).
+- T-5.4: Define handler error policy. — Done (isolate and report through `IArenaRunDispatchDiagnostics`; the tick survives).
+- T-5.5: Add dispatcher tests. — Done (Application routing/ordering/error fixtures plus the PlayMode `DispatchPipelineOrderTests`).
+- T-5.6: Migrate Presentation off the notification sink. — Done (`ArenaRunNotificationPresenter` is a handler set; `PlayModeTickHarness` takes an `ArenaRunResultDispatcher`; the sink and publisher are deleted).
+
+Pipeline stages:
+
+1. Snapshot publication.
+2. Entity view synchronization.
+3. Gameplay visual notifications.
+4. HUD notifications.
+5. Audio and VFX notifications.
+6. Analytics and diagnostics notifications.
+
+Exit criteria:
+
+- Snapshot publication precedes entity view synchronization, which precedes gameplay, HUD, audio/VFX, and analytics delivery. — Met
+- Each one-shot fact reaches every registered handler exactly once per tick. — Met
+- A handler failure follows the documented policy without losing the tick result or the Domain Events. — Met
+- Application references no Presentation type. — Met
+- Existing notification-sink call sites are either migrated or recorded as an adapter with a removal follow-up. — Met (migrated; the sink is gone)
+
 ### T-7. Unity Presentation
 
 Status: Completed
@@ -209,58 +243,13 @@ Exit criteria:
 
 ## Current Position
 
-T-5 is in progress. The Application dispatcher, its contracts, and its Application tests are delivered; the Presentation handler extraction and the PlayMode migration are with `coder-role`.
+T-5 is complete. The typed result dispatcher is delivered end to end: Application contracts, the six-stage dispatcher, the tick service dispatch, and the Presentation handler set with PlayMode order coverage.
 
-After T-5, the remaining work is T-6.1, T-6.8, and T-6.9, then T-8, then T-9 and T-10.
+Next is T-6: the Unity clock (T-6.1), the collider registry implementation (T-6.8), and the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
 ## Remaining Stages
-
-### T-5. Typed Result Dispatcher
-
-Status: In Progress
-
-Goal:
-
-Dispatch the tick result through explicit typed handlers in six ordered pipeline stages (ADR-0027).
-
-Substages:
-
-- T-5.1: Define dispatcher pipeline stages. — Done (`ArenaRunDispatchStage`, six ordered values).
-- T-5.2: Define typed notification handler contracts. — Done (`IArenaRunSnapshotHandler`, `IArenaRunNotificationHandler<TNotification>`).
-- T-5.3: Implement deterministic handler ordering between stages. — Done (`ArenaRunResultDispatcher`: stage order, publication order, registration order).
-- T-5.4: Define handler error policy. — Done (isolate and report through `IArenaRunDispatchDiagnostics`; the tick survives).
-- T-5.5: Add dispatcher tests. — Done for Application (routing, stage order, registration order, no-handler, duplicate and late registration, isolated failure, diagnostics). PlayMode migration is part of the open handoff.
-
-Remaining:
-
-- Extract `ArenaRunNotificationPresenter` into handlers registered on the dispatcher and migrate `PlayModeTickHarness` and the PlayMode fixtures. Handed to `coder-role` (`docs/coder/architect-inbox/t5-dispatcher.md`).
-
-Pipeline stages:
-
-1. Snapshot publication.
-2. Entity view synchronization.
-3. Gameplay visual notifications.
-4. HUD notifications.
-5. Audio and VFX notifications.
-6. Analytics and diagnostics notifications.
-
-Substage exit criteria:
-
-- T-5.1: the six pipeline stages exist as ordered Application contracts; no call site identifies a stage by string.
-- T-5.2: every notification type has a typed handler contract, and registration is checked at compile time.
-- T-5.3: handlers within a stage run in a documented deterministic order, proven stable across registration order by test.
-- T-5.4: the policy states whether a failing handler stops the handler, the stage, or the tick; the tick result survives a handler failure and the failure is observable.
-- T-5.5: routing, ordering, error policy, and the no-handler case are covered by Application tests.
-
-Exit criteria:
-
-- Snapshot publication precedes entity view synchronization, which precedes gameplay, HUD, audio/VFX, and analytics delivery.
-- Each one-shot fact reaches every registered handler exactly once per tick.
-- A handler failure follows the documented policy without losing the tick result or the Domain Events.
-- Application references no Presentation type.
-- Existing notification-sink call sites are either migrated or recorded as an adapter with a removal follow-up.
 
 ### T-6. Unity Infrastructure
 
