@@ -310,8 +310,8 @@ Substage exit criteria:
 
 - T-8.1: VContainer is installed and every Arena dependency is registered in one composition root; no scene object resolves a service through a global object search.
 - T-8.2: the scene binder resolves the tick service and the presenters; a missing dependency fails loudly at startup.
-- T-8.3: entering the scene creates exactly one active run with fresh identities and no state carried over from a previous run.
-- T-8.4: defeat waits the configured delay, reloads the Arena scene once, and the reloaded scene starts a new run.
+- T-8.3: entering the scene from bootstrap creates exactly one active run with fresh identities and no state carried over from a previous run; entering it after a defeat reload presents the active run the tick already restarted, and creates nothing (ADR-0029).
+- T-8.4: defeat waits the configured delay, requests the arena scene reload exactly once through the Application port (ADR-0029), and the reloaded scene presents the already-restarted run.
 - T-8.5: victory stops combat, shows the window once, and does not reload.
 - T-8.6: PlayMode smoke scenarios cover new run, movement, both attacks, wave progression, defeat, and victory.
 

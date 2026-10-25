@@ -4,7 +4,7 @@
 
 The Application tick coordinates existing ArenaRun operations.
 
-It does not implement combat rules, move Unity objects directly, reload scenes, or expose mutable aggregate references. It maps one-shot facts and hands the built tick result to the dispatcher described in § Victory and Terminal Runs.
+It does not implement combat rules, move Unity objects directly, or expose mutable aggregate references. It never reloads a scene itself; the defeat restart requests one through the `IArenaSceneReloader` port (§ Defeat and Restart, ADR-0029). It maps one-shot facts and hands the built tick result to the dispatcher described in § Victory and Terminal Runs.
 
 ## Input
 
@@ -208,6 +208,8 @@ The stage calls ArenaRunSession.RestartDefeatedRun. The Session allocates a new 
 
 After a restart the tick returns the new run's result and ends. It reads no player input and runs no gameplay stage for that frame. The restarted run is ticked normally from the next tick.
 
+The Application requests the host's scene reload through `IArenaSceneReloader.ReloadArenaScene()`, called by the Defeat Restart stage immediately after `RestartDefeatedRun` reports a restart (ADR-0029). It is a command, not a notification: the host reloads the arena scene, which rebuilds the per-scene adapters and views (ADR-0014). The request happens on the single edge where a defeated run becomes a live one, so a restarting tick requests exactly one reload and a tick that does not restart a run requests none. Unity applies the load at the end of the frame, so the tick still dispatches its result and publishes the restarted run's snapshot; the reloaded scene then binds to that already-active run rather than starting a second one.
+
 The delay is measured in GameDuration from IGameClock. A zero delta also does not advance it.
 
 The Domain has no restart timer and no delay value. The Application owns no defeat message and no defeat notification: the published snapshot keeps the Defeat status and the wave reached for the whole delay, and Presentation renders the defeat window S-003 from that published state — no control, no confirmation, no manual restart (ADR-0025). The window's lifetime is exactly the defeated state; it ends when the restart publishes the fresh run. A manual restart, a restart control, and a defeat confirmation do not exist in the contract.
@@ -250,4 +252,4 @@ Presentation reacts to the victory notification, not to a snapshot edge. The S-0
 ## Deferred Work
 
 - T-5: Presentation handler extraction and PlayMode coverage (the Application dispatcher, contracts, and Application tests are in place).
-- T-8: Scene lifecycle (the restart delay is owned by the tick; see § Defeat and Restart).
+- T-8: Scene lifecycle composition (the restart delay is owned by the tick and the reload is requested through `IArenaSceneReloader`; the scene driver, the ArenaScene name, and the scene scope belong to T-8; see § Defeat and Restart).
