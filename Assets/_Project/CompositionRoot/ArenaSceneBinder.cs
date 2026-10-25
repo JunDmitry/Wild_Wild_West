@@ -49,6 +49,13 @@ namespace Game.CompositionRoot
         [SerializeField] private BossIndicatorPresenter _bossIndicator;
         [SerializeField] private DefeatWindowPresenter _defeatWindow;
 
+        /// <summary>
+        /// Gets or sets the scene seam the binder builds the scope from. It is
+        /// null in production, which constructs the seam from the serialized
+        /// references above; a rig may supply its own before the binder starts.
+        /// </summary>
+        public ArenaSceneObjects SceneObjectsOverride { get; set; }
+
         private void Awake()
         {
             RequireReferences();
@@ -66,7 +73,7 @@ namespace Game.CompositionRoot
 
         private void BuildScope()
         {
-            ArenaSceneObjects sceneObjects = new(
+            ArenaSceneObjects sceneObjects = SceneObjectsOverride ?? new ArenaSceneObjects(
                 _camera,
                 _player,
                 _inputSource,
