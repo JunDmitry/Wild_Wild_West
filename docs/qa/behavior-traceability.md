@@ -1,5 +1,7 @@
 # Arena Combat Behavior Traceability
 
+> Refreshed 2026-10-25 by `architect-role` as an exception: `qa-role` is not operating yet. Every test name below was matched in source, and the suites were re-run — Domain 373/373, Application 215/215, Infrastructure EditMode 10/10, Arena PlayMode 197/197, all exit 0. Four names had drifted from the delivered fixtures and now point at the live tests.
+
 | Behavior | Target status | Target tests |
 |---|---|---|
 | B-001 New Arena Run | Implemented in Domain | `StartCreatesPlayingRunAtFirstWave`, `NewRunSelectsRangedWeapon` |
@@ -12,7 +14,7 @@
 | B-008 Wave Progression | Implemented in Domain | `DefeatingLastRegularEnemyRaisesWavePhaseChangedToBossCombat`, `DefeatingBossCompletesWave`, `CompletingNonFinalWaveStartsNextWave` |
 | B-009 Victory | Implemented in Domain | `DefeatingFinalBossCompletesRun`, `VictoriousRunRejectsFurtherCombatProgression` |
 | B-010 Defeat | Implemented in Domain | `LethalEnemyAttackDefeatsPlayer`, `LethalEnemyAttackDefeatsArenaRun`, `DefeatedRunRejectsFurtherCombatProgression` |
-| B-011 Restart | Planned in Application | `RestartOfDefeatedRunAllocatesNewIdentities`, `RestartOfDefeatedRunRemovesOldAggregate`, `RestartOfDefeatedRunAddsNewAggregate`, `RestartOfDefeatedRunChangesActiveArenaRunId`, `ReloadCreatesNewArenaRunAtFirstWave` |
+| B-011 Restart | Implemented in Application | `RestartOfDefeatedRunAllocatesNewIdentities`, `RestartOfDefeatedRunRemovesOldAggregate`, `RestartOfDefeatedRunAddsNewAggregate`, `RestartOfDefeatedRunChangesActiveArenaRunId`, `RestartedRunBeginsAtTheFirstWaveWithFullHealthAndFirearm` |
 
 ## Interaction Correlation Coverage
 
@@ -22,8 +24,8 @@
 | Unknown InteractionId is rejected | `UnknownInteractionResolutionIsRejected` |
 | Stale AggregateRevision is rejected | `StaleInteractionResolutionIsRejected` |
 | Duplicate resolution is rejected | `DuplicateInteractionResolutionIsRejected` |
-| Rejected resolution does not change state | `RejectedInteractionResolutionDoesNotChangeState` |
-| Rejected resolution does not advance revision | `RejectedInteractionResolutionDoesNotAdvanceRevision` |
+| Rejected resolution does not change state | `InvalidMovementResolutionDoesNotProduceDomainEvents` |
+| Rejected resolution does not advance revision | `InvalidMovementResolutionDoesNotAdvanceAggregateRevision` |
 | Request creation does not advance revision | `CreatingInteractionRequestDoesNotAdvanceRevision` |
 | Valid movement resolution can shorten movement | `AcceptedPositionAtPartialRequestedDistanceIsApplied` |
 | Invalid payload keeps interaction pending | `RejectedPayloadResolutionDoesNotClosePendingInteraction` |
@@ -51,7 +53,7 @@
 | Tick advances time before gameplay stages | `TickAdvancesGameTimeFirst` |
 | Tick result preserves event order | `TickContainsEventsInOccurrenceOrder` |
 | Tick result revision equals aggregate revision | `TickResultRevisionMatchesAggregateRevision` |
-| Terminal run skips combat stages | `TerminalRunDoesNotExecuteCombatStages` |
+| Terminal run skips combat stages | `TerminalRunDoesNotExecutePlayerOrEnemyStages` |
 | Rejected resolution stops remaining player stages | `RejectedMovementResolutionStopsTickBeforeAttackStart` |
 | Pending interaction is recovered at next tick | `PendingInteractionIsRecoveredAtBeginningOfNextTick` |
 | Adapter exception carries partial tick result | `NullTargetingResultProducesTickFailure` |
