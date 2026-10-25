@@ -1,6 +1,6 @@
 # ADR-0022: Publish one-shot facts through an Application notification sink
 
-- **Status:** Accepted
+- **Status:** Accepted (dispatch seam and failure policy superseded by [ADR-0027](ADR-0027-typed-result-dispatcher.md))
 - **Date:** 2026-10-22
 - **Authors:** architect-role
 - **Reviewers:** none

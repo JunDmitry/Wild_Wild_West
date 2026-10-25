@@ -52,11 +52,12 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0019 | Model the melee Attack Arc in the Domain contract | Accepted | 2026-10-22 | [ADR-0019](ADR-0019-attack-arc-in-domain-contract.md) |
 | ADR-0020 | Let Presentation consume Domain read-model value types | Accepted | 2026-10-22 | [ADR-0020](ADR-0020-presentation-domain-read-model-values.md) |
 | ADR-0021 | Automatic defeat restart is an Application tick concern | Accepted (defeat-message scope superseded by ADR-0025) | 2026-10-22 | [ADR-0021](ADR-0021-automatic-defeat-restart-in-application-tick.md) |
-| ADR-0022 | Publish one-shot facts through an Application notification sink | Accepted | 2026-10-23 | [ADR-0022](ADR-0022-application-notifications-for-one-shot-facts.md) |
+| ADR-0022 | Publish one-shot facts through an Application notification sink | Accepted (dispatch seam and failure policy superseded by ADR-0027) | 2026-10-23 | [ADR-0022](ADR-0022-application-notifications-for-one-shot-facts.md) |
 | ADR-0023 | Allow sliding along Arena Bounds in the Domain movement contract | Accepted | 2026-10-23 | [ADR-0023](ADR-0023-arena-bounds-sliding.md) |
 | ADR-0024 | Prepare HUD text in an Application-owned HUD model | Accepted | 2026-10-23 | [ADR-0024](ADR-0024-application-owned-hud-model.md) |
 | ADR-0025 | Derive the defeat window from published run state | Accepted | 2026-10-23 | [ADR-0025](ADR-0025-derive-defeat-window-from-published-state.md) |
 | ADR-0026 | Publish the weapon's attack shape with the pending attack | Accepted | 2026-10-24 | [ADR-0026](ADR-0026-publish-weapon-shape-with-pending-attack.md) |
+| ADR-0027 | Dispatch the tick result through typed ordered handlers | Accepted | 2026-10-25 | [ADR-0027](ADR-0027-typed-result-dispatcher.md) |
 
 ## New ADR Template
 
