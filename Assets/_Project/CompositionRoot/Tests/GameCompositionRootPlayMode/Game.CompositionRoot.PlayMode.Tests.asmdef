@@ -1,0 +1,25 @@
+{
+    "name": "Game.CompositionRoot.PlayMode.Tests",
+    "rootNamespace": "Game.CompositionRoot.PlayMode.Tests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Game.CompositionRoot",
+        "Game.Arena.Domain",
+        "Game.Arena.Application",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
