@@ -1,4 +1,5 @@
 using System;
+using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Geometry;
 using UnityEngine;
 
@@ -9,25 +10,17 @@ namespace Game.Arena.Presentation.Combat
         private const int ArcSegments = 24;
 
         [SerializeField] private LineRenderer _line;
-        [SerializeField] private float _reach = 2f;
-        [SerializeField] private float _arcDegrees = 360f;
 
         private Position3D _origin = Position3D.Zero;
         private Direction3D _direction = Direction3D.Forward;
-
-        public float Reach
-        {
-            get => _reach;
-            set => _reach = value;
-        }
-
-        public float ArcDegrees
-        {
-            get => _arcDegrees;
-            set => _arcDegrees = value;
-        }
+        private Distance _range;
+        private AttackArc _arc;
 
         public Direction3D Direction => _direction;
+
+        public Distance Range => _range;
+
+        public AttackArc Arc => _arc;
 
         private LineRenderer Line => _line != null ? _line : GetComponent<LineRenderer>();
 
@@ -40,15 +33,17 @@ namespace Game.Arena.Presentation.Combat
             }
         }
 
-        public void Show(Position3D origin, Direction3D direction)
+        public void Show(Position3D origin, Direction3D direction, Distance range, AttackArc arc)
         {
             _origin = origin;
             _direction = direction;
+            _range = range;
+            _arc = arc;
 
             LineRenderer line = RequireLine();
             Vector3 forward = UnityGeometry.ToVector3(direction);
             Vector3 center = UnityGeometry.ToVector3(origin);
-            float halfAngle = Mathf.Clamp(_arcDegrees, 0f, 360f) * 0.5f;
+            float halfAngle = arc.Degrees * 0.5f;
 
             line.positionCount = ArcSegments + 1;
 
@@ -56,7 +51,7 @@ namespace Game.Arena.Presentation.Combat
             {
                 float angle = Mathf.Lerp(-halfAngle, halfAngle, (float)index / ArcSegments);
                 Vector3 offset = Quaternion.AngleAxis(angle, Vector3.up) * forward;
-                line.SetPosition(index, center + (offset * _reach));
+                line.SetPosition(index, center + (offset * range.Value));
             }
 
             line.enabled = true;
@@ -79,18 +74,17 @@ namespace Game.Arena.Presentation.Combat
                 0f,
                 point.Z - _origin.Z);
 
-            if (offset.Length > _reach)
+            if (offset.Length > _range.Value)
             {
                 return false;
             }
 
-            if (_arcDegrees >= 360f || offset.IsZero)
+            if (_arc.IsFull || offset.IsZero)
             {
                 return true;
             }
 
-            float halfAngle = Mathf.Clamp(_arcDegrees, 0f, 360f) * 0.5f * Mathf.Deg2Rad;
-            return _direction.Dot(Direction3D.From(offset)) >= Mathf.Cos(halfAngle);
+            return _direction.Dot(Direction3D.From(offset)) >= _arc.CosHalfAngle;
         }
 
         private LineRenderer RequireLine()

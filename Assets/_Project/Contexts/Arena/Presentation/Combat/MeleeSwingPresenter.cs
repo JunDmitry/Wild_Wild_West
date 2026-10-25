@@ -57,9 +57,13 @@ namespace Game.Arena.Presentation.Combat
 
             if (isVisible)
             {
+                PendingPlayerAttack pendingAttack = snapshot.Player.PendingAttack;
+
                 RequireSwingView().Show(
                     snapshot.Player.Position,
-                    RequireViewDirection().Current);
+                    RequireViewDirection().Current,
+                    pendingAttack.Range,
+                    pendingAttack.Arc);
             }
             else
             {
