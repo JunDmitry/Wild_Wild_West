@@ -281,7 +281,7 @@ T-5 is complete. The typed result dispatcher is delivered end to end: Applicatio
 
 T-6 is complete. Every Application port consumed by the tick service has a Unity adapter: the clock, input, player movement, both attack resolvers, enemy movement, spawn placement, the collider identity registry (ADR-0028), and the scene lifecycle adapter. `UnityArenaSceneReloader` calls `SceneManager.LoadScene` in single mode, and `DefeatRestartStage` requests the reload once through `IArenaSceneReloader` immediately after a defeated run restarts (ADR-0029); a 4-test PlayMode fixture proves exactly one reload at that edge and none otherwise.
 
-Next is T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
+Next is T-8.2. T-8.1 is complete: one VContainer composition root owns every Arena registration. `BootstrapLifetimeScope` holds the process-lifetime graph, `ArenaSceneLifetimeScope` registers the scene graph behind the explicit `ArenaSceneObjects` seam, and a single `ArenaRegistrations` catalogue plus a code-defined `ArenaGameConfiguration` feed both (ADR-0030). A 4-test PlayMode fixture proves both graphs resolve, that singletons are shared, and that a missing seam fails loudly. T-8.2 supplies the scene objects and presenters and creates the BootstrapScene and ArenaScene assets; T-8.3–T-8.6 follow.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
@@ -289,7 +289,7 @@ T-7 is complete as presentation code. Making the Arena scene playable is T-8, no
 
 ### T-8. Bootstrap and Arena Session Lifecycle
 
-Status: Planned
+Status: In progress
 
 Goal:
 
@@ -297,7 +297,7 @@ Connect BootstrapScene, ArenaScene, Application Session, Repository, Unity adapt
 
 Substages:
 
-- T-8.1: Bootstrap Composition Root with VContainer LifetimeScope. — Open
+- T-8.1: Bootstrap Composition Root with VContainer LifetimeScope. — Done (`Game.CompositionRoot` carries the code-first root: `BootstrapLifetimeScope` registers the process-lifetime graph and `ArenaSceneLifetimeScope` the scene graph behind the explicit `ArenaSceneObjects` seam, both fed by one `ArenaRegistrations` catalogue and a code-defined `ArenaGameConfiguration`; ADR-0030; the scene scope registers a production no-op dispatch diagnostics; a 4-test PlayMode `ArenaCompositionTests` fixture in the test-only `Game.CompositionRoot.PlayMode.Tests` assembly proves both graphs, singleton identity, and missing-seam failures).
 - T-8.2: ArenaScene binder. — Open
 - T-8.3: ArenaRun creation flow. — Open
 - T-8.4: Defeat delay and ArenaScene reload. — Open
@@ -306,7 +306,7 @@ Substages:
 
 Substage exit criteria:
 
-- T-8.1: VContainer is installed and every Arena dependency is registered in one composition root; no scene object resolves a service through a global object search.
+- T-8.1: VContainer is installed and every Arena dependency is registered in one composition root; no scene object resolves a service through a global object search. — Met
 - T-8.2: the scene binder resolves the tick service and the presenters; a missing dependency fails loudly at startup.
 - T-8.3: entering the scene from bootstrap creates exactly one active run with fresh identities and no state carried over from a previous run; entering it after a defeat reload presents the active run the tick already restarted, and creates nothing (ADR-0029).
 - T-8.4: defeat waits the configured delay, requests the arena scene reload exactly once through the Application port (ADR-0029), and the reloaded scene presents the already-restarted run.
