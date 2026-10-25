@@ -91,6 +91,13 @@ namespace Game.CompositionRoot
             builder.RegisterInstance(sceneObjects);
             builder.RegisterInstance(sceneObjects.EnemyTransforms);
 
+            // A rig may override the reloader for the scene scope; production
+            // leaves it null and keeps the process-lifetime registration.
+            if (sceneObjects.Reloader != null)
+            {
+                builder.RegisterInstance(sceneObjects.Reloader);
+            }
+
             builder.Register<IFrameTimeSource, UnityFrameTimeSource>(Lifetime.Singleton);
             builder.Register<IGameClock, FrameDeltaGameClock>(Lifetime.Singleton);
             builder.RegisterInstance(sceneObjects.InputSource);

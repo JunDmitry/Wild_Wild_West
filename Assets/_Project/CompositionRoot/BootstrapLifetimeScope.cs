@@ -24,6 +24,19 @@ namespace Game.CompositionRoot
             set => _loadArenaOnStart = value;
         }
 
+        private ArenaGameConfiguration _configuration;
+
+        /// <summary>
+        /// Gets or sets the configuration this scope registers. It is null in
+        /// production, which builds <see cref="ArenaGameConfiguration.CreateDefault"/>;
+        /// a rig may supply its own catalogue before the scope activates.
+        /// </summary>
+        public ArenaGameConfiguration Configuration
+        {
+            get => _configuration;
+            set => _configuration = value;
+        }
+
         protected override void Awake()
         {
             DontDestroyOnLoad(gameObject);
@@ -34,7 +47,7 @@ namespace Game.CompositionRoot
         {
             ArenaRegistrations.RegisterProcessLifetime(
                 builder,
-                ArenaGameConfiguration.CreateDefault());
+                _configuration ?? ArenaGameConfiguration.CreateDefault());
 
             if (_loadArenaOnStart)
             {

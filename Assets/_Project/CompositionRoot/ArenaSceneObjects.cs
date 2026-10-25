@@ -9,7 +9,9 @@ namespace Game.CompositionRoot
     /// The Unity objects the Arena scene scope needs, supplied explicitly by the
     /// scene binder. Nothing is discovered through a global object search.
     /// Configuration is not part of the seam: it is a process-lifetime service
-    /// the child scope resolves from its parent (ADR-0031).
+    /// the child scope resolves from its parent (ADR-0031). The reloader is an
+    /// optional scene-scope override: production passes null and the process
+    /// registration stands, while a rig may supply one to observe reload requests.
     /// </summary>
     public sealed class ArenaSceneObjects
     {
@@ -17,7 +19,8 @@ namespace Game.CompositionRoot
             Camera camera,
             Transform player,
             IPlayerInputSource inputSource,
-            IEnemyTransformRegistry enemyTransforms)
+            IEnemyTransformRegistry enemyTransforms,
+            IArenaSceneReloader reloader = null)
         {
             Camera = camera != null
                 ? camera
@@ -32,6 +35,8 @@ namespace Game.CompositionRoot
 
             EnemyTransforms = enemyTransforms
                 ?? throw new ArgumentNullException(nameof(enemyTransforms));
+
+            Reloader = reloader;
         }
 
         public Camera Camera { get; }
@@ -41,5 +46,7 @@ namespace Game.CompositionRoot
         public IPlayerInputSource InputSource { get; }
 
         public IEnemyTransformRegistry EnemyTransforms { get; }
+
+        public IArenaSceneReloader Reloader { get; }
     }
 }
