@@ -196,3 +196,24 @@ handoff.
 - `Assets/_Project/Contexts/Arena/Application/Notifications/ArenaRunNotificationMapper.cs`
 - `Assets/_Project/Contexts/Arena/Presentation/Notifications/ArenaRunNotificationPresenter.cs`
 - `docs/architect/adr/ADR-0022-application-notifications-for-one-shot-facts.md`
+
+## Amendment 2026-10-25 — snapshot and HUD handlers at every stage
+
+T-8.2 had to register snapshot-driven gameplay-visual and HUD presenters, and no
+handler could see `ArenaRunTickResult.Hud`. The stage/payload split in the
+Decision above is narrowed as follows; everything else stands.
+
+- Every stage accepts `IArenaRunSnapshotHandler`. The stages 1–2 restriction is
+  removed.
+- A new `IArenaRunHudHandler` (`Application/Dispatch`) receives both the result's
+  snapshot and its HUD model, and is accepted at every stage.
+- Within a stage the dispatcher runs snapshot handlers first, then HUD handlers,
+  then notification handlers, each in registration order. Notification handlers
+  remain restricted to stages 3–6, so snapshot and entity-view work still
+  precedes every notification stage.
+- Registration closing, duplicate rejection, and per-handler failure isolation
+  are unchanged. A HUD handler failure is reported with
+  `typeof(ArenaRunHudSnapshot)` as its payload type.
+- The Compliance section's claim that the HUD model is "available to stage-3
+  handlers through the result" is corrected: the model reaches handlers only
+  through `IArenaRunHudHandler`.
