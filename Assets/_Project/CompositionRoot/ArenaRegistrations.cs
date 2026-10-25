@@ -45,9 +45,15 @@ namespace Game.CompositionRoot
             builder.RegisterInstance(configuration.CreationParameters);
 
             builder.Register<IArenaRunRepository, InMemoryArenaRunRepository>(Lifetime.Singleton);
-            builder.Register<IArenaRunIdSource, MonotonicArenaRunIdSource>(Lifetime.Singleton);
-            builder.Register<IPlayerIdSource, MonotonicPlayerIdSource>(Lifetime.Singleton);
-            builder.Register<IEnemyIdSource, MonotonicEnemyIdSource>(Lifetime.Singleton);
+            builder.Register<IArenaRunIdSource>(
+                _ => new MonotonicArenaRunIdSource(),
+                Lifetime.Singleton);
+            builder.Register<IPlayerIdSource>(
+                _ => new MonotonicPlayerIdSource(),
+                Lifetime.Singleton);
+            builder.Register<IEnemyIdSource>(
+                _ => new MonotonicEnemyIdSource(),
+                Lifetime.Singleton);
 
             builder.Register<MovementPathPolicy>(Lifetime.Singleton);
             builder.Register<ArenaRunFactory>(Lifetime.Singleton);
