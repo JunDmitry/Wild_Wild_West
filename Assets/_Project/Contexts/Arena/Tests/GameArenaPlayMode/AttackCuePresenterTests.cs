@@ -205,7 +205,7 @@ namespace Game.Arena.PlayMode.Tests
             }
 
             ArenaRunSnapshot afterImpact = _harness.TickIdle().Snapshot;
-            MeleeSwingPresenter presenter = CreateSwingPresenter(HarnessMeleeRange, 360f);
+            MeleeSwingPresenter presenter = CreateSwingPresenter();
 
             presenter.Present(windup);
             Assert.That(presenter.IsSwingVisible, Is.True);
@@ -231,9 +231,13 @@ namespace Game.Arena.PlayMode.Tests
                 _harness.TickIdle();
             }
 
-            MeleeSwingPresenter presenter = CreateSwingPresenter(HarnessMeleeRange, 360f);
+            MeleeSwingPresenter presenter = CreateSwingPresenter();
             presenter.Present(windup);
 
+            PendingPlayerAttack presentedAttack = windup.Player.PendingAttack;
+
+            Assert.That(presenter.SwingView.Range, Is.EqualTo(presentedAttack.Range));
+            Assert.That(presenter.SwingView.Arc, Is.EqualTo(presentedAttack.Arc));
             Assert.That(presenter.IsSwingVisible, Is.True);
 
             EnemyId[] enemies = { ahead, behind, beside };
@@ -250,6 +254,42 @@ namespace Game.Arena.PlayMode.Tests
                     Is.True,
                     "The drawn swing does not cover Enemy " + enemies[index] + ".");
             }
+        }
+
+        [Test]
+        public void Swing_DrawsThePendingAttacksShape()
+        {
+            const float narrowRange = 6f;
+            AttackArc narrowArc = AttackArc.FromDegrees(90f);
+            _harness = new PlayModeTickHarness(_colliders, narrowRange, narrowArc);
+
+            _harness.Tick(false, Direction3D.Forward, true);
+            ArenaRunSnapshot windup = _harness.Tick(true, Direction3D.Forward).Snapshot;
+
+            MeleeSwingPresenter presenter = CreateSwingPresenter();
+            presenter.Present(windup);
+
+            PendingPlayerAttack presentedAttack = windup.Player.PendingAttack;
+            Position3D origin = windup.Player.Position;
+
+            Assert.That(presentedAttack.Range.Value, Is.EqualTo(narrowRange));
+            Assert.That(presentedAttack.Arc.Degrees, Is.EqualTo(narrowArc.Degrees));
+            Assert.That(presenter.SwingView.Range, Is.EqualTo(presentedAttack.Range));
+            Assert.That(presenter.SwingView.Arc, Is.EqualTo(presentedAttack.Arc));
+
+            Assert.That(
+                presenter.SwingView.Contains(new Position3D(origin.X, origin.Y, origin.Z + 4f)),
+                Is.True);
+
+            Assert.That(
+                presenter.SwingView.Contains(new Position3D(origin.X, origin.Y, origin.Z + 10f)),
+                Is.False,
+                "A point beyond the presented range must be outside the swing.");
+
+            Assert.That(
+                presenter.SwingView.Contains(new Position3D(origin.X, origin.Y, origin.Z - 4f)),
+                Is.False,
+                "A point behind the swing direction must be outside the narrow arc.");
         }
 
         private FirearmAimPresenter CreateAimPresenter(
@@ -293,21 +333,7 @@ namespace Game.Arena.PlayMode.Tests
             return CreateSwingPresenter(out _, out _);
         }
 
-        private MeleeSwingPresenter CreateSwingPresenter(float reach, float arcDegrees)
-        {
-            return CreateSwingPresenter(reach, arcDegrees, out _, out _);
-        }
-
         private MeleeSwingPresenter CreateSwingPresenter(
-            out Transform viewTransform,
-            out MeleeSwingView swingView)
-        {
-            return CreateSwingPresenter(2f, 360f, out viewTransform, out swingView);
-        }
-
-        private MeleeSwingPresenter CreateSwingPresenter(
-            float reach,
-            float arcDegrees,
             out Transform viewTransform,
             out MeleeSwingView swingView)
         {
@@ -318,8 +344,6 @@ namespace Game.Arena.PlayMode.Tests
             swingObject.AddComponent<LineRenderer>();
 
             swingView = swingObject.AddComponent<MeleeSwingView>();
-            swingView.Reach = reach;
-            swingView.ArcDegrees = arcDegrees;
 
             viewTransform = Track(new GameObject("View")).transform;
             viewTransform.SetParent(root.transform);
@@ -383,6 +407,8 @@ namespace Game.Arena.PlayMode.Tests
                     AttackId.None.Next(),
                     playerId,
                     WeaponKind.Melee,
+                    Distance.FromValue(2f),
+                    AttackArc.Full,
                     new GameTimePoint(0d),
                     new GameTimePoint(0.3d))
                 : rangedPending
@@ -390,6 +416,8 @@ namespace Game.Arena.PlayMode.Tests
                         AttackId.None.Next(),
                         playerId,
                         WeaponKind.Ranged,
+                        Distance.FromValue(50f),
+                        AttackArc.Full,
                         new GameTimePoint(0d),
                         new GameTimePoint(0d))
                     : default;
