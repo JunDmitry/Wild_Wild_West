@@ -8,6 +8,7 @@
         "Game.Arena.Domain",
         "Game.Arena.Application",
         "Game.Arena.Infrastructure",
+        "Game.Arena.Presentation",
         "VContainer"
     ],
     "includePlatforms": [],
