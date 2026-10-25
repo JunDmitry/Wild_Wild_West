@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Identity;
 using Game.Arena.Application.Input;
-using Game.Arena.Application.Notifications;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Restart;
@@ -50,7 +50,7 @@ namespace Game.Arena.PlayMode.Tests
             WaveCatalog waveCatalog = null,
             IEnemySpawnPlacementResolver spawnPlacementResolver = null,
             IEnemySpawnPacingPolicy spawnPacingPolicy = null,
-            IArenaRunNotificationSink notificationSink = null,
+            ArenaRunResultDispatcher dispatcher = null,
             IEnemyMovementResolver enemyMovementResolver = null)
         {
             _repository = new InMemoryArenaRunRepository();
@@ -84,7 +84,7 @@ namespace Game.Arena.PlayMode.Tests
                 new MonotonicEnemyIdSource(),
                 spawnPacingPolicy ?? new NeverSpawnPacingPolicy(),
                 new FixedIntervalRunRestartDelayPolicy(restartDelay ?? new GameDuration(1000d)),
-                notificationSink ?? new NoOpNotificationSink());
+                dispatcher ?? new ArenaRunResultDispatcher());
 
             _tickService = new ArenaRunTickService(tickDependencies);
         }
@@ -288,11 +288,5 @@ namespace Game.Arena.PlayMode.Tests
             }
         }
 
-        private sealed class NoOpNotificationSink : IArenaRunNotificationSink
-        {
-            public void Publish(IArenaRunNotification notification)
-            {
-            }
-        }
     }
 }
