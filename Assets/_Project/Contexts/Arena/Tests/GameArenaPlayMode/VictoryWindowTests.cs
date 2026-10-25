@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Dispatch;
 using Game.Arena.Application.Input;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.Ports;
@@ -39,6 +40,7 @@ namespace Game.Arena.PlayMode.Tests
         private TextMeshPro _messageText;
         private FixedInputSource _input;
         private PlayModeTickHarness _harness;
+        private ArenaRunResultDispatcher _dispatcher;
 
         [SetUp]
         public void SetUp()
@@ -67,6 +69,20 @@ namespace Game.Arena.PlayMode.Tests
             _presenter.VictoryView = _view;
             _presenter.HitConfirmation = _hitConfirmation;
             _presenter.Announcer = _announcer;
+
+            _dispatcher = new ArenaRunResultDispatcher();
+            _dispatcher.RegisterSnapshotHandler(
+                ArenaRunDispatchStage.EntityViewSynchronization,
+                _presenter);
+            _dispatcher.RegisterNotificationHandler<ArenaRunEnemyDamagedNotification>(
+                ArenaRunDispatchStage.GameplayVisual,
+                _presenter);
+            _dispatcher.RegisterNotificationHandler<ArenaRunEnemyAttackResolvedNotification>(
+                ArenaRunDispatchStage.GameplayVisual,
+                _presenter);
+            _dispatcher.RegisterNotificationHandler<ArenaRunVictoryNotification>(
+                ArenaRunDispatchStage.GameplayVisual,
+                _presenter);
         }
 
         [TearDown]
@@ -125,8 +141,6 @@ namespace Game.Arena.PlayMode.Tests
                 _input.Input = CreateInput(false);
 
                 ArenaRunTickResult terminal = _harness.TickFrame();
-
-                _presenter.Present(terminal.Snapshot);
 
                 Assert.That(terminal.Snapshot.Status, Is.EqualTo(ArenaRunStatus.Victory));
                 Assert.That(_view.IsShown, Is.True);
@@ -187,8 +201,8 @@ namespace Game.Arena.PlayMode.Tests
                 ArenaRunId.FromValue(1UL),
                 ArenaRunStatus.Playing);
 
-            _presenter.Present(snapshot);
-            _presenter.Publish(new ArenaRunVictoryNotification(
+            _presenter.Handle(snapshot);
+            _presenter.Handle(new ArenaRunVictoryNotification(
                 ArenaRunId.FromValue(2UL),
                 AggregateRevision.Initial));
 
@@ -205,8 +219,6 @@ namespace Game.Arena.PlayMode.Tests
 
             ArenaRunTickResult after = _harness.TickFrame();
 
-            _presenter.Present(after.Snapshot);
-
             Assert.That(after.Snapshot.Status, Is.EqualTo(ArenaRunStatus.Victory));
             Assert.That(after.Snapshot.Revision, Is.EqualTo(victory.Snapshot.Revision));
             Assert.That(after.Snapshot.Player.Position.X, Is.EqualTo(victory.Snapshot.Player.Position.X).Within(1e-4f));
@@ -220,7 +232,7 @@ namespace Game.Arena.PlayMode.Tests
                 _registry,
                 waveCatalog: CreateBossOnlyCatalog(),
                 playerInputSource: _input,
-                notificationSink: _presenter);
+                dispatcher: _dispatcher);
         }
 
         private ArenaRunTickResult WinTheRun()
@@ -232,8 +244,6 @@ namespace Game.Arena.PlayMode.Tests
             for (int index = 0; index < MaxTicks; index++)
             {
                 ArenaRunTickResult result = _harness.TickFrame();
-
-                _presenter.Present(result.Snapshot);
 
                 if (result.Snapshot.Status == ArenaRunStatus.Victory)
                 {
