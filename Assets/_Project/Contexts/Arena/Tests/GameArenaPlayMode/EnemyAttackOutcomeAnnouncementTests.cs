@@ -52,11 +52,11 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_Miss_AnnouncesMissedOnce()
+        public void Handle_Miss_AnnouncesMissedOnce()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
             Assert.That(
@@ -65,11 +65,11 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_Cancelled_AnnouncesMissedOnce()
+        public void Handle_Cancelled_AnnouncesMissedOnce()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(
+            _presenter.Handle(Resolved(
                 EnemyId.FromValue(1UL),
                 Revision(1UL),
                 ArenaRunEnemyAttackOutcome.Cancelled));
@@ -81,54 +81,54 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_Hit_AnnouncesNothing()
+        public void Handle_Hit_AnnouncesNothing()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Hit));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Hit));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void Publish_SameMissNotificationTwice_AnnouncesOnce()
+        public void Handle_SameMissNotificationTwice_AnnouncesOnce()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Publish_MissForTwoEnemiesInOneRevision_AnnouncesTwice()
+        public void Handle_MissForTwoEnemiesInOneRevision_AnnouncesTwice()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
-            _presenter.Publish(Resolved(EnemyId.FromValue(2UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(2UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(2));
         }
 
         [Test]
-        public void Publish_NextMissForSameEnemy_AnnouncesAgain()
+        public void Handle_NextMissForSameEnemy_AnnouncesAgain()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(2UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(2UL), ArenaRunEnemyAttackOutcome.Miss));
 
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(2));
         }
 
         [Test]
-        public void Publish_ForeignRun_IsIgnored()
+        public void Handle_ForeignRun_IsIgnored()
         {
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            _presenter.Publish(new ArenaRunEnemyAttackResolvedNotification(
+            _presenter.Handle(new ArenaRunEnemyAttackResolvedNotification(
                 ArenaRunId.FromValue(2UL),
                 Revision(1UL),
                 EnemyId.FromValue(1UL),
@@ -138,17 +138,15 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
-        public void Publish_BeforeSnapshot_IsBufferedUntilPresent()
+        public void Handle_NotificationBeforeSnapshot_IsIgnored()
         {
-            _presenter.Publish(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
+            _presenter.Handle(Resolved(EnemyId.FromValue(1UL), Revision(1UL), ArenaRunEnemyAttackOutcome.Miss));
 
-            Assert.That(_presenter.PendingCount, Is.EqualTo(1));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(0));
 
-            _presenter.Present(CreateSnapshot());
+            _presenter.Handle(CreateSnapshot());
 
-            Assert.That(_presenter.PendingCount, Is.EqualTo(0));
-            Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
+            Assert.That(_announcer.AnnouncementCount, Is.EqualTo(0));
         }
 
         private static ArenaRunEnemyAttackResolvedNotification Resolved(
