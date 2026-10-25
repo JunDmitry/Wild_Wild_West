@@ -4,7 +4,7 @@
 
 The Application tick coordinates existing ArenaRun operations.
 
-It does not implement combat rules, move Unity objects directly, publish Presentation notifications, reload scenes, or expose mutable aggregate references.
+It does not implement combat rules, move Unity objects directly, reload scenes, or expose mutable aggregate references. It maps one-shot facts and hands the built tick result to the dispatcher described in § Victory and Terminal Runs.
 
 ## Input
 
@@ -49,7 +49,7 @@ A rejected interaction resolution ends the current tick after recording the oper
 
 A defeated ArenaRun runs the Defeat Restart stage and then ends the current tick before later combat stages.
 
-ArenaRunTickCoordinator returns a tick result and does not publish notifications. ArenaRunTickService publishes Application notifications after the result is built (see § Victory and Terminal Runs).
+ArenaRunTickCoordinator returns a tick result and does not dispatch. ArenaRunTickService hands the built result to the dispatcher before returning it (see § Victory and Terminal Runs).
 
 ## External Resolution Boundary
 
@@ -122,6 +122,7 @@ ArenaRunTickResult contains:
 - ArenaRunId;
 - final observed AggregateRevision;
 - Domain Events in occurrence order;
+- Application notifications mapped from those events, in the same order;
 - executed Application stages.
 
 Each event retains the revision of the aggregate operation that produced it.
@@ -130,7 +131,7 @@ The final tick revision is not assigned to all events.
 
 Collections are copied and published read-only.
 
-Tick results are inputs for Application notification mapping, not direct Presentation messages.
+Tick results are the input to dispatch, not direct Presentation messages: Presentation receives the snapshot and the notifications through handlers registered on the dispatcher.
 
 A tick that performs a Defeat Restart reports the new ArenaRun: its identity, its initial revision, and its initial snapshot. Consumers must read ArenaRunId from the result and must not assume it is stable across ticks.
 
@@ -160,7 +161,7 @@ A rejected external resolution stops further processing of the step and leaves i
 
 The next-step cancellation procedure is implemented in T-3.4.
 
-Adapter exceptions propagate as ArenaRunTickFailedException. The exception carries a partial tick result containing Domain Events produced before the failure. Callers must deliver the partial result to notification consumers before handling the failure.
+Adapter exceptions propagate as ArenaRunTickFailedException. The exception carries a partial tick result containing Domain Events produced before the failure. Callers must deliver the partial result to notification consumers before handling the failure. Handler exceptions during dispatch are isolated instead (see § Victory and Terminal Runs).
 
 An interaction left pending by a failed or rejected step is cancelled at the beginning of the next step with the SupersededByLifecycle reason.
 
@@ -170,7 +171,7 @@ ArenaRunTickService is the only public type that executes a gameplay step.
 
 CompositionRoot and future Unity game-loop code call ArenaRunTickService.ExecuteTick.
 
-The service returns ArenaRunTickResult on success.
+The service returns ArenaRunTickResult on success. Before returning it, the service dispatches it through IArenaRunDispatch.
 
 On adapter or orchestration failure it throws ArenaRunTickFailedException. The exception carries the partial tick result produced before the failure. Callers must deliver the partial result to notification consumers and then handle the failure.
 
@@ -208,17 +209,28 @@ A run reaches the Victory status when the last Wave of its WaveCatalog is comple
 
 Application maps Domain Events to Application notifications. ArenaRunNotificationMapper is the single mapping place: it maps ArenaRunVictorious to ArenaRunVictoryNotification, which carries the ArenaRunId and the revision of the committed operation. Events without a notification mapping produce nothing; today that is every event except victory, enemy damage, and the outcome of an Enemy Attack (below).
 
-IArenaRunNotification marks an Application notification. IArenaRunNotificationSink is the outbound port; Presentation implements it and the CompositionRoot supplies it, so Application never references a view.
+IArenaRunNotification marks an Application notification. ArenaRunTickResult carries the tick's mapped notifications, and IArenaRunDispatch is the outbound seam: ArenaRunTickService dispatches the built result before returning it, and the Application dispatcher runs the tick's pipeline stages over it (ADR-0027). Composition registers Presentation handlers; Application never references a view.
 
-ArenaRunTickService publishes the notifications of a tick after the result is built, in Domain Event order. A tick whose events map to nothing publishes nothing.
+Dispatch runs six ordered stages:
+
+1. Snapshot publication.
+2. Entity view synchronization.
+3. Gameplay visual notifications.
+4. HUD notifications.
+5. Audio and visual effects.
+6. Analytics and diagnostics.
+
+The first two deliver the result snapshot to IArenaRunSnapshotHandler. The other four deliver every notification of the tick, in publication order, to the handlers registered for its type at that stage; a handler registered for a base notification interface receives every assignable notification. Within a stage, handlers run in registration order. Registration closes at the first dispatch, and a duplicate or wrong-kind registration is rejected then, so the dispatch order is fixed before the first tick.
+
+ArenaRunTickService dispatches the result inside ExecuteTick, after the coordinator builds it and before returning it. A tick whose events map to nothing dispatches a result with no notifications.
 
 The notification is published once, because the event exists only in the tick that produced it; a later tick on a victorious run produces no new events and therefore no repeat.
 
-ArenaRunNotificationMapper maps a second one-shot fact: EnemyDamaged becomes ArenaRunEnemyDamagedNotification, carrying the run id, the revision, and the enemy id. Damage is a one-shot fact with no state to read afterwards — a later snapshot shows the reduced health but not that this impact produced it — so it stays on the notification channel (ADR-0022). The mapping is damage-source-agnostic: a firearm impact and a melee impact both produce it. Presentation shows the hit confirmation at that enemy's published position; the mark's form and lifetime are design and tuning. One impact produces one EnemyDamaged per enemy it damages, all carrying that impact's AggregateRevision, so the confirmation needs no batch signal: Presentation marks each named enemy and announces the hit once per revision — once per impact, however many enemies it damaged. A swing that damages nothing produces no event, no mark, and no announcement. Application publishes a tick's notifications inside the tick, before the result exists, so Presentation resolves the confirmation's position from the snapshot it most recently presented — the pre-impact one, which still contains an enemy the impact defeated; a killing blow therefore confirms, while an enemy absent from that snapshot shows no mark.
+ArenaRunNotificationMapper maps a second one-shot fact: EnemyDamaged becomes ArenaRunEnemyDamagedNotification, carrying the run id, the revision, and the enemy id. Damage is a one-shot fact with no state to read afterwards — a later snapshot shows the reduced health but not that this impact produced it — so it stays on the notification channel (ADR-0022). The mapping is damage-source-agnostic: a firearm impact and a melee impact both produce it. Presentation shows the hit confirmation at that enemy's published position; the mark's form and lifetime are design and tuning. One impact produces one EnemyDamaged per enemy it damages, all carrying that impact's AggregateRevision, so the confirmation needs no batch signal: Presentation marks each named enemy and announces the hit once per revision — once per impact, however many enemies it damaged. A swing that damages nothing produces no event, no mark, and no announcement. Dispatch publishes the result snapshot before it delivers notifications, so snapshot handlers see the post-impact state. A notification handler that needs the position of an enemy the impact removed reads the snapshot published in the previous dispatch — the pre-impact one, which still contains that enemy — and Presentation keeps it when it stores the new snapshot. A killing blow therefore confirms, while an enemy absent from the previous snapshot shows no mark.
 
 ArenaRunNotificationMapper maps the outcome of an Enemy Attack as well: EnemyAttackCompleted becomes ArenaRunEnemyAttackResolvedNotification with Hit or Miss, and EnemyAttackCancelled becomes the same notification with Cancelled. The notification carries the run id, the revision, the enemy id, and that outcome. A hit needs no announcement of its own — PlayerDamaged carries the source enemy and the S-001 health region announces the change — but a miss and a cancellation have no state to read afterwards: a pending attack that disappears looks the same whatever ended it, and one enemy hitting while another misses in the same tick leaves a single health change that names neither. Presentation announces the cue once when an enemy's pending attack appears and announces the miss once on Miss or Cancelled; a cue that stays pending is not re-announced. Cancellation follows the same rule whatever its cause, so an attacker the player defeats and an attack cut short by a terminal transition both announce the miss.
 
-A sink failure stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when the sink is called.
+A handler failure does not stop the tick. The dispatcher reports it to IArenaRunDispatchDiagnostics as an ArenaRunDispatchFailure (stage, handler name, payload type, exception), runs the remaining handlers and stages, and ExecuteTick returns the result. A dispatcher failure that is not a handler failure — a wiring or programming error — still stops the tick with ArenaRunTickFailedException carrying the built result as its partial result. There is no retry and no rollback: the aggregate transition is already committed when dispatch runs.
 
 While the run is terminal, the view holds the direction it had at the terminal transition: the third-person camera stops responding to mouse movement, and the input adapter keeps returning that last view direction, so movement and aim requests stay unchanged no-ops. A new run restores control. The freeze is Presentation-owned and derived from the published Status — the tick still reads input, but the Application runs no gameplay stage once the run is not Playing, and the view direction is neither Domain nor Application state. Defeat and Victory behave the same, and the surfaces above them (S-002, S-003) do not own the camera.
 
@@ -228,6 +240,5 @@ Presentation reacts to the victory notification, not to a snapshot edge. The S-0
 
 ## Deferred Work
 
-- T-4: Remaining Application notifications beyond victory.
-- T-5: Notification dispatch to the view (the Application port and the mapper exist; the adapter does not).
+- T-5: Presentation handler extraction and PlayMode coverage (the Application dispatcher, contracts, and Application tests are in place).
 - T-8: Scene lifecycle (the restart delay is owned by the tick; see § Defeat and Restart).

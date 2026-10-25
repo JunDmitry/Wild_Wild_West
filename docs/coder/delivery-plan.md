@@ -209,7 +209,7 @@ Exit criteria:
 
 ## Current Position
 
-T-5 is the next stage.
+T-5 is in progress. The Application dispatcher, its contracts, and its Application tests are delivered; the Presentation handler extraction and the PlayMode migration are with `coder-role`.
 
 After T-5, the remaining work is T-6.1, T-6.8, and T-6.9, then T-8, then T-9 and T-10.
 
@@ -219,19 +219,23 @@ T-7 is complete as presentation code. Making the Arena scene playable is T-8, no
 
 ### T-5. Typed Result Dispatcher
 
-Status: Planned
+Status: In Progress
 
 Goal:
 
-Dispatch Application notifications through explicit typed handlers.
+Dispatch the tick result through explicit typed handlers in six ordered pipeline stages (ADR-0027).
 
 Substages:
 
-- T-5.1: Define dispatcher pipeline stages. — Open
-- T-5.2: Define typed notification handler contracts. — Open
-- T-5.3: Implement deterministic handler ordering between stages. — Open
-- T-5.4: Define handler error policy. — Open
-- T-5.5: Add dispatcher tests. — Open
+- T-5.1: Define dispatcher pipeline stages. — Done (`ArenaRunDispatchStage`, six ordered values).
+- T-5.2: Define typed notification handler contracts. — Done (`IArenaRunSnapshotHandler`, `IArenaRunNotificationHandler<TNotification>`).
+- T-5.3: Implement deterministic handler ordering between stages. — Done (`ArenaRunResultDispatcher`: stage order, publication order, registration order).
+- T-5.4: Define handler error policy. — Done (isolate and report through `IArenaRunDispatchDiagnostics`; the tick survives).
+- T-5.5: Add dispatcher tests. — Done for Application (routing, stage order, registration order, no-handler, duplicate and late registration, isolated failure, diagnostics). PlayMode migration is part of the open handoff.
+
+Remaining:
+
+- Extract `ArenaRunNotificationPresenter` into handlers registered on the dispatcher and migrate `PlayModeTickHarness` and the PlayMode fixtures. Handed to `coder-role` (`docs/coder/architect-inbox/t5-dispatcher.md`).
 
 Pipeline stages:
 
