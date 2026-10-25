@@ -247,7 +247,9 @@ T-5 is complete. The typed result dispatcher is delivered end to end: Applicatio
 
 T-6.1 is complete. The Arena tick advances from engine-independent game time: `FrameDeltaGameClock` applies the game's own scale and pause to the frame elapsed time reported by `UnityFrameTimeSource`, and `Time.timeScale` plays no part in gameplay.
 
-Next in T-6: the collider identity registry (T-6.8) and the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
+T-6.8 is complete. `EnemyColliderRegistry` is the production collider identity map, populated from `EnemyViewRegistry` view-created/view-destroyed callbacks and covered by a 9-test PlayMode fixture that includes the live view seam (ADR-0028). The T-8 composition root will subscribe the two callbacks.
+
+Next in T-6: the scene lifecycle adapter (T-6.9). Then T-8. VContainer 1.19.0 is already installed and Zenject has been removed, so T-8.1 can start from the package baseline.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
@@ -270,7 +272,7 @@ Substages:
 - T-6.5: Unity melee attack resolver. — Done (`UnityPlayerAttackTargetingResolver.ResolveMelee`).
 - T-6.6: Unity enemy movement resolver. — Done (`UnityEnemyMovementResolver` over `IEnemyTransformRegistry`).
 - T-6.7: Unity spawn point provider. — Done (`UnityEnemySpawnPlacementResolver`).
-- T-6.8: Collider identity registry. — Open. The `IEnemyColliderRegistry` contract exists; no production implementation exists.
+- T-6.8: Collider identity registry. — Done (`EnemyColliderRegistry` implements `IEnemyColliderRegistry` and `IEnemyColliderRegistration` over a two-direction collider↔`EnemyId` map, populated from `EnemyViewRegistry` lifecycle callbacks (ADR-0028); unknown, null, and destroyed colliders resolve to `EnemyId.None`; 9-test PlayMode fixture including the live seam).
 - T-6.9: Unity scene lifecycle adapter. — Open.
 - T-6.10: Infrastructure PlayMode tests. — Done for the delivered adapters; each new adapter carries its own PlayMode coverage.
 
