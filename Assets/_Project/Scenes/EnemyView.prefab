@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _body: {fileID: 100005}
-  _targetCollider: {fileID: 100006}
+  _targetCollider: {fileID: 100008}
 --- !u!1 &100004
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,6 +130,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &100008
 BoxCollider:
   m_ObjectHideFlags: 0
