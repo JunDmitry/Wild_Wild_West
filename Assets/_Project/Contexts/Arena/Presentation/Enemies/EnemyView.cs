@@ -7,8 +7,14 @@ namespace Game.Arena.Presentation.Enemies
     public sealed class EnemyView : MonoBehaviour
     {
         [SerializeField] private Transform _body;
+        [SerializeField] private Collider _targetCollider;
 
         public Transform Body => _body != null ? _body : transform;
+
+        public Collider TargetCollider
+        {
+            get => _targetCollider != null ? _targetCollider : GetComponent<Collider>();
+        }
 
         public Position3D Position { get; private set; }
 

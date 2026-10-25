@@ -18,6 +18,10 @@ namespace Game.Arena.Presentation.Enemies
         private ArenaRunId _presentedRunId;
         private bool _hasPresented;
 
+        public event Action<EnemyId, Collider> ViewCreated;
+
+        public event Action<EnemyId> ViewDestroyed;
+
         public EnemyView Template
         {
             get => _template;
@@ -89,6 +93,13 @@ namespace Game.Arena.Presentation.Enemies
             view.Show(enemy.Position);
 
             _views.Add(enemy.EnemyId, view);
+
+            Collider collider = view.TargetCollider;
+
+            if (collider != null)
+            {
+                ViewCreated?.Invoke(enemy.EnemyId, collider);
+            }
         }
 
         private void RemoveUnpresented()
@@ -113,16 +124,20 @@ namespace Game.Arena.Presentation.Enemies
 
             for (int index = 0; index < removed.Count; index++)
             {
-                Destroy(_views[removed[index]].gameObject);
-                _views.Remove(removed[index]);
+                EnemyId enemyId = removed[index];
+
+                ViewDestroyed?.Invoke(enemyId);
+                Destroy(_views[enemyId].gameObject);
+                _views.Remove(enemyId);
             }
         }
 
         private void ClearAll()
         {
-            foreach (EnemyView view in _views.Values)
+            foreach (KeyValuePair<EnemyId, EnemyView> entry in _views)
             {
-                Destroy(view.gameObject);
+                ViewDestroyed?.Invoke(entry.Key);
+                Destroy(entry.Value.gameObject);
             }
 
             _views.Clear();
