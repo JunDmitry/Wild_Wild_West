@@ -60,6 +60,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0027 | Dispatch the tick result through typed ordered handlers | Accepted | 2026-10-25 | [ADR-0027](ADR-0027-typed-result-dispatcher.md) |
 | ADR-0028 | Register live enemy colliders from view lifecycle callbacks | Accepted | 2026-10-25 | [ADR-0028](ADR-0028-live-enemy-collider-registration.md) |
 | ADR-0029 | Request an Arena scene reload through an Application port at the restart edge | Accepted | 2026-10-25 | [ADR-0029](ADR-0029-scene-reload-through-application-port.md) |
+| ADR-0030 | Compose the Arena graph in a persistent root scope and a per-scene child scope | Accepted | 2026-10-25 | [ADR-0030](ADR-0030-composition-root-scopes.md) |
 
 ## New ADR Template
 
