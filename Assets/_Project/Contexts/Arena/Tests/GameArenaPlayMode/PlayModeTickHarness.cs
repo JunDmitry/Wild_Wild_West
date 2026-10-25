@@ -51,7 +51,8 @@ namespace Game.Arena.PlayMode.Tests
             IEnemySpawnPlacementResolver spawnPlacementResolver = null,
             IEnemySpawnPacingPolicy spawnPacingPolicy = null,
             ArenaRunResultDispatcher dispatcher = null,
-            IEnemyMovementResolver enemyMovementResolver = null)
+            IEnemyMovementResolver enemyMovementResolver = null,
+            IArenaSceneReloader sceneReloader = null)
         {
             _repository = new InMemoryArenaRunRepository();
             _mutableInput = playerInputSource == null ? new MutableInputSource(CreateInput(false)) : null;
@@ -84,6 +85,7 @@ namespace Game.Arena.PlayMode.Tests
                 new MonotonicEnemyIdSource(),
                 spawnPacingPolicy ?? new NeverSpawnPacingPolicy(),
                 new FixedIntervalRunRestartDelayPolicy(restartDelay ?? new GameDuration(1000d)),
+                sceneReloader ?? NoOpArenaSceneReloader.Instance,
                 dispatcher ?? new ArenaRunResultDispatcher());
 
             _tickService = new ArenaRunTickService(tickDependencies);
@@ -284,6 +286,15 @@ namespace Game.Arena.PlayMode.Tests
             }
 
             public void Reset()
+            {
+            }
+        }
+
+        private sealed class NoOpArenaSceneReloader : IArenaSceneReloader
+        {
+            public static readonly NoOpArenaSceneReloader Instance = new();
+
+            public void ReloadArenaScene()
             {
             }
         }
