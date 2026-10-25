@@ -161,3 +161,32 @@ policy replaces that one registration line.
 
 This is the only production change authorized for the T-8.1 composition
 fixture beyond the two test fakes the standing request names.
+
+## Amendment 2026-10-25 — constructor selection and factory registrations
+
+VContainer's `TypeAnalyzer` enumerates public **and** non-public declared
+constructors and selects the one with the most parameters when none carries
+`[Inject]` — and ADR-0014 forbids attribute injection here.
+`MonotonicArenaRunIdSource`, `MonotonicPlayerIdSource`, and
+`MonotonicEnemyIdSource` each declare a public parameterless constructor and an
+`internal (ulong firstValue)` constructor, so the container selected the
+internal overload and failed to resolve `System.UInt64`.
+
+The catalogue names the constructor the graph intends for those three types:
+
+```csharp
+builder.Register<IArenaRunIdSource>(_ => new MonotonicArenaRunIdSource(), Lifetime.Singleton);
+builder.Register<IPlayerIdSource>(_ => new MonotonicPlayerIdSource(), Lifetime.Singleton);
+builder.Register<IEnemyIdSource>(_ => new MonotonicEnemyIdSource(), Lifetime.Singleton);
+```
+
+The internal constructors are unchanged and remain available to in-assembly
+callers. The general rule: when the container's greedy selection is not the
+constructor the graph intends, register the type through a factory that selects
+the intended one. Do not widen a public constructor and do not add `[Inject]`.
+
+A sweep of the other types the catalogue registers by type — the repository,
+session and its dependencies, the tick service and its dependencies, the game
+clock, `ArenaRunFactory`, `MovementPathPolicy`, and `UnityFrameTimeSource` —
+found one constructor each, so this failure class is closed for the known
+graph. A future multi-constructor type is registered the same way.
