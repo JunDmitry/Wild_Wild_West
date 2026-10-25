@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Game.Arena.Application.Dispatch;
+using Game.Arena.Application.Hud;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
@@ -297,18 +298,128 @@ namespace Game.Arena.Application.Tests.Dispatch
         }
 
         [Test]
-        public void HandlerKindMustMatchTheStage()
+        public void SnapshotHandlersAreAcceptedAtEveryStage()
+        {
+            ArenaRunResultDispatcher dispatcher = new();
+
+            Assert.DoesNotThrow(
+                () => dispatcher.RegisterSnapshotHandler(
+                    ArenaRunDispatchStage.GameplayVisual,
+                    new RecordingSnapshotHandler()));
+            Assert.DoesNotThrow(
+                () => dispatcher.RegisterSnapshotHandler(
+                    ArenaRunDispatchStage.Hud,
+                    new RecordingSnapshotHandler()));
+            Assert.DoesNotThrow(
+                () => dispatcher.RegisterSnapshotHandler(
+                    ArenaRunDispatchStage.AnalyticsAndDiagnostics,
+                    new RecordingSnapshotHandler()));
+        }
+
+        [Test]
+        public void NotificationHandlersAreRejectedInSnapshotStages()
         {
             ArenaRunResultDispatcher dispatcher = new();
 
             Assert.Throws<ArgumentException>(
-                () => dispatcher.RegisterSnapshotHandler(
-                    ArenaRunDispatchStage.GameplayVisual,
-                    new RecordingSnapshotHandler()));
-            Assert.Throws<ArgumentException>(
                 () => dispatcher.RegisterNotificationHandler(
                     ArenaRunDispatchStage.SnapshotPublication,
                     new RecordingNotificationHandler<ArenaRunVictoryNotification>()));
+            Assert.Throws<ArgumentException>(
+                () => dispatcher.RegisterNotificationHandler(
+                    ArenaRunDispatchStage.EntityViewSynchronization,
+                    new RecordingNotificationHandler<ArenaRunVictoryNotification>()));
+        }
+
+        [Test]
+        public void HudHandlersReceiveTheResultSnapshotAndHudModel()
+        {
+            RecordingHudHandler handler = new();
+            ArenaRunResultDispatcher dispatcher = new();
+
+            dispatcher.RegisterHudHandler(ArenaRunDispatchStage.Hud, handler);
+
+            ArenaRunTickResult result = CreateResult();
+
+            dispatcher.Dispatch(result);
+
+            Assert.That(handler.Pairs, Has.Count.EqualTo(1));
+            Assert.That(handler.Pairs[0].Snapshot, Is.SameAs(result.Snapshot));
+            Assert.That(handler.Pairs[0].Hud, Is.SameAs(result.Hud));
+        }
+
+        [Test]
+        public void WithinAStageSnapshotRunsBeforeHudAndHudBeforeNotifications()
+        {
+            List<string> order = new();
+            ArenaRunResultDispatcher dispatcher = new();
+
+            dispatcher.RegisterSnapshotHandler(
+                ArenaRunDispatchStage.Hud,
+                new RecordingSnapshotHandler(_ => order.Add("snapshot")));
+            dispatcher.RegisterHudHandler(
+                ArenaRunDispatchStage.Hud,
+                new RecordingHudHandler((_, _) => order.Add("hud")));
+            dispatcher.RegisterNotificationHandler(
+                ArenaRunDispatchStage.Hud,
+                new RecordingNotificationHandler<ArenaRunEnemyDamagedNotification>(
+                    _ => order.Add("notification")));
+
+            dispatcher.Dispatch(CreateResult(
+                CreateDamagedEvent(EnemyId.FromValue(1UL))));
+
+            Assert.That(order, Is.EqualTo(new[] { "snapshot", "hud", "notification" }));
+        }
+
+        [Test]
+        public void HudHandlerFailureIsReported()
+        {
+            InvalidOperationException failure = new("HUD handler failed.");
+            RecordingDiagnostics diagnostics = new();
+            ArenaRunResultDispatcher dispatcher = new(diagnostics);
+
+            dispatcher.RegisterHudHandler(
+                ArenaRunDispatchStage.Hud,
+                new RecordingHudHandler((_, _) => throw failure));
+
+            Assert.DoesNotThrow(() => dispatcher.Dispatch(CreateResult()));
+
+            Assert.That(diagnostics.Failures, Has.Count.EqualTo(1));
+            Assert.That(
+                diagnostics.Failures[0].PayloadType,
+                Is.EqualTo(typeof(ArenaRunHudSnapshot)));
+        }
+
+        [Test]
+        public void DuplicateHudRegistrationIsRejected()
+        {
+            RecordingHudHandler handler = new();
+            ArenaRunResultDispatcher dispatcher = new();
+
+            dispatcher.RegisterHudHandler(ArenaRunDispatchStage.Hud, handler);
+
+            Assert.Throws<ArgumentException>(
+                () => dispatcher.RegisterHudHandler(
+                    ArenaRunDispatchStage.Hud,
+                    handler));
+
+            Assert.DoesNotThrow(
+                () => dispatcher.RegisterHudHandler(
+                    ArenaRunDispatchStage.GameplayVisual,
+                    handler));
+        }
+
+        [Test]
+        public void HudRegistrationIsRejectedAfterFirstDispatch()
+        {
+            ArenaRunResultDispatcher dispatcher = new();
+
+            dispatcher.Dispatch(CreateResult());
+
+            Assert.Throws<InvalidOperationException>(
+                () => dispatcher.RegisterHudHandler(
+                    ArenaRunDispatchStage.Hud,
+                    new RecordingHudHandler()));
         }
 
         [Test]
@@ -386,6 +497,25 @@ namespace Game.Arena.Application.Tests.Dispatch
             {
                 Snapshots.Add(snapshot);
                 _onHandle?.Invoke(snapshot);
+            }
+        }
+
+        private sealed class RecordingHudHandler : IArenaRunHudHandler
+        {
+            private readonly Action<ArenaRunSnapshot, ArenaRunHudSnapshot> _onHandle;
+
+            public RecordingHudHandler(
+                Action<ArenaRunSnapshot, ArenaRunHudSnapshot> onHandle = null)
+            {
+                _onHandle = onHandle;
+            }
+
+            public List<(ArenaRunSnapshot Snapshot, ArenaRunHudSnapshot Hud)> Pairs { get; } = new();
+
+            public void Handle(ArenaRunSnapshot snapshot, ArenaRunHudSnapshot hud)
+            {
+                Pairs.Add((snapshot, hud));
+                _onHandle?.Invoke(snapshot, hud);
             }
         }
 

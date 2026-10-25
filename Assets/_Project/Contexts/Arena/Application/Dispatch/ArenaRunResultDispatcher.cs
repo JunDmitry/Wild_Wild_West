@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Hud;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Application.Ticks;
@@ -19,6 +20,7 @@ namespace Game.Arena.Application.Dispatch
         };
 
         private readonly Dictionary<ArenaRunDispatchStage, List<SnapshotRegistration>> _snapshotHandlers;
+        private readonly Dictionary<ArenaRunDispatchStage, List<HudRegistration>> _hudHandlers;
         private readonly Dictionary<ArenaRunDispatchStage, List<NotificationRegistration>> _notificationHandlers;
         private readonly IArenaRunDispatchDiagnostics _diagnostics;
 
@@ -34,6 +36,7 @@ namespace Game.Arena.Application.Dispatch
         {
             _diagnostics = diagnostics;
             _snapshotHandlers = new Dictionary<ArenaRunDispatchStage, List<SnapshotRegistration>>();
+            _hudHandlers = new Dictionary<ArenaRunDispatchStage, List<HudRegistration>>();
             _notificationHandlers = new Dictionary<ArenaRunDispatchStage, List<NotificationRegistration>>();
         }
 
@@ -41,13 +44,6 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             IArenaRunSnapshotHandler handler)
         {
-            if (IsSnapshotStage(stage) == false)
-            {
-                throw new ArgumentException(
-                    "The stage does not accept snapshot handlers.",
-                    nameof(stage));
-            }
-
             if (handler == null)
             {
                 throw new ArgumentNullException(nameof(handler));
@@ -68,6 +64,32 @@ namespace Game.Arena.Application.Dispatch
             }
 
             registrations.Add(new SnapshotRegistration(handler));
+        }
+
+        public void RegisterHudHandler(
+            ArenaRunDispatchStage stage,
+            IArenaRunHudHandler handler)
+        {
+            if (handler == null)
+            {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
+            EnsureRegistrationOpen();
+
+            List<HudRegistration> registrations = GetHudRegistrations(stage);
+
+            for (int index = 0; index < registrations.Count; index++)
+            {
+                if (ReferenceEquals(registrations[index].Handler, handler))
+                {
+                    throw new ArgumentException(
+                        "The handler is already registered for this stage.",
+                        nameof(handler));
+                }
+            }
+
+            registrations.Add(new HudRegistration(handler));
         }
 
         public void RegisterNotificationHandler<TNotification>(
@@ -131,26 +153,15 @@ namespace Game.Arena.Application.Dispatch
                 {
                     ArenaRunDispatchStage stage = Stages[index];
 
-                    if (IsSnapshotStage(stage))
-                    {
-                        DispatchSnapshotHandlers(stage, result.Snapshot);
-                    }
-                    else
-                    {
-                        DispatchNotificationHandlers(stage, result.Notifications);
-                    }
+                    DispatchSnapshotHandlers(stage, result.Snapshot);
+                    DispatchHudHandlers(stage, result.Snapshot, result.Hud);
+                    DispatchNotificationHandlers(stage, result.Notifications);
                 }
             }
             finally
             {
                 _dispatching = false;
             }
-        }
-
-        private static bool IsSnapshotStage(ArenaRunDispatchStage stage)
-        {
-            return stage == ArenaRunDispatchStage.SnapshotPublication
-                || stage == ArenaRunDispatchStage.EntityViewSynchronization;
         }
 
         private static bool IsNotificationStage(ArenaRunDispatchStage stage)
@@ -167,6 +178,17 @@ namespace Game.Arena.Application.Dispatch
             {
                 registrations = new List<SnapshotRegistration>();
                 _snapshotHandlers.Add(stage, registrations);
+            }
+
+            return registrations;
+        }
+
+        private List<HudRegistration> GetHudRegistrations(ArenaRunDispatchStage stage)
+        {
+            if (_hudHandlers.TryGetValue(stage, out List<HudRegistration> registrations) == false)
+            {
+                registrations = new List<HudRegistration>();
+                _hudHandlers.Add(stage, registrations);
             }
 
             return registrations;
@@ -210,6 +232,28 @@ namespace Game.Arena.Application.Dispatch
                     registration.Handler,
                     typeof(ArenaRunSnapshot),
                     () => registration.Handler.Handle(snapshot));
+            }
+        }
+
+        private void DispatchHudHandlers(
+            ArenaRunDispatchStage stage,
+            ArenaRunSnapshot snapshot,
+            ArenaRunHudSnapshot hud)
+        {
+            if (_hudHandlers.TryGetValue(stage, out List<HudRegistration> registrations) == false)
+            {
+                return;
+            }
+
+            for (int index = 0; index < registrations.Count; index++)
+            {
+                HudRegistration registration = registrations[index];
+
+                Invoke(
+                    stage,
+                    registration.Handler,
+                    typeof(ArenaRunHudSnapshot),
+                    () => registration.Handler.Handle(snapshot, hud));
             }
         }
 
@@ -293,6 +337,16 @@ namespace Game.Arena.Application.Dispatch
             }
 
             public IArenaRunSnapshotHandler Handler { get; }
+        }
+
+        private sealed class HudRegistration
+        {
+            public HudRegistration(IArenaRunHudHandler handler)
+            {
+                Handler = handler;
+            }
+
+            public IArenaRunHudHandler Handler { get; }
         }
 
         private sealed class NotificationRegistration
