@@ -281,7 +281,7 @@ T-5 is complete. The typed result dispatcher is delivered end to end: Applicatio
 
 T-6 is complete. Every Application port consumed by the tick service has a Unity adapter: the clock, input, player movement, both attack resolvers, enemy movement, spawn placement, the collider identity registry (ADR-0028), and the scene lifecycle adapter. `UnityArenaSceneReloader` calls `SceneManager.LoadScene` in single mode, and `DefeatRestartStage` requests the reload once through `IArenaSceneReloader` immediately after a defeated run restarts (ADR-0029); a 4-test PlayMode fixture proves exactly one reload at that edge and none otherwise.
 
-T-8.1 and T-8.2 are complete. One VContainer composition root owns every Arena registration: `BootstrapLifetimeScope` holds the process-lifetime graph, `ArenaSceneLifetimeScope` registers the scene graph behind the explicit `ArenaSceneObjects` seam, and a single `ArenaRegistrations` catalogue plus a code-defined `ArenaGameConfiguration` feed both (ADR-0030). A 4-test PlayMode fixture proves both graphs resolve, that singletons are shared, and that a missing seam fails loudly. The Arena scene is now bound: `ArenaSceneBinder` supplies the scene objects, registers every presenter at its ADR-0027 dispatch stage, wires the enemy view registry to the collider registration port, and releases `ArenaTickDriver` as the single frame-loop entry point; a missing reference or dependency throws before gameplay (ADR-0031). `BootstrapScene`, `ArenaScene`, and `EnemyView.prefab` exist, and a 5-test PlayMode `ArenaSceneBinderTests` fixture proves the binder end to end. T-8.3 is complete: entering the Arena scene creates exactly one active run with fresh identities, and entering it after a defeat reload creates nothing and presents the restarted run (ADR-0032); both arena scenes are now in Build Settings, bootstrap first. T-8.4 is complete by composition of existing coverage: the defeat delay is the configured singleton policy, the reload is requested once at the restart edge, and the post-reload entry presents the already-restarted run (T-8.3). A narrow composition coverage task (`t8-4-defeat-reload`) landed as `ProcessGraph_PolicyWaitsTheConfiguredRestartDelay` and `SceneScope_ResolvesTheSameRestartDelayPolicyAsTheProcessGraph`: the configured delay reaches the registered policy and the scene scope resolves the same singleton. No production seam was added, so the defeat→reload edge keeps its Application and PlayMode coverage. T-8.5 is complete: victory freezes combat, shows the window once, and never reloads, with the window wired in the real Arena scene; its last clause (zero reloads on a win) is now proven by `ArenaSceneReloadTests.WinningTheRun_RequestsNoReload` — zero reloads at the victory tick and after 20 further terminal ticks (`t8-5-victory-lifecycle`, fixture 5/5). T-8.6 is complete: `ArenaSandboxSmokeTests` is one end-to-end PlayMode fixture through the real bootstrap→arena composition, seven scenarios covering new run, arena-bound movement, ranged hit and miss, melee against three enemies, wave progression, defeat with exactly one reload after the configured delay, and victory with zero reloads — 7/7 green in batchmode (`t8-6-arena-smoke`). No substage of T-8 remains open.
+T-8.1 and T-8.2 are complete. One VContainer composition root owns every Arena registration: `BootstrapLifetimeScope` holds the process-lifetime graph, `ArenaSceneLifetimeScope` registers the scene graph behind the explicit `ArenaSceneObjects` seam, and a single `ArenaRegistrations` catalogue plus a code-defined `ArenaGameConfiguration` feed both (ADR-0030). A 4-test PlayMode fixture proves both graphs resolve, that singletons are shared, and that a missing seam fails loudly. The Arena scene is now bound: `ArenaSceneBinder` supplies the scene objects, registers every presenter at its ADR-0027 dispatch stage, wires the enemy view registry to the collider registration port, and releases `ArenaTickDriver` as the single frame-loop entry point; a missing reference or dependency throws before gameplay (ADR-0031). `BootstrapScene`, `ArenaScene`, and `EnemyView.prefab` exist, and a 5-test PlayMode `ArenaSceneBinderTests` fixture proves the binder end to end. T-8.3 is complete: entering the Arena scene creates exactly one active run with fresh identities, and entering it after a defeat reload creates nothing and presents the restarted run (ADR-0032); both arena scenes are now in Build Settings, bootstrap first. T-8.4 is complete by composition of existing coverage: the defeat delay is the configured singleton policy, the reload is requested once at the restart edge, and the post-reload entry presents the already-restarted run (T-8.3). A narrow composition coverage task (`t8-4-defeat-reload`) landed as `ProcessGraph_PolicyWaitsTheConfiguredRestartDelay` and `SceneScope_ResolvesTheSameRestartDelayPolicyAsTheProcessGraph`: the configured delay reaches the registered policy and the scene scope resolves the same singleton. No production seam was added, so the defeat→reload edge keeps its Application and PlayMode coverage. T-8.5 is complete: victory freezes combat, shows the window once, and never reloads, with the window wired in the real Arena scene; its last clause (zero reloads on a win) is now proven by `ArenaSceneReloadTests.WinningTheRun_RequestsNoReload` — zero reloads at the victory tick and after 20 further terminal ticks (`t8-5-victory-lifecycle`, fixture 5/5). T-8.6 is complete: `ArenaSandboxSmokeTests` is one end-to-end PlayMode fixture through the real bootstrap→arena composition, seven scenarios covering new run, arena-bound movement, ranged hit and miss, melee against three enemies, wave progression, defeat with exactly one reload after the configured delay, and victory with zero reloads — 7/7 green in batchmode (`t8-6-arena-smoke`). No substage of T-8 remains open; T-8 is Completed and its four exit criteria are Met. The T-9 entry audit of 2026-10-25 leaves two gates open: the ADR-0033 performance measurement and the three migration smoke scenarios T-8.6 did not cover.
 
 T-7 is complete as presentation code. Making the Arena scene playable is T-8, not T-7.
 
@@ -289,7 +289,7 @@ T-7 is complete as presentation code. Making the Arena scene playable is T-8, no
 
 ### T-8. Bootstrap and Arena Session Lifecycle
 
-Status: In progress
+Status: Completed
 
 Goal:
 
@@ -315,10 +315,10 @@ Substage exit criteria:
 
 Exit criteria:
 
-- Playing the Arena scene starts a run with no manual wiring.
-- Both lifecycles complete: defeat reloads, victory does not.
-- Arena runtime code references no legacy assembly.
-- Architecture tests remain green; Presentation still does not reference Infrastructure.
+- Playing the Arena scene starts a run with no manual wiring. — Met (`ArenaBootstrapEntryPoint` + `ArenaRunStartupDriver`, proven by `ArenaRunCreationTests` 4/4 and the binder fixture; the manual play check is a T-9 gate)
+- Both lifecycles complete: defeat reloads, victory does not. — Met (`ArenaSceneReloadTests` 5/5, `ArenaSandboxSmokeTests` defeat and victory scenarios)
+- Arena runtime code references no legacy assembly. — Met (`Game.Arena.*` and `Game.CompositionRoot` asmdefs reference no `Game.Core.*`; only legacy and legacy-test assemblies do)
+- Architecture tests remain green; Presentation still does not reference Infrastructure. — Met (`Game.Arena.Presentation.asmdef` references Application, Domain, and TextMeshPro only; the Arena PlayMode suite is 197/197 and the Infrastructure suite 10/10, audit of 2026-10-25)
 
 ### T-9. Production Cut-Over
 
@@ -328,13 +328,16 @@ Goal:
 
 Switch the main gameplay scene from the legacy stack to the Arena Combat stack.
 
-Entry criteria:
+Entry criteria (audited 2026-10-25; the QA artefacts were refreshed by `architect-role` as an exception because `qa-role` is not operating):
 
-- B-001 through B-011 in `docs/qa/behavior-baseline.md` are covered by target tests.
-- All relevant legacy defects have target behavior coverage.
-- Architecture, Domain, Application, Infrastructure, and Presentation tests are green.
-- ArenaSandbox PlayMode smoke tests are green.
-- Performance threshold is defined and passed.
+| Criterion | State | Evidence |
+|---|---|---|
+| B-001–B-011 covered by target tests | Met (B-011 reclassified) | `docs/qa/behavior-traceability.md` refreshed: every named test matched in source, B-011 now `Implemented in Application`, and four drifted names repointed to the live tests |
+| Every legacy defect has a target status | Met | `docs/qa/legacy-defect-register.md` refreshed: rows whose target work landed in T-3–T-7 now read `Implemented in target; production cut-over pending`; the rest wait on T-9 or T-10 |
+| Architecture, Domain, Application, Infrastructure, and Presentation tests green | Domain, Application, Infrastructure, and Presentation met; the architecture fixture stands on its last recorded green run | Domain 373/373, Application 215/215, Infrastructure EditMode 10/10, Arena PlayMode 197/197 — all exit 0 on 2026-10-25 |
+| ArenaSandbox PlayMode smoke tests green | Met | `ArenaSandboxSmokeTests` 7/7, exit 0 on 2026-10-25 |
+| Performance threshold defined and passed | Defined, not measured | ADR-0033 fixes the five thresholds, the measurement procedure, and the 10% legacy comparison; the measurement run is itself a T-9 entry task |
+| Migration smoke scenarios (full set) | Open | `docs/architect/migration/criteria-for-switching-production-flow.md` names eight; `ArenaSandboxSmokeTests` covers start→wave→boss→victory over two waves, movement, both attacks, defeat + reload, and victory. Missing: the three-wave start→victory chain, enemy windup → evasion, and enemy windup → defeat |
 
 ### T-10. Legacy Retirement
 
