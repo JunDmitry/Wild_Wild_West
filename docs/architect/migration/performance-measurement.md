@@ -1,7 +1,7 @@
 # Performance measurement for the production cut-over
 
 - **Authority:** [ADR-0033](../adr/ADR-0033-performance-thresholds-for-cut-over.md) fixes the thresholds and the player-build procedure; [ADR-0034](../adr/ADR-0034-automated-performance-measurement.md) fixes the harness and the measurement profile.
-- **Status:** procedure defined, measurement not yet run.
+- **Status:** measured 2026-10-27 on build `38f856e` (two clean runs); 3 of 5 thresholds pass, GC allocation and physics queries fail. T-9 remains blocked.
 - **Owner:** `architect-role`; the harness is implemented by `coder-role`.
 
 ## Scope
@@ -16,9 +16,11 @@ The measurement runs the **target** Arena stack in a Windows player build. The 1
 | 2 | Worst frame time | P99 ≤ 33.3 ms and max ≤ 50 ms | Same samples, sorted after capture |
 | 3 | Managed allocation per frame | 0 B after warm-up | `ProfilerRecorder` marker `GC.Alloc`, sum over the capture window |
 | 4 | Maximum active enemies | ≤ 24 | `ArenaRun.ActiveEnemyCount` polled every capture frame; peak |
-| 5 | Physics queries per frame | ≤ 5 | `ProfilerRecorder` physics counter resolved by name; peak |
+| 5 | Physics queries per frame | ≤ 5 | Sum of the Physics-category markers `Physics.SphereCastNonAlloc`, `Physics.RaycastNonAlloc`, and `Physics.OverlapSphereNonAlloc`; peak per frame |
 
 Every metric must hold in **both** runs. A failed metric is an optimisation task, not a waiver.
+
+No single `Physics.Query` counter is exposed in a 2022.3.46f1 player, so the counter ADR-0033 names is resolved as the sum of the three query markers the game actually calls. The ≤ 5 threshold is unchanged.
 
 ## Measurement profile
 
@@ -31,7 +33,7 @@ The shipped `ArenaGameConfiguration.CreateDefault()` is used unchanged except fo
 | Player health | 100 | **1 000 000** |
 | Weapon catalogue | shipped | unchanged |
 | Regular enemy definition | shipped | health **1 000 000**, every other field unchanged |
-| Boss enemy definition | shipped | health **1 000 000**, every other field unchanged |
+| Boss enemy definition | shipped | health **1 000 001** — `EnemyCatalog` requires the boss to strictly exceed every regular enemy; the value is unused by this profile, every other field unchanged |
 | Waves | one wave, 10 regular | unchanged |
 | Spawn interval | 2 s | unchanged |
 | Restart delay | 3 s | unchanged |
@@ -131,6 +133,13 @@ Append one row per run; never edit a recorded row. A rerun after a code change i
 
 | Run | Build commit | Date (UTC) | Avg ms | P99 ms | Max ms | GC B/frame | Enemy peak | Physics peak | Verdict |
 |---|---|---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | — | — | not run |
+| 1 | `38f856e` | 2026-10-26T23:37:52Z | 16.666 | 19.903 | 23.203 | 35 200 | 10 | 12 | fail (GC, physics) |
+| 2 | `38f856e` | 2026-10-26T23:39:08Z | 16.666 | 19.593 | 23.727 | 31 200 | 10 | 12 | fail (GC, physics) |
+
+- **Machine:** Windows 10 (10.0.19045) 64-bit, Intel Core i5-10500H @ 2.50 GHz, NVIDIA GeForce GTX 1650 Max-Q, 24 393 MB.
+- **Window:** both runs captured 3 301 frames over 55 s, `runEndedEarly = false`.
+- **Harness attribution:** `GC.GetAllocatedBytesForCurrentThread()` delta over each capture block is 0 B in both runs, so the recorded GC total is game-side, not harness-side.
+- **GC allocation:** every captured frame allocates in both runs (3 301 / 3 301), at a near-constant per-frame amount — 35 200 B in run 1, 31 200 B in run 2.
+- **Preliminary run (not recorded):** the implementing coder's run of the same code produced 31.1 KB/frame and physics peak 12. Its `build-info.json` recorded `-perfcommit e633b4f`, the specification commit rather than the code commit, so it is not attributable and is not entered as a results row.
 
 **Legacy comparison:** not applicable — no runnable legacy scene exists (scene-GUID evidence in § Scope).
