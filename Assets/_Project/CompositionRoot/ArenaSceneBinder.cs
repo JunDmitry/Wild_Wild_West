@@ -71,13 +71,23 @@ namespace Game.CompositionRoot
             BuildScope();
         }
 
-        private void BuildScope()
+        /// <summary>
+        /// Creates the production scene seam from the serialized references. It is
+        /// the one construction path shared by <see cref="BuildScope"/> and a rig or
+        /// measurement harness that supplies an override built from the same objects.
+        /// </summary>
+        public ArenaSceneObjects CreateSceneObjects()
         {
-            ArenaSceneObjects sceneObjects = SceneObjectsOverride ?? new ArenaSceneObjects(
+            return new ArenaSceneObjects(
                 _camera,
                 _player,
                 _inputSource,
                 new EnemyViewTransformRegistry(_enemyViews));
+        }
+
+        private void BuildScope()
+        {
+            ArenaSceneObjects sceneObjects = SceneObjectsOverride ?? CreateSceneObjects();
 
             _scope.Bind(sceneObjects);
             _scope.Build();
