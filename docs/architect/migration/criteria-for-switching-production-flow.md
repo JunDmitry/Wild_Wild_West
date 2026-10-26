@@ -28,6 +28,28 @@
 - Enemy windup followed by Player evasion.
 - Enemy windup followed by Player defeat.
 
+### Acceptance detail — scenarios not yet in `ArenaSandboxSmokeTests`
+
+The seven-scenario T-8.6 fixture covers defeat + reload (2), arena-bound movement (3), ranged hit and miss (4), melee against multiple enemies (5), and a two-wave start → boss → victory chain (part of 1). Three remain. All three are test-side work in `Game.CompositionRoot.PlayMode.Tests`, using the existing `ArenaSceneTestRig`, `FakeInputDevice`, and `ArenaGameConfiguration` values; none requires a production, scene, prefab, assembly-definition, or package change. Configuration values may be tuned for determinism; the observables below are fixed.
+
+**Scenario 1 — Start → Wave 1 → Boss → Wave 2 → Wave 3 → Victory**
+
+- Setup: production arena, player, weapons, enemies, and a `WaveCatalog` of three waves. Use boss-only waves (`RegularEnemyCount = 0`) so each wave is the deterministic boss phase, mirroring the existing two-wave scenario; regular spawning and timing are already proven elsewhere.
+- Drive: enter the arena and wait for the active run; for each wave wait for the boss to spawn, register and sync its collider, aim at it, and strike whenever the selected weapon is ready, until the run advances.
+- Observable: the HUD wave text reads `Wave 1 of 3`, `Wave 2 of 3`, then `Wave 3 of 3`, in that order; the run stays `Playing` while waves advance; after the third boss is defeated the status is `Victory`, the victory window is shown once, and the reload count stays zero.
+
+**Scenario 7 — Enemy windup followed by Player evasion**
+
+- Setup: one regular enemy with a long windup (at least 1.5 s), a short attack range, lethal or near-lethal damage, and a slow movement speed; an arena large enough for the player to leave that range.
+- Drive: enter the arena and wait until the enemy's pending attack is observable (`EnemyStateSnapshot.HasPendingAttack` / the read model's `HasPendingAttack`); then move the player out of the enemy's attack range before the windup ends.
+- Observable: the player's health is unchanged when the windup starts; after the attack resolves, the player's health still equals its pre-windup value, the run status is still `Playing`, and the enemy has no pending attack.
+
+**Scenario 8 — Enemy windup followed by Player defeat**
+
+- Setup: one regular enemy with a long windup, lethal damage, and a short attack range; no movement or attack input from the player.
+- Drive: enter the arena and wait for the windup to start, then let it complete in range.
+- Observable: the player's health is unchanged at windup start; after the impact the player's health is depleted, the run status is `Defeat`, and the defeat window is shown for that run. Reload timing is already covered by scenario 2; this scenario asserts the defeat, and may additionally assert zero reloads on the defeated tick.
+
 ## Performance
 
 Before T-9, define measurable thresholds for:
