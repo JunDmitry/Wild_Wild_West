@@ -335,9 +335,9 @@ Entry criteria (audited 2026-10-25; the QA artefacts were refreshed by `architec
 | B-001–B-011 covered by target tests | Met (B-011 reclassified) | `docs/qa/behavior-traceability.md` refreshed: every named test matched in source, B-011 now `Implemented in Application`, and four drifted names repointed to the live tests |
 | Every legacy defect has a target status | Met | `docs/qa/legacy-defect-register.md` refreshed: rows whose target work landed in T-3–T-7 now read `Implemented in target; production cut-over pending`; the rest wait on T-9 or T-10 |
 | Architecture, Domain, Application, Infrastructure, and Presentation tests green | Domain, Application, Infrastructure, and Presentation met; the architecture fixture stands on its last recorded green run | Domain 373/373, Application 215/215, Infrastructure EditMode 10/10, Arena PlayMode 197/197 — all exit 0 on 2026-10-25 |
-| ArenaSandbox PlayMode smoke tests green | Met | `ArenaSandboxSmokeTests` 7/7, exit 0 on 2026-10-25 |
+| ArenaSandbox PlayMode smoke tests green | Met | `ArenaSandboxSmokeTests` 10/10, exit 0 on 2026-10-26 |
 | Performance threshold defined and passed | Defined, not measured | ADR-0033 fixes the five thresholds, the measurement procedure, and the 10% legacy comparison; the measurement run is itself a T-9 entry task |
-| Migration smoke scenarios (full set) | Open | `docs/architect/migration/criteria-for-switching-production-flow.md` names eight; `ArenaSandboxSmokeTests` covers start→wave→boss→victory over two waves, movement, both attacks, defeat + reload, and victory. Missing: the three-wave start→victory chain, enemy windup → evasion, and enemy windup → defeat |
+| Migration smoke scenarios (full set) | Met | All eight scenarios in `docs/architect/migration/criteria-for-switching-production-flow.md` are covered: the three missing ones (three-wave start→victory, enemy windup → evasion, enemy windup → defeat) landed in `ArenaSandboxSmokeTests` on 2026-10-26 (commit `f109da0`, fixture 10/10, exit 0) |
 
 ### T-10. Legacy Retirement
 

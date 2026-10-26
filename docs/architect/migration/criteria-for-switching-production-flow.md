@@ -28,9 +28,9 @@
 - Enemy windup followed by Player evasion.
 - Enemy windup followed by Player defeat.
 
-### Acceptance detail — scenarios not yet in `ArenaSandboxSmokeTests`
+### Acceptance detail — the three scenarios added in T-9
 
-The seven-scenario T-8.6 fixture covers defeat + reload (2), arena-bound movement (3), ranged hit and miss (4), melee against multiple enemies (5), and a two-wave start → boss → victory chain (part of 1). Three remain. All three are test-side work in `Game.CompositionRoot.PlayMode.Tests`, using the existing `ArenaSceneTestRig`, `FakeInputDevice`, and `ArenaGameConfiguration` values; none requires a production, scene, prefab, assembly-definition, or package change. Configuration values may be tuned for determinism; the observables below are fixed.
+The seven-scenario T-8.6 fixture covers defeat + reload (2), arena-bound movement (3), ranged hit and miss (4), melee against multiple enemies (5), and a two-wave start → boss → victory chain (part of 1). Three remained; all three were added on 2026-10-26 (see Status below). All three are test-side work in `Game.CompositionRoot.PlayMode.Tests`, using the existing `ArenaSceneTestRig`, `FakeInputDevice`, and `ArenaGameConfiguration` values; none requires a production, scene, prefab, assembly-definition, or package change. Configuration values may be tuned for determinism; the observables below are fixed.
 
 **Scenario 1 — Start → Wave 1 → Boss → Wave 2 → Wave 3 → Victory**
 
@@ -49,6 +49,8 @@ The seven-scenario T-8.6 fixture covers defeat + reload (2), arena-bound movemen
 - Setup: one regular enemy with a long windup, lethal damage, and a short attack range; no movement or attack input from the player.
 - Drive: enter the arena and wait for the windup to start, then let it complete in range.
 - Observable: the player's health is unchanged at windup start; after the impact the player's health is depleted, the run status is `Defeat`, and the defeat window is shown for that run. Reload timing is already covered by scenario 2; this scenario asserts the defeat, and may additionally assert zero reloads on the defeated tick.
+
+**Status (2026-10-26):** all three scenarios are implemented and green in `ArenaSandboxSmokeTests` — `ThreeWaveStart_ReachesVictory_WithWaveTextInOrder`, `EnemyWindup_PlayerEscapes_ResolvesAsMiss`, and `EnemyWindup_PlayerStaysInRange_DefeatsTheRun`; the fixture ran 10/10 in batchmode, exit 0 (commit `f109da0`).
 
 ## Performance
 
