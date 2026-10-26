@@ -1,0 +1,22 @@
+{
+    "name": "Game.Performance",
+    "rootNamespace": "Game.Performance",
+    "references": [
+        "Game.CompositionRoot",
+        "Game.Arena.Domain",
+        "Game.Arena.Application",
+        "Game.Arena.Infrastructure",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "PERF_MEASUREMENT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
