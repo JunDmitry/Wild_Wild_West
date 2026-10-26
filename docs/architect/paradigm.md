@@ -30,6 +30,7 @@ Domain-Driven Design in the style of *Implementing Domain-Driven Design* (IDDD).
 ## Exceptions
 
 - The legacy stack remains in place until T-9/T-10 as an explicit migration exception, approved in ADR-0009.
+- `Game.Performance` is a development-only measurement assembly compiled only under `PERF_MEASUREMENT` (ADR-0034). It sits outside the shipping layer graph, references CompositionRoot and Infrastructure, and is never referenced by a production assembly.
 
 ## History
 

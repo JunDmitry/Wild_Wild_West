@@ -63,6 +63,8 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0030 | Compose the Arena graph in a persistent root scope and a per-scene child scope | Accepted | 2026-10-25 | [ADR-0030](ADR-0030-composition-root-scopes.md) |
 | ADR-0031 | Bind the Arena scene explicitly and drive the tick from a scene entry point | Accepted | 2026-10-25 | [ADR-0031](ADR-0031-scene-binder-and-frame-driver.md) |
 | ADR-0032 | Load the Arena scene from bootstrap and create the initial run on scene entry | Accepted | 2026-10-25 | [ADR-0032](ADR-0032-bootstrap-scene-load-and-initial-run.md) |
+| ADR-0033 | Fix performance thresholds for the production cut-over | Accepted | 2026-10-25 | [ADR-0033](ADR-0033-performance-thresholds-for-cut-over.md) |
+| ADR-0034 | Measure performance with a development-only harness | Accepted | 2026-10-26 | [ADR-0034](ADR-0034-automated-performance-measurement.md) |
 
 ## New ADR Template
 
