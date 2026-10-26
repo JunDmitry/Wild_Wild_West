@@ -41,6 +41,7 @@ namespace Game.CompositionRoot.PlayMode.Tests
     {
         private const string AttackButton = "Fire1";
         private const string VerticalAxis = "Vertical";
+        private const string HorizontalAxis = "Horizontal";
 
         private static readonly EnemyId FrontEnemyId = EnemyId.FromValue(5001UL);
         private static readonly EnemyId SideEnemyId = EnemyId.FromValue(5002UL);
@@ -598,6 +599,318 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 "Terminal frames request no scene reload.");
         }
 
+        [UnityTest]
+        public IEnumerator ThreeWaveStart_ReachesVictory_WithWaveTextInOrder()
+        {
+            RecordingArenaSceneReloader reloader = new();
+            ArenaSceneTestRig rig = CreateRig(CreateThreeWaveVictoryConfiguration(), reloader);
+
+            int victoryAnnouncements = 0;
+
+            rig.Announcer.Announced += announcement =>
+            {
+                if (announcement == ArenaRunAnnouncer.VictoryAnnouncement)
+                {
+                    victoryAnnouncements++;
+                }
+            };
+
+            // The attack aim is read from the camera; this scenario points the
+            // view at each boss instead of letting the controller follow the player.
+            rig.CameraController.enabled = false;
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            IEnemyColliderRegistration colliders =
+                rig.Scope.Container.Resolve<IEnemyColliderRegistration>();
+
+            List<string> observedWaveText = new();
+            Dictionary<EnemyId, GameObject> tracked = new();
+            EnemyId bossId = EnemyId.None;
+            int lastWave = run.CurrentWaveNumber.Value;
+
+            yield return WaitUntil(() => rig.Hud.WaveText == "Wave 1 of 3", 3f);
+
+            Assert.That(
+                rig.Hud.WaveText,
+                Is.EqualTo("Wave 1 of 3"),
+                "The HUD presents the first wave of the three-wave catalogue.");
+            observedWaveText.Add(rig.Hud.WaveText);
+
+            float deadline = Time.realtimeSinceStartup + 90f;
+
+            while (run.Status == ArenaRunStatus.Playing
+                && Time.realtimeSinceStartup < deadline)
+            {
+                int currentWave = run.CurrentWaveNumber.Value;
+
+                if (currentWave != lastWave)
+                {
+                    // The previous boss is gone; its fixture collider would keep
+                    // capturing the aim ray if it stayed at the death position.
+                    DestroyTrackedColliders(tracked);
+                    bossId = EnemyId.None;
+                    lastWave = currentWave;
+
+                    string expectedWaveText = "Wave " + currentWave + " of 3";
+
+                    yield return WaitUntil(() => rig.Hud.WaveText == expectedWaveText, 3f);
+
+                    Assert.That(
+                        rig.Hud.WaveText,
+                        Is.EqualTo(expectedWaveText),
+                        "The HUD presents wave " + currentWave + " in order.");
+                    observedWaveText.Add(rig.Hud.WaveText);
+                }
+
+                if (bossId.IsNone && TryFindBoss(run, out EnemyId spawnedBoss))
+                {
+                    bossId = spawnedBoss;
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.ContainsKey(bossId) == false
+                    && run.TryGetEnemyPosition(bossId, out Position3D spawn))
+                {
+                    tracked[bossId] = RegisterCollider(
+                        colliders,
+                        bossId,
+                        new Vector3(spawn.X, spawn.Y, spawn.Z));
+                }
+
+                if (bossId.IsNone == false
+                    && tracked.TryGetValue(bossId, out GameObject bossCollider))
+                {
+                    SyncColliders(run, tracked);
+
+                    // The boss spawns outside the arena, so no production view
+                    // exists for it yet. Registering the synced collider on every
+                    // frame keeps the aim ray resolving the boss after it walks in.
+                    colliders.Register(bossId, bossCollider.GetComponent<Collider>());
+
+                    AimAt(rig, run, bossId);
+                }
+
+                if (run.IsSelectedWeaponReady)
+                {
+                    yield return Strike();
+                    continue;
+                }
+
+                yield return null;
+            }
+
+            Assert.That(
+                run.Status,
+                Is.EqualTo(ArenaRunStatus.Victory),
+                "Clearing the third boss won the run.");
+
+            Assert.That(
+                observedWaveText,
+                Is.EqualTo(new[] { "Wave 1 of 3", "Wave 2 of 3", "Wave 3 of 3" }),
+                "The HUD presented every wave text in order.");
+
+            Assert.That(
+                rig.VictoryView.IsShown,
+                Is.True,
+                "The victory window is shown over the published victory.");
+            Assert.That(
+                rig.VictoryView.ShownRunId,
+                Is.EqualTo(session.ActiveArenaRunId));
+            Assert.That(
+                victoryAnnouncements,
+                Is.EqualTo(1),
+                "Victory is presented exactly once.");
+
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "The victory tick requests no scene reload.");
+
+            ArenaRunId shownRunId = rig.VictoryView.ShownRunId;
+
+            yield return WaitForSeconds(0.5f);
+
+            Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Victory));
+            Assert.That(rig.VictoryView.IsShown, Is.True);
+            Assert.That(rig.VictoryView.ShownRunId, Is.EqualTo(shownRunId));
+            Assert.That(
+                victoryAnnouncements,
+                Is.EqualTo(1),
+                "Terminal frames do not present victory again.");
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "Terminal frames request no scene reload.");
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyWindup_PlayerEscapes_ResolvesAsMiss()
+        {
+            RecordingArenaSceneReloader reloader = new();
+            ArenaSceneTestRig rig = CreateRig(CreateWindupEnemyConfiguration(), reloader);
+
+            // Movement is view-relative; the controller would otherwise rewrite
+            // the view basis every frame.
+            rig.CameraController.enabled = false;
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            float deadline = Time.realtimeSinceStartup + 25f;
+            EnemyId attackerId = EnemyId.None;
+            Position3D attackerPosition = Position3D.Zero;
+
+            while (TryFindPendingEnemyAttack(run, out attackerId, out attackerPosition) == false
+                && Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(
+                attackerId.IsNone,
+                Is.False,
+                "The enemy reached range and began its windup.");
+
+            int healthAtWindup = PlayerHealthOf(run);
+
+            Assert.That(
+                healthAtWindup,
+                Is.EqualTo(100),
+                "The player is undamaged when the windup starts.");
+
+            PlayerSnapshot player = new ArenaRunSnapshotMapper().Map(run.CreateSnapshot()).Player;
+            float offsetX = player.Position.X - attackerPosition.X;
+            float offsetZ = player.Position.Z - attackerPosition.Z;
+
+            // The camera is not rotated, so the view basis maps Vertical to +Z
+            // and Horizontal to +X; step away along the dominant escape axis.
+            if (Mathf.Abs(offsetZ) >= Mathf.Abs(offsetX))
+            {
+                _device.Axes[VerticalAxis] = offsetZ >= 0f ? 1f : -1f;
+            }
+            else
+            {
+                _device.Axes[HorizontalAxis] = offsetX >= 0f ? 1f : -1f;
+            }
+
+            yield return WaitUntil(() => HasPendingEnemyAttack(run) == false, 6f);
+
+            _device.Axes.Remove(VerticalAxis);
+            _device.Axes.Remove(HorizontalAxis);
+
+            Assert.That(
+                HasPendingEnemyAttack(run),
+                Is.False,
+                "The windup resolved after the player left the attack range.");
+
+            Assert.That(
+                PlayerHealthOf(run),
+                Is.EqualTo(healthAtWindup),
+                "An out-of-range impact resolves as a miss and damages nothing.");
+            Assert.That(
+                run.Status,
+                Is.EqualTo(ArenaRunStatus.Playing),
+                "Evading the windup leaves the run playing.");
+
+            yield return WaitForSeconds(0.5f);
+
+            Assert.That(
+                PlayerHealthOf(run),
+                Is.EqualTo(healthAtWindup),
+                "The missed impact leaves the player's health unchanged.");
+            Assert.That(run.Status, Is.EqualTo(ArenaRunStatus.Playing));
+        }
+
+        [UnityTest]
+        public IEnumerator EnemyWindup_PlayerStaysInRange_DefeatsTheRun()
+        {
+            RecordingArenaSceneReloader reloader = new();
+            ArenaSceneTestRig rig = CreateRig(CreateWindupEnemyConfiguration(), reloader);
+
+            rig.BinderObject.SetActive(true);
+            yield return null;
+
+            ArenaRunSession session = rig.Scope.Container.Resolve<ArenaRunSession>();
+
+            yield return WaitUntil(() => session.HasActiveRun, 2f);
+
+            IArenaRunRepository repository =
+                rig.Scope.Container.Resolve<IArenaRunRepository>();
+
+            Assert.That(
+                repository.TryGet(session.ActiveArenaRunId, out ArenaRun run),
+                Is.True);
+
+            float deadline = Time.realtimeSinceStartup + 25f;
+            EnemyId attackerId = EnemyId.None;
+
+            while (TryFindPendingEnemyAttack(run, out attackerId, out _) == false
+                && Time.realtimeSinceStartup < deadline)
+            {
+                yield return null;
+            }
+
+            Assert.That(
+                attackerId.IsNone,
+                Is.False,
+                "The enemy reached range and began its lethal windup.");
+
+            int healthAtWindup = PlayerHealthOf(run);
+
+            Assert.That(
+                healthAtWindup,
+                Is.EqualTo(100),
+                "The player is undamaged when the windup starts.");
+
+            // No movement or attack input: the lethal impact lands in range.
+            yield return WaitUntil(() => run.Status == ArenaRunStatus.Defeat, 6f);
+
+            Assert.That(
+                run.Status,
+                Is.EqualTo(ArenaRunStatus.Defeat),
+                "The in-range impact defeated the player.");
+
+            ArenaRunId defeatedRunId = session.ActiveArenaRunId;
+
+            Assert.That(
+                PlayerHealthOf(run),
+                Is.EqualTo(0),
+                "The lethal impact depleted the player's health.");
+            Assert.That(
+                rig.DefeatView.IsShown,
+                Is.True,
+                "The defeat window is shown over the published defeat state.");
+            Assert.That(rig.DefeatView.ShownRunId, Is.EqualTo(defeatedRunId));
+            Assert.That(
+                reloader.ReloadCount,
+                Is.EqualTo(0),
+                "The defeated tick itself requests no reload.");
+        }
+
         private ArenaSceneTestRig CreateRig(
             ArenaGameConfiguration configuration = null,
             IArenaSceneReloader reloader = null)
@@ -731,6 +1044,89 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 defaults.ArenaSceneName);
         }
 
+        /// <summary>
+        /// Three boss-only waves, so the T-9 cut-over chain observes every wave
+        /// transition: wave one, wave two, then the final victory.
+        /// </summary>
+        private static ArenaGameConfiguration CreateThreeWaveVictoryConfiguration()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+            ArenaRunCreationParameters defaultsParameters = defaults.CreationParameters;
+
+            WaveCatalog waves = new(
+                new[]
+                {
+                    new WaveDefinition(WaveNumber.First, 0),
+                    new WaveDefinition(WaveNumber.First.Next(), 0),
+                    new WaveDefinition(WaveNumber.First.Next().Next(), 0),
+                });
+
+            ArenaRunCreationParameters parameters = new(
+                defaultsParameters.ArenaDefinition,
+                defaultsParameters.PlayerDefinition,
+                defaultsParameters.WeaponCatalog,
+                defaultsParameters.EnemyCatalog,
+                waves);
+
+            return new ArenaGameConfiguration(
+                defaults.Arena,
+                parameters,
+                defaults.RestartDelay,
+                new GameDuration(0.1d),
+                defaults.ArenaSceneName);
+        }
+
+        /// <summary>
+        /// One regular enemy with a long windup, a short range, and lethal damage.
+        /// The arena leaves the player enough room to step out of range, and the
+        /// slow enemy speed keeps evasion decisive after the player stops.
+        /// </summary>
+        private static ArenaGameConfiguration CreateWindupEnemyConfiguration()
+        {
+            ArenaGameConfiguration defaults = ArenaGameConfiguration.CreateDefault();
+            ArenaRunCreationParameters defaultsParameters = defaults.CreationParameters;
+
+            ArenaDefinition arena = new(
+                new ArenaBounds(-6f, 6f, -6f, 6f, 0f),
+                Distance.FromValue(2f));
+
+            PlayerDefinition player = new(
+                Position3D.Zero,
+                Health.Full(100),
+                MovementSpeed.FromUnitsPerSecond(5f),
+                CollisionRadius.FromValue(0.5f));
+
+            EnemyDefinition regular = new(
+                EnemyKind.Regular,
+                Health.Full(50),
+                MovementSpeed.FromUnitsPerSecond(2f),
+                CollisionRadius.FromValue(0.5f),
+                DamageAmount.FromPoints(100),
+                Distance.FromValue(1.5f),
+                new GameDuration(0.2d),
+                new GameDuration(2d));
+
+            EnemyCatalog enemies = new(
+                regular,
+                defaultsParameters.EnemyCatalog.Get(EnemyKind.Boss));
+
+            WaveCatalog waves = new(new[] { new WaveDefinition(WaveNumber.First, 1) });
+
+            ArenaRunCreationParameters parameters = new(
+                arena,
+                player,
+                defaultsParameters.WeaponCatalog,
+                enemies,
+                waves);
+
+            return new ArenaGameConfiguration(
+                arena,
+                parameters,
+                new GameDuration(3d),
+                new GameDuration(0.1d),
+                defaults.ArenaSceneName);
+        }
+
         private static bool TryFindBoss(ArenaRun run, out EnemyId bossId)
         {
             ArenaRunSnapshot snapshot = new ArenaRunSnapshotMapper().Map(run.CreateSnapshot());
@@ -840,6 +1236,56 @@ namespace Game.CompositionRoot.PlayMode.Tests
             }
 
             Physics.SyncTransforms();
+        }
+
+        private static int PlayerHealthOf(ArenaRun run)
+        {
+            ArenaRunSnapshot snapshot = new ArenaRunSnapshotMapper().Map(run.CreateSnapshot());
+
+            return snapshot.Player.Health.Current;
+        }
+
+        private static bool HasPendingEnemyAttack(ArenaRun run)
+        {
+            return TryFindPendingEnemyAttack(run, out _, out _);
+        }
+
+        private static bool TryFindPendingEnemyAttack(
+            ArenaRun run,
+            out EnemyId enemyId,
+            out Position3D position)
+        {
+            ArenaRunSnapshot snapshot = new ArenaRunSnapshotMapper().Map(run.CreateSnapshot());
+
+            for (int index = 0; index < snapshot.Enemies.Count; index++)
+            {
+                if (snapshot.Enemies[index].HasPendingAttack)
+                {
+                    enemyId = snapshot.Enemies[index].EnemyId;
+                    position = snapshot.Enemies[index].Position;
+                    return true;
+                }
+            }
+
+            enemyId = EnemyId.None;
+            position = Position3D.Zero;
+            return false;
+        }
+
+        private void DestroyTrackedColliders(Dictionary<EnemyId, GameObject> tracked)
+        {
+            foreach (KeyValuePair<EnemyId, GameObject> entry in tracked)
+            {
+                if (entry.Value == null)
+                {
+                    continue;
+                }
+
+                _colliders.Remove(entry.Value);
+                UnityEngine.Object.DestroyImmediate(entry.Value);
+            }
+
+            tracked.Clear();
         }
 
         private static int HealthOf(ArenaRun run, EnemyId enemyId)
