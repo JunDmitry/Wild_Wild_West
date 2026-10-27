@@ -1,6 +1,6 @@
 # ADR-0020: Let Presentation consume Domain read-model value types
 
-- **Status:** Accepted
+- **Status:** Accepted; the durability of published read models is amended by [ADR-0035](ADR-0035-reusable-frame-buffers.md)
 - **Date:** 2026-10-22
 - **Authors:** architect-role
 - **Reviewers:** none
