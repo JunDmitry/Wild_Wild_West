@@ -50,7 +50,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0017 | Convert view-relative player input in the Application | Accepted | 2026-10-22 | [ADR-0017](ADR-0017-view-relative-player-input.md) |
 | ADR-0018 | PlayMode tests live in a separate Unity test assembly | Accepted | 2026-10-22 | [ADR-0018](ADR-0018-playmode-test-assembly.md) |
 | ADR-0019 | Model the melee Attack Arc in the Domain contract | Accepted | 2026-10-22 | [ADR-0019](ADR-0019-attack-arc-in-domain-contract.md) |
-| ADR-0020 | Let Presentation consume Domain read-model value types | Accepted | 2026-10-22 | [ADR-0020](ADR-0020-presentation-domain-read-model-values.md) |
+| ADR-0020 | Let Presentation consume Domain read-model value types | Accepted (read-model lifetime amended by ADR-0035) | 2026-10-22 | [ADR-0020](ADR-0020-presentation-domain-read-model-values.md) |
 | ADR-0021 | Automatic defeat restart is an Application tick concern | Accepted (defeat-message scope superseded by ADR-0025) | 2026-10-22 | [ADR-0021](ADR-0021-automatic-defeat-restart-in-application-tick.md) |
 | ADR-0022 | Publish one-shot facts through an Application notification sink | Accepted (dispatch seam and failure policy superseded by ADR-0027) | 2026-10-23 | [ADR-0022](ADR-0022-application-notifications-for-one-shot-facts.md) |
 | ADR-0023 | Allow sliding along Arena Bounds in the Domain movement contract | Accepted | 2026-10-23 | [ADR-0023](ADR-0023-arena-bounds-sliding.md) |
@@ -65,6 +65,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0032 | Load the Arena scene from bootstrap and create the initial run on scene entry | Accepted | 2026-10-25 | [ADR-0032](ADR-0032-bootstrap-scene-load-and-initial-run.md) |
 | ADR-0033 | Fix performance thresholds for the production cut-over | Accepted | 2026-10-25 | [ADR-0033](ADR-0033-performance-thresholds-for-cut-over.md) |
 | ADR-0034 | Measure performance with a development-only harness | Accepted | 2026-10-26 | [ADR-0034](ADR-0034-automated-performance-measurement.md) |
+| ADR-0035 | Reuse preallocated frame buffers to make the Arena tick path allocate nothing | Accepted | 2026-10-27 | [ADR-0035](ADR-0035-reusable-frame-buffers.md) |
 
 ## New ADR Template
 
