@@ -1,7 +1,7 @@
 # Performance measurement for the production cut-over
 
 - **Authority:** [ADR-0033](../adr/ADR-0033-performance-thresholds-for-cut-over.md) fixes the thresholds and the player-build procedure; [ADR-0034](../adr/ADR-0034-automated-performance-measurement.md) fixes the harness and the measurement profile.
-- **Status:** measured 2026-10-27 on build `38f856e` (two clean runs); 3 of 5 thresholds pass, GC allocation and physics queries fail. T-9 remains blocked.
+- **Status:** measured 2026-10-27; corrected baseline on build `00903f4` (runs 3–4) reports ~6.1–6.3 KB/frame. 3 of 5 thresholds pass; GC allocation and physics queries fail. T-9 remains blocked.
 - **Owner:** `architect-role`; the harness is implemented by `coder-role`.
 
 ## Scope
@@ -138,13 +138,17 @@ Append one row per run; never edit a recorded row. A rerun after a code change i
 
 | Run | Build commit | Date (UTC) | Avg ms | P99 ms | Max ms | GC B/frame | Enemy peak | Physics peak | Verdict |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | `38f856e` | 2026-10-26T23:37:52Z | 16.666 | 19.903 | 23.203 | 35 200 | 10 | 12 | fail (GC, physics) |
-| 2 | `38f856e` | 2026-10-26T23:39:08Z | 16.666 | 19.593 | 23.727 | 31 200 | 10 | 12 | fail (GC, physics) |
+| 1 | `38f856e` | 2026-10-26T23:37:52Z | 16.666 | 19.903 | 23.203 | 35 200 † | 10 | 12 | fail (GC, physics) |
+| 2 | `38f856e` | 2026-10-26T23:39:08Z | 16.666 | 19.593 | 23.727 | 31 200 † | 10 | 12 | fail (GC, physics) |
+| 3 | `00903f4` | 2026-10-27T00:19:15Z | 16.666 | 19.635 | 23.229 | 6 087 | 10 | 12 | fail (GC, physics) |
+| 4 | `00903f4` | 2026-10-27T00:20:19Z | 16.667 | 19.823 | 23.389 | 6 277 | 10 | 12 | fail (GC, physics) |
+
+† **Invalid for metric 3.** Runs 1–2 used the capacity-1 `GC.Alloc` recorder without wrap-around, which froze its first sample, so the GC column repeats one startup value. They are left unedited as the audit record; runs 3–4 are the corrected baseline (recorder fixed in `00903f4`). Their frame-time, enemy, and physics columns are valid.
 
 - **Machine:** Windows 10 (10.0.19045) 64-bit, Intel Core i5-10500H @ 2.50 GHz, NVIDIA GeForce GTX 1650 Max-Q, 24 393 MB.
 - **Window:** both runs captured 3 301 frames over 55 s, `runEndedEarly = false`.
-- **Harness attribution:** `GC.GetAllocatedBytesForCurrentThread()` delta over each capture block is 0 B in both runs, so the recorded GC total is game-side, not harness-side.
-- **GC allocation:** every captured frame allocates in both runs (3 301 / 3 301), at a near-constant per-frame amount — 35 200 B in run 1, 31 200 B in run 2.
+- **Harness attribution:** `GC.GetAllocatedBytesForCurrentThread()` is unsupported in this player (a deliberate 4 KiB allocation produces no delta), so harness allocation is established by inspection: the capture path allocates nothing.
+- **GC allocation:** every captured frame allocates in both corrected runs, at 6 087 B/frame (run 3) and 6 277 B/frame (run 4). The allocation sits in the per-tick path — the domain/application snapshot graph, the per-frame enemy movement batch and its domain events, and presenter collections — not in TextMeshPro text assignment (a change-driven HUD spike lowered the total by only ~2 %).
 - **Preliminary run (not recorded):** the implementing coder's run of the same code produced 31.1 KB/frame and physics peak 12. Its `build-info.json` recorded `-perfcommit e633b4f`, the specification commit rather than the code commit, so it is not attributable and is not entered as a results row.
 
 **Legacy comparison:** not applicable — no runnable legacy scene exists (scene-GUID evidence in § Scope).
