@@ -126,7 +126,8 @@ namespace Game.Performance
                 ProfilerCategory.Memory,
                 GcAllocMarker,
                 1,
-                ProfilerRecorderOptions.SumAllSamplesInFrame);
+                ProfilerRecorderOptions.SumAllSamplesInFrame
+                    | ProfilerRecorderOptions.WrapAroundWhenCapacityReached);
 
             if (_gcAllocRecorder.Valid == false)
             {

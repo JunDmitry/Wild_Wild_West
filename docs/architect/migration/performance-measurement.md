@@ -125,7 +125,12 @@ An aborted run is not a pass. Stop and report to the architect; do not substitut
 - The physics counter cannot be resolved through `ProfilerRecorderHandle.GetAvailable` for the player build.
 - The run reaches `Victory` or `Defeat`, or the scene reloads, inside the 60 s window.
 - Fewer than 55 s of frames are captured, or the process exits non-zero.
-- The probe itself allocates during the capture window (prove the harness allocation-free before judging metric 3).
+- The probe allocates inside the capture window. The capture path (`Update`, `CaptureFrame`, `Finish`) is allocation-free by inspection; `GC.GetAllocatedBytesForCurrentThread()` is **not supported in a 2022.3.46f1 player build** (a deliberate 4 KiB allocation produces no delta), so that API cannot be used as the check.
+
+## Measurement-instrument notes
+
+- The `GC.Alloc` recorder must be started with `ProfilerRecorderOptions.SumAllSamplesInFrame | ProfilerRecorderOptions.WrapAroundWhenCapacityReached`. Without wrap-around, a capacity-1 recorder captures one sample at startup and repeats it for the whole run. Runs recorded before 2026-10-27 with that defect are invalid for metric 3 and are annotated as such below.
+- The physics counter is the sum of the three named markers (metric 5); no single `Physics.Query` counter exists in this player.
 
 ## Recording results
 
