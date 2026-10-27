@@ -25,24 +25,24 @@ namespace Game.Performance.Editor
         public static void Build()
         {
             int exitCode = 1;
-            BuildTargetGroup targetGroup = BuildTargetGroup.Standalone;
-            string previousDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
+            UnityEditor.Build.NamedBuildTarget targetGroup = UnityEditor.Build.NamedBuildTarget.Standalone;
+            string previousDefines = PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Standalone);
 
             try
             {
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(
+                PlayerSettings.SetScriptingDefineSymbols(
                     targetGroup,
                     AppendDefine(previousDefines, MeasureDefine));
 
                 string outputDirectory = Path.GetFullPath(OutputDirectory);
                 Directory.CreateDirectory(outputDirectory);
 
-                BuildPlayerOptions options = new BuildPlayerOptions
+                BuildPlayerOptions options = new()
                 {
                     scenes = new[] { ArenaScenePath },
                     locationPathName = Path.Combine(outputDirectory, PlayerName),
                     target = BuildTarget.StandaloneWindows64,
-                    targetGroup = targetGroup,
+                    targetGroup = targetGroup.ToBuildTargetGroup(),
                     options = BuildOptions.Development,
                     extraScriptingDefines = new[] { MeasureDefine },
                 };
@@ -66,7 +66,7 @@ namespace Game.Performance.Editor
             }
             finally
             {
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, previousDefines);
+                PlayerSettings.SetScriptingDefineSymbols(targetGroup, previousDefines);
             }
 
             if (Application.isBatchMode)

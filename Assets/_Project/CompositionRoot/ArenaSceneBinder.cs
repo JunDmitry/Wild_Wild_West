@@ -85,6 +85,15 @@ namespace Game.CompositionRoot
                 new EnemyViewTransformRegistry(_enemyViews));
         }
 
+        private static void Require(UnityEngine.Object reference, string fieldName)
+        {
+            if (reference == null)
+            {
+                throw new InvalidOperationException(
+                    "ArenaSceneBinder is missing its " + fieldName + " scene reference.");
+            }
+        }
+
         private void BuildScope()
         {
             ArenaSceneObjects sceneObjects = SceneObjectsOverride ?? CreateSceneObjects();
@@ -195,15 +204,6 @@ namespace Game.CompositionRoot
             Require(_waveIndicator, nameof(_waveIndicator));
             Require(_bossIndicator, nameof(_bossIndicator));
             Require(_defeatWindow, nameof(_defeatWindow));
-        }
-
-        private static void Require(UnityEngine.Object reference, string fieldName)
-        {
-            if (reference == null)
-            {
-                throw new InvalidOperationException(
-                    "ArenaSceneBinder is missing its " + fieldName + " scene reference.");
-            }
         }
     }
 }
