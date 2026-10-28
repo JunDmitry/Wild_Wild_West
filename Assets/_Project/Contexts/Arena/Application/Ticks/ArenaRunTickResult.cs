@@ -153,7 +153,7 @@ namespace Game.Arena.Application.Ticks
             {
                 ArenaRunTickStage stage = executedStages[index];
 
-                if (Enum.IsDefined(typeof(ArenaRunTickStage), stage) == false)
+                if ((int)stage < 0 || (int)stage > (int)ArenaRunTickStage.DefeatRestart)
                 {
                     throw new ArgumentException("Executed stages contain an unknown value.", nameof(executedStages));
                 }

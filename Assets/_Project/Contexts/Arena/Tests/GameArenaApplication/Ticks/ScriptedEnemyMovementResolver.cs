@@ -21,6 +21,8 @@ namespace Game.Arena.Application.Tests.Ticks
 
         public EnemyMovementBatchRequest LastRequest { get; private set; }
 
+        private readonly List<EnemyMovementBatchResolutionEntry> _entries = new();
+
         public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
             EnemyMovementBatchRequest request)
         {
@@ -32,7 +34,7 @@ namespace Game.Arena.Application.Tests.Ticks
                 return null;
             }
 
-            List<EnemyMovementBatchResolutionEntry> entries = new();
+            _entries.Clear();
 
             for (int index = 0; index < request.Intents.Count; index++)
             {
@@ -47,10 +49,10 @@ namespace Game.Arena.Application.Tests.Ticks
                     ? intent.Intent.From
                     : intent.Intent.RequestedPosition;
 
-                entries.Add(new EnemyMovementBatchResolutionEntry(intent.EnemyId, position));
+                _entries.Add(new EnemyMovementBatchResolutionEntry(intent.EnemyId, position));
             }
 
-            return entries;
+            return _entries;
         }
     }
 }

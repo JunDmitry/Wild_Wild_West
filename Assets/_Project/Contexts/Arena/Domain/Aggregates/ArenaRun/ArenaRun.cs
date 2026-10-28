@@ -149,7 +149,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             EnemyCapacity = CalculateEnemyCapacity(runWaveCatalog);
             _eventPool = new ArenaDomainEventPool(EnemyCapacity);
-            _operationEvents = new List<IArenaDomainEvent>(EnemyCapacity * 2);
+            _operationEvents = new List<IArenaDomainEvent>(EnemyCapacity * 4);
             _orderedEnemyIds = new List<EnemyId>(EnemyCapacity);
             _scratchTargets = new List<EnemyId>(EnemyCapacity);
             _scratchDefeated = new List<EnemyId>(EnemyCapacity);
@@ -1135,10 +1135,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
+            IReadOnlyList<EnemyMovementIntent> pendingIntents = _pendingEnemyMovementBatchRequest.Intents;
             bool anyMoved = false;
 
-            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            for (int index = 0; index < pendingIntents.Count; index++)
             {
+                EnemyMovementIntent intent = pendingIntents[index];
                 Enemy enemy = _enemies[intent.EnemyId];
                 Position3D acceptedPosition = acceptedPositions[intent.EnemyId];
 
@@ -1155,8 +1157,9 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     EnemyMovementBatchRejectionReason.None);
             }
 
-            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            for (int index = 0; index < pendingIntents.Count; index++)
             {
+                EnemyMovementIntent intent = pendingIntents[index];
                 Enemy enemy = _enemies[intent.EnemyId];
                 enemy.MoveTo(acceptedPositions[intent.EnemyId]);
             }
@@ -1467,9 +1470,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             acceptedPositions.Clear();
             _scratchExpectedIds.Clear();
 
-            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            IReadOnlyList<EnemyMovementIntent> pendingIntents = _pendingEnemyMovementBatchRequest.Intents;
+
+            for (int index = 0; index < pendingIntents.Count; index++)
             {
-                _scratchExpectedIds.Add(intent.EnemyId);
+                _scratchExpectedIds.Add(pendingIntents[index].EnemyId);
             }
 
             for (int index = 0; index < resolution.Entries.Count; index++)
@@ -1494,8 +1499,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 acceptedPositions.Add(entry.EnemyId, entry.AcceptedPosition);
             }
 
-            foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
+            for (int index = 0; index < pendingIntents.Count; index++)
             {
+                EnemyMovementIntent intent = pendingIntents[index];
+
                 if (acceptedPositions.ContainsKey(intent.EnemyId) == false)
                 {
                     return EnemyMovementBatchRejectionReason.MissingEnemyId;
@@ -1654,7 +1661,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (enteredBossCombat)
             {
-                events.Add(new WavePhaseChanged(
+                events.Add(_eventPool.TakeWavePhaseChanged(
                     Id,
                     nextRevision,
                     _currentWave.Number,
@@ -1670,19 +1677,19 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 return;
             }
 
-            events.Add(new WavePhaseChanged(
+            events.Add(_eventPool.TakeWavePhaseChanged(
                 Id,
                 nextRevision,
                 _currentWave.Number,
                 previousPhase,
                 _currentWave.Phase));
 
-            events.Add(new WaveCompleted(Id, nextRevision, _currentWave.Number));
+            events.Add(_eventPool.TakeWaveCompleted(Id, nextRevision, _currentWave.Number));
 
             if (_waveCatalog.IsLast(_currentWave.Number))
             {
                 Status = ArenaRunStatus.Victory;
-                events.Add(new ArenaRunVictorious(Id, nextRevision));
+                events.Add(_eventPool.TakeArenaRunVictorious(Id, nextRevision));
 
                 return;
             }
@@ -1697,7 +1704,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             WaveNumber nextNumber = _currentWave.Number.Next();
             _currentWave = new Wave(_waveCatalog.Get(nextNumber));
 
-            events.Add(new WaveStarted(
+            events.Add(_eventPool.TakeWaveStarted(
                 Id,
                 nextRevision,
                 _currentWave.Number,
