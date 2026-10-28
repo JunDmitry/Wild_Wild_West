@@ -8,9 +8,48 @@ namespace Game.Arena.Domain.Interactions.Movement
 {
     public sealed class EnemyMovementBatchRequest : IInteractionRequest
     {
-        private readonly ReadOnlyCollection<EnemyMovementIntent> _intents;
+        private readonly HashSet<EnemyId> _seen = new();
+        private IReadOnlyList<EnemyMovementIntent> _intents;
+
+        internal EnemyMovementBatchRequest()
+        {
+            _intents = Array.Empty<EnemyMovementIntent>();
+        }
 
         public EnemyMovementBatchRequest(
+            InteractionCorrelation correlation,
+            IReadOnlyList<EnemyMovementIntent> intents)
+        {
+            Validate(correlation, intents);
+
+            EnemyMovementIntent[] copied = new EnemyMovementIntent[intents.Count];
+
+            for (int index = 0; index < intents.Count; index++)
+            {
+                copied[index] = intents[index];
+            }
+
+            Correlation = correlation;
+            _intents = Array.AsReadOnly(copied);
+        }
+
+        public InteractionCorrelation Correlation { get; private set; }
+
+        public InteractionKind Kind => InteractionKind.EnemyMovementBatch;
+
+        public IReadOnlyList<EnemyMovementIntent> Intents => _intents;
+
+        internal void Fill(
+            InteractionCorrelation correlation,
+            IReadOnlyList<EnemyMovementIntent> intents)
+        {
+            Validate(correlation, intents);
+
+            Correlation = correlation;
+            _intents = intents;
+        }
+
+        private void Validate(
             InteractionCorrelation correlation,
             IReadOnlyList<EnemyMovementIntent> intents)
         {
@@ -34,8 +73,7 @@ namespace Game.Arena.Domain.Interactions.Movement
                 throw new ArgumentException("At least one movement intent is required.", nameof(intents));
             }
 
-            HashSet<EnemyId> ids = new();
-            EnemyMovementIntent[] copied = new EnemyMovementIntent[intents.Count];
+            _seen.Clear();
 
             for (int index = 0; index < intents.Count; index++)
             {
@@ -51,22 +89,11 @@ namespace Game.Arena.Domain.Interactions.Movement
                     throw new ArgumentException("EnemyMovementIntent contains invalid movement intent.", nameof(intents));
                 }
 
-                if (ids.Add(intent.EnemyId) == false)
+                if (_seen.Add(intent.EnemyId) == false)
                 {
                     throw new ArgumentException("EnemyMovementIntent contains duplicate EnemyId.", nameof(intents));
                 }
-
-                copied[index] = intent;
             }
-
-            Correlation = correlation;
-            _intents = Array.AsReadOnly(copied);
         }
-
-        public InteractionCorrelation Correlation { get; }
-
-        public InteractionKind Kind => InteractionKind.EnemyMovementBatch;
-
-        public IReadOnlyList<EnemyMovementIntent> Intents => _intents;
     }
 }

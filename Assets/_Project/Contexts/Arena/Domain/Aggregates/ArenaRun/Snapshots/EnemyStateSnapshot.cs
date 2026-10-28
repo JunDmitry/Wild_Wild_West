@@ -9,6 +9,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class EnemyStateSnapshot
     {
+        internal EnemyStateSnapshot()
+        {
+        }
+
         public EnemyStateSnapshot(
             EnemyId enemyId,
             EnemyKind kind,
@@ -23,6 +27,34 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new ArgumentException("EnemyId cannot be None.", nameof(enemyId));
             }
 
+            Fill(enemyId, kind, position, health, collisionRadius, attackReadyAt, pendingAttack);
+        }
+
+        public EnemyId EnemyId { get; private set; }
+
+        public EnemyKind Kind { get; private set; }
+
+        public Position3D Position { get; private set; }
+
+        public Health Health { get; private set; }
+
+        public CollisionRadius CollisionRadius { get; private set; }
+
+        public GameTimePoint AttackReadyAt { get; private set; }
+
+        public bool HasPendingAttack { get; private set; }
+
+        public PendingEnemyAttack PendingAttack { get; private set; }
+
+        internal void Fill(
+            EnemyId enemyId,
+            EnemyKind kind,
+            Position3D position,
+            Health health,
+            CollisionRadius collisionRadius,
+            GameTimePoint attackReadyAt,
+            PendingEnemyAttack pendingAttack)
+        {
             EnemyId = enemyId;
             Kind = kind;
             Position = position;
@@ -32,21 +64,5 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             PendingAttack = pendingAttack;
             HasPendingAttack = pendingAttack.Id.IsNone == false;
         }
-
-        public EnemyId EnemyId { get; }
-
-        public EnemyKind Kind { get; }
-
-        public Position3D Position { get; }
-
-        public Health Health { get; }
-
-        public CollisionRadius CollisionRadius { get; }
-
-        public GameTimePoint AttackReadyAt { get; }
-
-        public bool HasPendingAttack { get; }
-
-        public PendingEnemyAttack PendingAttack { get; }
     }
 }

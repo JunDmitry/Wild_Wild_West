@@ -5,6 +5,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class WeaponSwitchOutcome
     {
+        internal WeaponSwitchOutcome()
+        {
+        }
+
         private WeaponSwitchOutcome(
             WeaponSwitchStatus status,
             WeaponKind selectedWeapon,
@@ -15,13 +19,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Change = change ?? throw new ArgumentNullException(nameof(change));
         }
 
-        public WeaponSwitchStatus Status { get; }
+        public WeaponSwitchStatus Status { get; private set; }
 
-        public WeaponKind SelectedWeapon { get; }
+        public WeaponKind SelectedWeapon { get; private set; }
 
-        public ArenaRunChange Change { get; }
+        public ArenaRunChange Change { get; private set; }
 
         public bool IsSwitched => Status == WeaponSwitchStatus.Switched;
+
+        internal void Fill(
+            WeaponSwitchStatus status,
+            WeaponKind selectedWeapon,
+            ArenaRunChange change)
+        {
+            Status = status;
+            SelectedWeapon = selectedWeapon;
+            Change = change ?? throw new ArgumentNullException(nameof(change));
+        }
 
         public static WeaponSwitchOutcome Switched(
             WeaponKind selectedWeapon,

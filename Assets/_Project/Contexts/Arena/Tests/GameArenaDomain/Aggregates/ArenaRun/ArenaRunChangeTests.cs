@@ -11,7 +11,7 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
     public sealed class ArenaRunChangeTests
     {
         [Test]
-        public void ConstructorCopiesDomainEventCollection()
+        public void ConstructorStoresDomainEventCollectionWithoutCopying()
         {
             ArenaRunId runId = ArenaRunId.FromValue(1UL);
             AggregateRevision revision = AggregateRevision.Initial.Next();
@@ -23,8 +23,10 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             ArenaRunChange change = new(revision, source);
             source[0] = new ArenaRunVictorious(runId, revision);
 
+            // ADR-0036 point 5: the change no longer copies its caller's list;
+            // it is valid only until the next operation.
             Assert.That(change.DomainEvents.Count, Is.EqualTo(1));
-            Assert.That(change.DomainEvents[0], Is.TypeOf<ArenaRunDefeated>());
+            Assert.That(change.DomainEvents[0], Is.TypeOf<ArenaRunVictorious>());
         }
 
         [Test]

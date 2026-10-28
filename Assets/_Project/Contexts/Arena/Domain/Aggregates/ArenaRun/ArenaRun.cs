@@ -35,6 +35,40 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private EnemyMovementBatchRequest _pendingEnemyMovementBatchRequest;
         private AttackId _lastAttackId;
 
+        private readonly ArenaDomainEventPool _eventPool;
+        private readonly List<IArenaDomainEvent> _operationEvents;
+        private readonly List<EnemyId> _orderedEnemyIds;
+        private readonly List<EnemyId> _scratchTargets;
+        private readonly List<EnemyId> _scratchDefeated;
+        private readonly List<EnemyId> _scratchEligible;
+        private readonly List<PendingEnemyAttack> _scratchStartedAttacks;
+        private readonly List<EnemyAttackImpactPlanEntry> _scratchImpactPlan;
+        private readonly List<EnemyMovementIntent> _scratchMovementIntents;
+        private readonly Dictionary<EnemyId, Position3D> _scratchAcceptedPositions;
+        private readonly HashSet<EnemyId> _scratchExpectedIds;
+        private readonly ArenaRunChange _change;
+        private readonly EnemyMovementBatchRequest _movementBatchRequest;
+
+        private readonly PlayerMovementRequestOutcome _movementRequestOutcome;
+        private readonly PlayerMovementResolutionOutcome _movementResolutionOutcome;
+        private readonly WeaponSwitchOutcome _weaponSwitchOutcome;
+        private readonly TimeAdvanceOutcome _timeAdvanceOutcome;
+        private readonly EnemySpawnRequestOutcome _spawnRequestOutcome;
+        private readonly EnemySpawnResolutionOutcome _spawnResolutionOutcome;
+        private readonly PlayerAttackStartOutcome _playerAttackStartOutcome;
+        private readonly PlayerAttackImpactRequestOutcome _playerAttackImpactRequestOutcome;
+        private readonly PlayerAttackImpactOutcome _playerAttackImpactOutcome;
+        private readonly EnemyAttackStartOutcome _enemyAttackStartOutcome;
+        private readonly EnemyAttackImpactOutcome _enemyAttackImpactOutcome;
+        private readonly EnemyMovementBatchRequestOutcome _enemyMovementBatchRequestOutcome;
+        private readonly EnemyMovementBatchResolutionOutcome _enemyMovementBatchResolutionOutcome;
+        private readonly InteractionCancellationOutcome _cancellationOutcome;
+
+        private static readonly IReadOnlyList<IArenaDomainEvent> NoEvents =
+            Array.Empty<IArenaDomainEvent>();
+
+        private static readonly Comparison<EnemyId> CompareEnemyIdValues = CompareEnemyIds;
+
         internal ArenaRun(
             ArenaRunId id,
             Player runPlayer,
@@ -112,6 +146,36 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _movementPathPolicy = runMovementPathPolicy;
 
             CurrentTime = new GameTimePoint(0);
+
+            EnemyCapacity = CalculateEnemyCapacity(runWaveCatalog);
+            _eventPool = new ArenaDomainEventPool(EnemyCapacity);
+            _operationEvents = new List<IArenaDomainEvent>(EnemyCapacity * 2);
+            _orderedEnemyIds = new List<EnemyId>(EnemyCapacity);
+            _scratchTargets = new List<EnemyId>(EnemyCapacity);
+            _scratchDefeated = new List<EnemyId>(EnemyCapacity);
+            _scratchEligible = new List<EnemyId>(EnemyCapacity);
+            _scratchStartedAttacks = new List<PendingEnemyAttack>(EnemyCapacity);
+            _scratchImpactPlan = new List<EnemyAttackImpactPlanEntry>(EnemyCapacity);
+            _scratchMovementIntents = new List<EnemyMovementIntent>(EnemyCapacity);
+            _scratchAcceptedPositions = new Dictionary<EnemyId, Position3D>(EnemyCapacity);
+            _scratchExpectedIds = new HashSet<EnemyId>();
+            _change = new ArenaRunChange();
+            _movementBatchRequest = new EnemyMovementBatchRequest();
+
+            _movementRequestOutcome = new PlayerMovementRequestOutcome();
+            _movementResolutionOutcome = new PlayerMovementResolutionOutcome();
+            _weaponSwitchOutcome = new WeaponSwitchOutcome();
+            _timeAdvanceOutcome = new TimeAdvanceOutcome();
+            _spawnRequestOutcome = new EnemySpawnRequestOutcome();
+            _spawnResolutionOutcome = new EnemySpawnResolutionOutcome();
+            _playerAttackStartOutcome = new PlayerAttackStartOutcome();
+            _playerAttackImpactRequestOutcome = new PlayerAttackImpactRequestOutcome();
+            _playerAttackImpactOutcome = new PlayerAttackImpactOutcome();
+            _enemyAttackStartOutcome = new EnemyAttackStartOutcome();
+            _enemyAttackImpactOutcome = new EnemyAttackImpactOutcome();
+            _enemyMovementBatchRequestOutcome = new EnemyMovementBatchRequestOutcome();
+            _enemyMovementBatchResolutionOutcome = new EnemyMovementBatchResolutionOutcome();
+            _cancellationOutcome = new InteractionCancellationOutcome();
         }
 
         public ArenaRunId Id { get; }
@@ -133,6 +197,21 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         public int RegularEnemiesRemainingToSpawn => _currentWave.RegularEnemiesRemainingToSpawn;
         public int ActiveEnemyCount => _enemies.Count;
+
+        /// <summary>
+        /// Upper bound on enemies alive at once: the largest catalogue wave's
+        /// regular count plus its boss. Derived, never a literal (ADR-0035).
+        /// </summary>
+        public int EnemyCapacity { get; }
+
+        /// <summary>
+        /// Advances the Domain event pool to the other slot and releases the
+        /// events that slot held two ticks ago (ADR-0036 point 3).
+        /// </summary>
+        public void BeginTick()
+        {
+            _eventPool.BeginTick();
+        }
 
         public int PendingEnemyAttackCount
         {
@@ -235,31 +314,54 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             PlanarMovementIntent intent = new(_player.Position, permittedMovement.Direction, permittedMovement.Distance);
             InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.PlayerMovement, Revision);
             _pendingMovementRequest = new(correlation, intent, _player.CollisionRadius);
+            _movementRequestOutcome.Fill(
+                PlayerMovementRequestStatus.Requested,
+                _pendingMovementRequest);
 
-            return PlayerMovementRequestOutcome.Requested(_pendingMovementRequest);
+            return _movementRequestOutcome;
         }
 
         public WeaponSwitchOutcome SwitchWeapon()
         {
             if (Status != ArenaRunStatus.Playing)
             {
-                return WeaponSwitchOutcome.RunIsNotPlaying(SelectedWeapon, CreateNoChange());
+                _weaponSwitchOutcome.Fill(
+                    WeaponSwitchStatus.RunIsNotPlaying,
+                    SelectedWeapon,
+                    CreateNoChange());
+
+                return _weaponSwitchOutcome;
             }
 
             if (_interactionLedger.HasPending)
             {
-                return WeaponSwitchOutcome.InteractionPending(SelectedWeapon, CreateNoChange());
+                _weaponSwitchOutcome.Fill(
+                    WeaponSwitchStatus.InteractionPending,
+                    SelectedWeapon,
+                    CreateNoChange());
+
+                return _weaponSwitchOutcome;
             }
 
             if (_player.HasPendingAttack)
             {
-                return WeaponSwitchOutcome.AttackPending(SelectedWeapon, CreateNoChange());
+                _weaponSwitchOutcome.Fill(
+                    WeaponSwitchStatus.AttackPending,
+                    SelectedWeapon,
+                    CreateNoChange());
+
+                return _weaponSwitchOutcome;
             }
 
             _player.SwitchWeapon();
             Revision = Revision.Next();
 
-            return WeaponSwitchOutcome.Switched(SelectedWeapon, CreateStateChange());
+            _weaponSwitchOutcome.Fill(
+                WeaponSwitchStatus.Switched,
+                SelectedWeapon,
+                CreateStateChange());
+
+            return _weaponSwitchOutcome;
         }
 
         public TimeAdvanceOutcome AdvanceTime(GameDuration duration)
@@ -271,18 +373,33 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (Status != ArenaRunStatus.Playing)
             {
-                return TimeAdvanceOutcome.RunIsNotPlaying(CurrentTime, CreateNoChange());
+                _timeAdvanceOutcome.Fill(
+                    TimeAdvanceStatus.RunIsNotPlaying,
+                    CurrentTime,
+                    CreateNoChange());
+
+                return _timeAdvanceOutcome;
             }
 
             if (_interactionLedger.HasPending)
             {
-                return TimeAdvanceOutcome.InteractionPending(CurrentTime, CreateNoChange());
+                _timeAdvanceOutcome.Fill(
+                    TimeAdvanceStatus.InteractionPending,
+                    CurrentTime,
+                    CreateNoChange());
+
+                return _timeAdvanceOutcome;
             }
 
             CurrentTime += duration;
             Revision = Revision.Next();
 
-            return TimeAdvanceOutcome.Advanced(CurrentTime, CreateStateChange());
+            _timeAdvanceOutcome.Fill(
+                TimeAdvanceStatus.Advanced,
+                CurrentTime,
+                CreateStateChange());
+
+            return _timeAdvanceOutcome;
         }
 
         public PlayerMovementResolutionOutcome ApplyPlayerMovement(PlayerMovementResolution resolution)
@@ -291,27 +408,47 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (admission.IsAdmitted == false)
             {
-                return PlayerMovementResolutionOutcome.Rejected(MapRejectionReason(admission.RejectionReason), CreateNoChange());
+                _movementResolutionOutcome.Fill(
+                    PlayerMovementResolutionStatus.Rejected,
+                    MapRejectionReason(admission.RejectionReason),
+                    CreateNoChange());
+
+                return _movementResolutionOutcome;
             }
 
             PlayerMovementResolutionRejectionReason geometryRejection = ValidateAcceptedPosition(_pendingMovementRequest, resolution.AcceptedPosition);
 
             if (geometryRejection != PlayerMovementResolutionRejectionReason.None)
             {
-                return PlayerMovementResolutionOutcome.Rejected(geometryRejection, CreateNoChange());
+                _movementResolutionOutcome.Fill(
+                    PlayerMovementResolutionStatus.Rejected,
+                    geometryRejection,
+                    CreateNoChange());
+
+                return _movementResolutionOutcome;
             }
 
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
 
             if (_player.Position == resolution.AcceptedPosition)
             {
-                return PlayerMovementResolutionOutcome.AcceptedWithoutStateChange(CreateNoChange());
+                _movementResolutionOutcome.Fill(
+                    PlayerMovementResolutionStatus.AcceptedWithoutStateChange,
+                    PlayerMovementResolutionRejectionReason.None,
+                    CreateNoChange());
+
+                return _movementResolutionOutcome;
             }
 
             _player.MoveTo(resolution.AcceptedPosition);
             Revision = Revision.Next();
 
-            return PlayerMovementResolutionOutcome.Applied(CreateStateChange());
+            _movementResolutionOutcome.Fill(
+                PlayerMovementResolutionStatus.Applied,
+                PlayerMovementResolutionRejectionReason.None,
+                CreateStateChange());
+
+            return _movementResolutionOutcome;
         }
 
         public EnemySpawnRequestOutcome RequestEnemySpawn()
@@ -348,7 +485,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 kind,
                 _enemyCatalog.Get(kind).CollisionRadius);
 
-            return EnemySpawnRequestOutcome.Requested(_pendingSpawnRequest);
+            _spawnRequestOutcome.Fill(
+                EnemySpawnRequestStatus.Requested,
+                _pendingSpawnRequest);
+
+            return _spawnRequestOutcome;
         }
 
         public EnemySpawnResolutionOutcome ApplyEnemySpawn(EnemySpawnResolution resolution)
@@ -357,22 +498,22 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (admission.IsAdmitted == false)
             {
-                return EnemySpawnResolutionOutcome.Rejected(MapSpawnRejectionReason(admission.RejectionReason), CreateNoChange());
+                return FillSpawnRejection(MapSpawnRejectionReason(admission.RejectionReason));
             }
 
             if (resolution.EnemyId.IsNone)
             {
-                return EnemySpawnResolutionOutcome.Rejected(EnemySpawnResolutionRejectionReason.EnemyIdIsNone, CreateNoChange());
+                return FillSpawnRejection(EnemySpawnResolutionRejectionReason.EnemyIdIsNone);
             }
 
             if (_enemies.ContainsKey(resolution.EnemyId))
             {
-                return EnemySpawnResolutionOutcome.Rejected(EnemySpawnResolutionRejectionReason.DuplicateEnemyId, CreateNoChange());
+                return FillSpawnRejection(EnemySpawnResolutionRejectionReason.DuplicateEnemyId);
             }
 
             if (_arenaDefinition.IsSpawnPosition(resolution.SpawnPosition) == false)
             {
-                return EnemySpawnResolutionOutcome.Rejected(EnemySpawnResolutionRejectionReason.SpawnPositionOutsidePerimeter, CreateNoChange());
+                return FillSpawnRejection(EnemySpawnResolutionRejectionReason.SpawnPositionOutsidePerimeter);
             }
 
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
@@ -392,34 +533,53 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             Revision = Revision.Next();
 
-            IArenaDomainEvent[] events =
-            {
-                new EnemySpawned(Id, Revision, enemy.Id, enemy.Kind, enemy.Position),
-            };
+            _operationEvents.Clear();
+            _operationEvents.Add(_eventPool.TakeEnemySpawned(
+                Id,
+                Revision,
+                enemy.Id,
+                enemy.Kind,
+                enemy.Position));
 
-            return EnemySpawnResolutionOutcome.Spawned(new ArenaRunChange(Revision, true, events));
+            _spawnResolutionOutcome.Fill(
+                EnemySpawnResolutionStatus.Spawned,
+                EnemySpawnResolutionRejectionReason.None,
+                CreateChange(true));
+
+            return _spawnResolutionOutcome;
+        }
+
+        private EnemySpawnResolutionOutcome FillSpawnRejection(
+            EnemySpawnResolutionRejectionReason reason)
+        {
+            _spawnResolutionOutcome.Fill(
+                EnemySpawnResolutionStatus.Rejected,
+                reason,
+                CreateNoChange());
+
+            return _spawnResolutionOutcome;
         }
 
         public PlayerAttackStartOutcome StartPlayerAttack()
         {
             if (Status != ArenaRunStatus.Playing)
             {
-                return PlayerAttackStartOutcome.RunIsNotPlaying(CreateNoChange());
+                return FillAttackStart(PlayerAttackStartStatus.RunIsNotPlaying, default);
             }
 
             if (_interactionLedger.HasPending)
             {
-                return PlayerAttackStartOutcome.InteractionPending(CreateNoChange());
+                return FillAttackStart(PlayerAttackStartStatus.InteractionPending, default);
             }
 
             if (_player.HasPendingAttack)
             {
-                return PlayerAttackStartOutcome.AttackAlreadyPending(CreateNoChange());
+                return FillAttackStart(PlayerAttackStartStatus.AttackAlreadyPending, default);
             }
 
             if (_player.IsWeaponReady(SelectedWeapon, CurrentTime) == false)
             {
-                return PlayerAttackStartOutcome.WeaponNotReady(CreateNoChange());
+                return FillAttackStart(PlayerAttackStartStatus.WeaponNotReady, default);
             }
 
             WeaponDefinition weapon = _weaponCatalog.Get(SelectedWeapon);
@@ -429,19 +589,31 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _lastAttackId = nextAttackId;
             Revision = Revision.Next();
 
-            IArenaDomainEvent[] events =
-            {
-                new PlayerAttackStarted(
-                    Id,
-                    Revision,
-                    _player.Id,
-                    pendingAttack.Id,
-                    pendingAttack.WeaponKind,
-                    pendingAttack.StartedAt,
-                    pendingAttack.ImpactAt)
-            };
+            _operationEvents.Clear();
+            _operationEvents.Add(_eventPool.TakePlayerAttackStarted(
+                Id,
+                Revision,
+                _player.Id,
+                pendingAttack.Id,
+                pendingAttack.WeaponKind,
+                pendingAttack.StartedAt,
+                pendingAttack.ImpactAt));
 
-            return PlayerAttackStartOutcome.Started(pendingAttack, new ArenaRunChange(Revision, true, events));
+            return FillAttackStart(PlayerAttackStartStatus.Started, pendingAttack);
+        }
+
+        private PlayerAttackStartOutcome FillAttackStart(
+            PlayerAttackStartStatus status,
+            PendingPlayerAttack attack)
+        {
+            _playerAttackStartOutcome.Fill(
+                status,
+                attack,
+                status == PlayerAttackStartStatus.Started
+                    ? CreateChange(true)
+                    : CreateNoChange());
+
+            return _playerAttackStartOutcome;
         }
 
         public PlayerAttackImpactRequestOutcome RequestPlayerAttackImpact(Direction3D aimDirection)
@@ -485,7 +657,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 weapon.Range,
                 weapon.Arc);
 
-            return PlayerAttackImpactRequestOutcome.Requested(_pendingAttackImpactRequest);
+            _playerAttackImpactRequestOutcome.Fill(
+                PlayerAttackImpactRequestStatus.Requested,
+                _pendingAttackImpactRequest);
+
+            return _playerAttackImpactRequestOutcome;
         }
 
         public PlayerAttackImpactOutcome ApplyPlayerAttackImpact(PlayerAttackImpactResolution resolution)
@@ -499,17 +675,18 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (admission.IsAdmitted == false)
             {
-                return PlayerAttackImpactOutcome.Rejected(MapAttackRejectionReason(admission.RejectionReason), CreateNoChange());
+                return FillImpactRejection(MapAttackRejectionReason(admission.RejectionReason));
             }
 
             PlayerAttackImpactRequest request = _pendingAttackImpactRequest;
 
             if (request.WeaponKind == WeaponKind.Ranged && resolution.HitEnemies.Count > 1)
             {
-                return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TooManyTargets, CreateNoChange());
+                return FillImpactRejection(PlayerAttackImpactRejectionReason.TooManyTargets);
             }
 
-            List<EnemyId> targets = new();
+            List<EnemyId> targets = _scratchTargets;
+            targets.Clear();
 
             for (int index = 0; index < resolution.HitEnemies.Count; index++)
             {
@@ -517,17 +694,17 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
                 if (_enemies.TryGetValue(enemyId, out Enemy enemy) == false)
                 {
-                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.UnknownTarget, CreateNoChange());
+                    return FillImpactRejection(PlayerAttackImpactRejectionReason.UnknownTarget);
                 }
 
                 if (IsWithinAttackRange(enemy, request.Range) == false)
                 {
-                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TargetOutOfRange, CreateNoChange());
+                    return FillImpactRejection(PlayerAttackImpactRejectionReason.TargetOutOfRange);
                 }
 
                 if (IsWithinAttackArc(enemy, request) == false)
                 {
-                    return PlayerAttackImpactOutcome.Rejected(PlayerAttackImpactRejectionReason.TargetOutsideArc, CreateNoChange());
+                    return FillImpactRejection(PlayerAttackImpactRejectionReason.TargetOutsideArc);
                 }
 
                 if (targets.Contains(enemyId) == false)
@@ -541,15 +718,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             WeaponDefinition weapon = _weaponCatalog.Get(request.WeaponKind);
             PendingPlayerAttack attack = _player.PendingAttack;
             AggregateRevision nextRevision = Revision.Next();
-            List<IArenaDomainEvent> events = new();
-            List<EnemyId> defeated = new();
+            _operationEvents.Clear();
+            List<EnemyId> defeated = _scratchDefeated;
+            defeated.Clear();
 
             for (int index = 0; index < targets.Count; index++)
             {
                 Enemy enemy = _enemies[targets[index]];
                 DamageApplication application = enemy.TakeDamage(weapon.Damage);
 
-                events.Add(new EnemyDamaged(
+                _operationEvents.Add(_eventPool.TakeEnemyDamaged(
                     Id,
                     nextRevision,
                     enemy.Id,
@@ -559,7 +737,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 if (enemy.IsDefeated)
                 {
                     defeated.Add(enemy.Id);
-                    events.Add(new EnemyDefeated(
+                    _operationEvents.Add(_eventPool.TakeEnemyDefeated(
                         Id,
                         nextRevision,
                         enemy.Id,
@@ -569,7 +747,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     {
                         PendingEnemyAttack pendingEnemyAttack = enemy.PendingAttack;
                         enemy.CancelAttack();
-                        events.Add(new EnemyAttackCancelled(
+                        _operationEvents.Add(_eventPool.TakeEnemyAttackCancelled(
                             Id,
                             nextRevision,
                             enemy.Id,
@@ -591,10 +769,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 _enemies.Remove(defeated[index]);
             }
 
-            ProcessWaveProgressionAfterEnemyDeaths(nextRevision, events);
+            ProcessWaveProgressionAfterEnemyDeaths(nextRevision, _operationEvents);
             AttackOutcome outcome = targets.Count > 0 ? AttackOutcome.Hit : AttackOutcome.Miss;
 
-            events.Add(new PlayerAttackCompleted(
+            _operationEvents.Add(_eventPool.TakePlayerAttackCompleted(
                 Id,
                 nextRevision,
                 _player.Id,
@@ -606,30 +784,42 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _player.CompleteAttack();
             Revision = nextRevision;
 
-            ArenaRunChange change = new(Revision, true, events);
+            _playerAttackImpactOutcome.Fill(
+                outcome == AttackOutcome.Hit
+                    ? PlayerAttackImpactStatus.Hit
+                    : PlayerAttackImpactStatus.Missed,
+                PlayerAttackImpactRejectionReason.None,
+                CreateChange(true));
 
-            if (outcome == AttackOutcome.Hit)
-            {
-                return PlayerAttackImpactOutcome.Hit(change);
-            }
+            return _playerAttackImpactOutcome;
+        }
 
-            return PlayerAttackImpactOutcome.Missed(change);
+        private PlayerAttackImpactOutcome FillImpactRejection(
+            PlayerAttackImpactRejectionReason reason)
+        {
+            _playerAttackImpactOutcome.Fill(
+                PlayerAttackImpactStatus.Rejected,
+                reason,
+                CreateNoChange());
+
+            return _playerAttackImpactOutcome;
         }
 
         public EnemyAttackStartOutcome StartEligibleEnemyAttacks()
         {
             if (Status != ArenaRunStatus.Playing)
             {
-                return EnemyAttackStartOutcome.RunIsNotPlaying(CreateNoChange());
+                return FillEnemyAttackStart(EnemyAttackStartStatus.RunIsNotPlaying);
             }
 
             if (_interactionLedger.HasPending)
             {
-                return EnemyAttackStartOutcome.InteractionPending(CreateNoChange());
+                return FillEnemyAttackStart(EnemyAttackStartStatus.InteractionPending);
             }
 
             List<EnemyId> orderedIds = OrderedEnemyIds();
-            List<EnemyId> eligible = new();
+            List<EnemyId> eligible = _scratchEligible;
+            eligible.Clear();
 
             for (int index = 0; index < orderedIds.Count; index++)
             {
@@ -650,13 +840,14 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (eligible.Count == 0)
             {
-                return EnemyAttackStartOutcome.NoEligibleEnemies(CreateNoChange());
+                return FillEnemyAttackStart(EnemyAttackStartStatus.NoEligibleEnemies);
             }
 
             AggregateRevision nextRevision = Revision.Next();
             AttackId nextAttackId = _lastAttackId;
-            List<PendingEnemyAttack> startedAttacks = new();
-            List<IArenaDomainEvent> events = new();
+            List<PendingEnemyAttack> startedAttacks = _scratchStartedAttacks;
+            startedAttacks.Clear();
+            _operationEvents.Clear();
 
             for (int index = 0; index < eligible.Count; index++)
             {
@@ -666,7 +857,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 PendingEnemyAttack attack = enemy.StartAttack(nextAttackId, CurrentTime);
                 startedAttacks.Add(attack);
 
-                events.Add(new EnemyAttackStarted(
+                _operationEvents.Add(_eventPool.TakeEnemyAttackStarted(
                     Id,
                     nextRevision,
                     attack.EnemyId,
@@ -678,23 +869,39 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             _lastAttackId = nextAttackId;
             Revision = nextRevision;
 
-            return EnemyAttackStartOutcome.Started(startedAttacks, new ArenaRunChange(Revision, true, events));
+            _enemyAttackStartOutcome.Fill(
+                EnemyAttackStartStatus.Started,
+                startedAttacks,
+                CreateChange(true));
+
+            return _enemyAttackStartOutcome;
+        }
+
+        private EnemyAttackStartOutcome FillEnemyAttackStart(EnemyAttackStartStatus status)
+        {
+            _enemyAttackStartOutcome.Fill(
+                status,
+                Array.Empty<PendingEnemyAttack>(),
+                CreateNoChange());
+
+            return _enemyAttackStartOutcome;
         }
 
         public EnemyAttackImpactOutcome ResolveDueEnemyAttackImpacts()
         {
             if (Status != ArenaRunStatus.Playing)
             {
-                return EnemyAttackImpactOutcome.RunIsNotPlaying(CreateNoChange());
+                return FillEnemyAttackImpact(EnemyAttackImpactStatus.RunIsNotPlaying, 0, 0);
             }
 
             if (_interactionLedger.HasPending)
             {
-                return EnemyAttackImpactOutcome.InteractionPending(CreateNoChange());
+                return FillEnemyAttackImpact(EnemyAttackImpactStatus.InteractionPending, 0, 0);
             }
 
             List<EnemyId> orderedIds = OrderedEnemyIds();
-            List<EnemyAttackImpactPlanEntry> plan = new();
+            List<EnemyAttackImpactPlanEntry> plan = _scratchImpactPlan;
+            plan.Clear();
             Health projectedHealth = _player.Health;
             bool playerWillBeDefeated = false;
 
@@ -742,11 +949,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (plan.Count == 0)
             {
-                return EnemyAttackImpactOutcome.NoAttacksDue(CreateNoChange());
+                return FillEnemyAttackImpact(EnemyAttackImpactStatus.NoAttacksDue, 0, 0);
             }
 
             AggregateRevision nextRevision = Revision.Next();
-            List<IArenaDomainEvent> events = new();
+            _operationEvents.Clear();
             int hitCount = 0;
             bool actualDefeatedPlayer = false;
 
@@ -760,7 +967,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     hitCount++;
                     DamageApplication application = _player.TakeDamage(enemy.Definition.AttackDamage);
 
-                    events.Add(new PlayerDamaged(
+                    _operationEvents.Add(_eventPool.TakePlayerDamaged(
                         Id,
                         nextRevision,
                         _player.Id,
@@ -771,7 +978,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
                     if (application.IsLethal)
                     {
-                        events.Add(new PlayerDefeated(
+                        _operationEvents.Add(_eventPool.TakePlayerDefeated(
                             Id,
                             nextRevision,
                             _player.Id));
@@ -780,7 +987,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 }
 
                 enemy.CompleteAttack();
-                events.Add(new EnemyAttackCompleted(
+                _operationEvents.Add(_eventPool.TakeEnemyAttackCompleted(
                     Id,
                     nextRevision,
                     entry.EnemyId,
@@ -792,13 +999,32 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             if (playerWillBeDefeated && actualDefeatedPlayer)
             {
                 Status = ArenaRunStatus.Defeat;
-                CancelRemainingAttacksOnDefeat(orderedIds, nextRevision, events);
-                events.Add(new ArenaRunDefeated(Id, nextRevision));
+                CancelRemainingAttacksOnDefeat(orderedIds, nextRevision, _operationEvents);
+                _operationEvents.Add(_eventPool.TakeArenaRunDefeated(Id, nextRevision));
             }
 
             Revision = nextRevision;
 
-            return EnemyAttackImpactOutcome.Resolved(plan.Count, hitCount, new ArenaRunChange(Revision, true, events));
+            return FillEnemyAttackImpact(
+                EnemyAttackImpactStatus.Resolved,
+                plan.Count,
+                hitCount);
+        }
+
+        private EnemyAttackImpactOutcome FillEnemyAttackImpact(
+            EnemyAttackImpactStatus status,
+            int resolvedAttackCount,
+            int hitCount)
+        {
+            _enemyAttackImpactOutcome.Fill(
+                status,
+                resolvedAttackCount,
+                hitCount,
+                status == EnemyAttackImpactStatus.Resolved
+                    ? CreateChange(true)
+                    : CreateNoChange());
+
+            return _enemyAttackImpactOutcome;
         }
 
         public EnemyMovementBatchRequestOutcome RequestEnemyMovementBatch(GameDuration duration)
@@ -819,7 +1045,8 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             List<EnemyId> orderedIds = OrderedEnemyIds();
-            List<EnemyMovementIntent> intents = new();
+            List<EnemyMovementIntent> intents = _scratchMovementIntents;
+            intents.Clear();
 
             for (int index = 0; index < orderedIds.Count; index++)
             {
@@ -873,9 +1100,13 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             InteractionCorrelation correlation = _interactionLedger.Open(InteractionKind.EnemyMovementBatch, Revision);
-            _pendingEnemyMovementBatchRequest = new EnemyMovementBatchRequest(correlation, intents);
+            _movementBatchRequest.Fill(correlation, intents);
+            _pendingEnemyMovementBatchRequest = _movementBatchRequest;
+            _enemyMovementBatchRequestOutcome.Fill(
+                EnemyMovementBatchRequestStatus.Requested,
+                _pendingEnemyMovementBatchRequest);
 
-            return EnemyMovementBatchRequestOutcome.Requested(_pendingEnemyMovementBatchRequest);
+            return _enemyMovementBatchRequestOutcome;
         }
 
         public EnemyMovementBatchResolutionOutcome ApplyEnemyMovementBatch(EnemyMovementBatchResolution resolution)
@@ -889,14 +1120,18 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (admission.IsAdmitted == false)
             {
-                return EnemyMovementBatchResolutionOutcome.Rejected(MapEnemyMovementRejectionReason(admission.RejectionReason), CreateNoChange());
+                return FillMovementBatch(
+                    EnemyMovementBatchResolutionStatus.Rejected,
+                    MapEnemyMovementRejectionReason(admission.RejectionReason));
             }
 
             EnemyMovementBatchRejectionReason validation = ValidateEnemyMovementBatchResolution(resolution, out Dictionary<EnemyId, Position3D> acceptedPositions);
 
             if (validation != EnemyMovementBatchRejectionReason.None)
             {
-                return EnemyMovementBatchResolutionOutcome.Rejected(validation, CreateNoChange());
+                return FillMovementBatch(
+                    EnemyMovementBatchResolutionStatus.Rejected,
+                    validation);
             }
 
             _interactionLedger.Complete(resolution.Correlation.InteractionId);
@@ -915,7 +1150,9 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             if (anyMoved == false)
             {
-                return EnemyMovementBatchResolutionOutcome.AcceptedWithoutStateChange(CreateNoChange());
+                return FillMovementBatch(
+                    EnemyMovementBatchResolutionStatus.AcceptedWithoutStateChange,
+                    EnemyMovementBatchRejectionReason.None);
             }
 
             foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
@@ -926,7 +1163,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
             Revision = Revision.Next();
 
-            return EnemyMovementBatchResolutionOutcome.Applied(CreateStateChange());
+            return FillMovementBatch(
+                EnemyMovementBatchResolutionStatus.Applied,
+                EnemyMovementBatchRejectionReason.None);
+        }
+
+        private EnemyMovementBatchResolutionOutcome FillMovementBatch(
+            EnemyMovementBatchResolutionStatus status,
+            EnemyMovementBatchRejectionReason rejectionReason)
+        {
+            _enemyMovementBatchResolutionOutcome.Fill(
+                status,
+                rejectionReason,
+                status == EnemyMovementBatchResolutionStatus.Applied
+                    ? CreateStateChange()
+                    : CreateNoChange());
+
+            return _enemyMovementBatchResolutionOutcome;
         }
 
         public InteractionCancellationOutcome CancelPendingInteraction(
@@ -935,17 +1188,29 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         {
             if (_interactionLedger.HasPending == false)
             {
-                return InteractionCancellationOutcome.NoPendingInteraction(reason);
+                _cancellationOutcome.Fill(
+                    InteractionCancellationStatus.NoPendingInteraction,
+                    reason);
+
+                return _cancellationOutcome;
             }
 
             bool cancelled = _interactionLedger.Cancel(correlation);
 
             if (cancelled == false)
             {
-                return InteractionCancellationOutcome.CorrelationMismatch(reason);
+                _cancellationOutcome.Fill(
+                    InteractionCancellationStatus.CorrelationMismatch,
+                    reason);
+
+                return _cancellationOutcome;
             }
 
-            return InteractionCancellationOutcome.Cancelled(reason);
+            _cancellationOutcome.Fill(
+                InteractionCancellationStatus.Cancelled,
+                reason);
+
+            return _cancellationOutcome;
         }
 
         public GameTimePoint WeaponReadyAt(WeaponKind kind)
@@ -997,6 +1262,78 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 player,
                 enemies,
                 wave,
+                _waveCatalog.Last);
+        }
+
+        /// <summary>
+        /// Allocates an empty snapshot shell sized for this run's enemy
+        /// capacity. The tick path fills it in place on every tick.
+        /// </summary>
+        public ArenaRunStateSnapshot CreateSnapshotBuffer()
+        {
+            return new ArenaRunStateSnapshot(EnemyCapacity);
+        }
+
+        /// <summary>
+        /// Fills <paramref name="target"/> in place and returns it. Falls back
+        /// to an allocating snapshot when no target is supplied.
+        /// </summary>
+        public ArenaRunStateSnapshot CreateSnapshot(ArenaRunStateSnapshot target)
+        {
+            if (target == null)
+            {
+                return CreateSnapshot();
+            }
+
+            FillStateSnapshot(target);
+
+            return target;
+        }
+
+        private void FillStateSnapshot(ArenaRunStateSnapshot target)
+        {
+            List<EnemyStateSnapshot> enemies = target.EnemyBuffer;
+            enemies.Clear();
+            List<EnemyId> orderedIds = OrderedEnemyIds();
+
+            for (int index = 0; index < orderedIds.Count; index++)
+            {
+                Enemy enemy = _enemies[orderedIds[index]];
+                EnemyStateSnapshot slot = target.GetOrCreateEnemySlot(index);
+
+                slot.Fill(
+                    enemy.Id,
+                    enemy.Kind,
+                    enemy.Position,
+                    enemy.Health,
+                    enemy.CollisionRadius,
+                    enemy.AttackReadyAt,
+                    enemy.PendingAttack);
+
+                enemies.Add(slot);
+            }
+
+            target.PlayerSlot.Fill(
+                _player.Id,
+                _player.Position,
+                _player.Health,
+                _player.SelectedWeapon,
+                _player.ReadyAt(WeaponKind.Ranged),
+                _player.ReadyAt(WeaponKind.Melee),
+                _player.PendingAttack);
+
+            target.WaveSlot.Fill(
+                _currentWave.Number,
+                _currentWave.Phase,
+                _currentWave.RegularEnemiesRemainingToSpawn,
+                _currentWave.BossStatus);
+
+            target.FillMeta(
+                Id,
+                Revision,
+                Status,
+                CurrentTime,
+                _arenaDefinition.Bounds,
                 _waveCatalog.Last);
         }
 
@@ -1072,6 +1409,25 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             return left.Value.CompareTo(right.Value);
         }
 
+        private static int CalculateEnemyCapacity(WaveCatalog waveCatalog)
+        {
+            int capacity = 1;
+            int waveCount = waveCatalog.Last.Value;
+
+            for (int number = 1; number <= waveCount; number++)
+            {
+                int waveSize =
+                    waveCatalog.Get(WaveNumber.FromValue(number)).RegularEnemyCount + 1;
+
+                if (waveSize > capacity)
+                {
+                    capacity = waveSize;
+                }
+            }
+
+            return capacity;
+        }
+
         private PlayerMovementResolutionRejectionReason ValidateAcceptedPosition(PlayerMovementRequest pendingMovementRequest, Position3D acceptedPosition)
         {
             MovementPathVerdict verdict = _movementPathPolicy.Validate(pendingMovementRequest.Intent, acceptedPosition);
@@ -1107,12 +1463,13 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private EnemyMovementBatchRejectionReason ValidateEnemyMovementBatchResolution(EnemyMovementBatchResolution resolution, out Dictionary<EnemyId, Position3D> acceptedPositions)
         {
-            acceptedPositions = new Dictionary<EnemyId, Position3D>();
-            HashSet<EnemyId> expectedIds = new();
+            acceptedPositions = _scratchAcceptedPositions;
+            acceptedPositions.Clear();
+            _scratchExpectedIds.Clear();
 
             foreach (EnemyMovementIntent intent in _pendingEnemyMovementBatchRequest.Intents)
             {
-                expectedIds.Add(intent.EnemyId);
+                _scratchExpectedIds.Add(intent.EnemyId);
             }
 
             for (int index = 0; index < resolution.Entries.Count; index++)
@@ -1124,7 +1481,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                     return EnemyMovementBatchRejectionReason.EnemyIdIsNone;
                 }
 
-                if (expectedIds.Contains(entry.EnemyId) == false)
+                if (_scratchExpectedIds.Contains(entry.EnemyId) == false)
                 {
                     return EnemyMovementBatchRejectionReason.UnexpectedEnemyId;
                 }
@@ -1177,7 +1534,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
                 PendingEnemyAttack attack = enemy.PendingAttack;
                 enemy.CancelAttack();
-                events.Add(new EnemyAttackCancelled(
+                events.Add(_eventPool.TakeEnemyAttackCancelled(
                     Id,
                     nextRevision,
                     enemy.Id,
@@ -1189,7 +1546,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             {
                 PendingPlayerAttack attack = _player.PendingAttack;
                 _player.CancelAttack();
-                events.Add(new PlayerAttackCancelled(
+                events.Add(_eventPool.TakePlayerAttackCancelled(
                     Id,
                     nextRevision,
                     _player.Id,
@@ -1215,12 +1572,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private ArenaRunChange CreateNoChange()
         {
-            return new ArenaRunChange(Revision, false, Array.Empty<IArenaDomainEvent>());
+            _change.Fill(Revision, false, NoEvents);
+
+            return _change;
         }
 
         private ArenaRunChange CreateStateChange()
         {
-            return new ArenaRunChange(Revision, true, Array.Empty<IArenaDomainEvent>());
+            _change.Fill(Revision, true, NoEvents);
+
+            return _change;
+        }
+
+        private ArenaRunChange CreateChange(bool hasStateChange)
+        {
+            _change.Fill(Revision, hasStateChange, _operationEvents);
+
+            return _change;
         }
 
         private bool IsWithinAttackRange(Enemy enemy, Distance range)
@@ -1255,16 +1623,16 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private List<EnemyId> OrderedEnemyIds()
         {
-            List<EnemyId> ids = new(_enemies.Count);
+            _orderedEnemyIds.Clear();
 
             foreach (EnemyId enemyId in _enemies.Keys)
             {
-                ids.Add(enemyId);
+                _orderedEnemyIds.Add(enemyId);
             }
 
-            ids.Sort(CompareEnemyIds);
+            _orderedEnemyIds.Sort(CompareEnemyIdValues);
 
-            return ids;
+            return _orderedEnemyIds;
         }
 
         private bool IsPlayerWithinEnemyAttackRange(Enemy enemy)

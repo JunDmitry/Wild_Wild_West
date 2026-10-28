@@ -17,6 +17,11 @@ namespace Game.Arena.Application.Ticks
         public ArenaRunTickResult ExecuteTick()
         {
             ArenaRun run = _dependencies.Session.GetRequiredActiveRun();
+
+            // ADR-0036 point 6: advance the per-run event pool before the
+            // recovery stage, so events filled two ticks ago are released.
+            run.BeginTick();
+
             ArenaRunTickRecorder recorder = new();
 
             try

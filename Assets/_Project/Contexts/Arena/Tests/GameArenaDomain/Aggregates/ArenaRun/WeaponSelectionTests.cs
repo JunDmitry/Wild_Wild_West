@@ -35,10 +35,12 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             ArenaRun run = CreateRun();
 
             WeaponSwitchOutcome first = run.SwitchWeapon();
+            WeaponSwitchStatus firstStatus = first.Status;
+            WeaponKind firstWeapon = first.SelectedWeapon;
             WeaponSwitchOutcome second = run.SwitchWeapon();
 
-            Assert.That(first.Status, Is.EqualTo(WeaponSwitchStatus.Switched));
-            Assert.That(first.SelectedWeapon, Is.EqualTo(WeaponKind.Melee));
+            Assert.That(firstStatus, Is.EqualTo(WeaponSwitchStatus.Switched));
+            Assert.That(firstWeapon, Is.EqualTo(WeaponKind.Melee));
             Assert.That(second.SelectedWeapon, Is.EqualTo(WeaponKind.Ranged));
             Assert.That(run.SelectedWeapon, Is.EqualTo(WeaponKind.Ranged));
         }

@@ -9,6 +9,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class PlayerStateSnapshot
     {
+        internal PlayerStateSnapshot()
+        {
+        }
+
         public PlayerStateSnapshot(
             PlayerId playerId,
             Position3D position,
@@ -23,6 +27,34 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new ArgumentException("PlayerId cannot be None.", nameof(playerId));
             }
 
+            Fill(playerId, position, health, selectedWeapon, rangedReadyAt, meleeReadyAt, pendingAttack);
+        }
+
+        public PlayerId PlayerId { get; private set; }
+
+        public Position3D Position { get; private set; }
+
+        public Health Health { get; private set; }
+
+        public WeaponKind SelectedWeapon { get; private set; }
+
+        public GameTimePoint RangedReadyAt { get; private set; }
+
+        public GameTimePoint MeleeReadyAt { get; private set; }
+
+        public bool HasPendingAttack { get; private set; }
+
+        public PendingPlayerAttack PendingAttack { get; private set; }
+
+        internal void Fill(
+            PlayerId playerId,
+            Position3D position,
+            Health health,
+            WeaponKind selectedWeapon,
+            GameTimePoint rangedReadyAt,
+            GameTimePoint meleeReadyAt,
+            PendingPlayerAttack pendingAttack)
+        {
             PlayerId = playerId;
             Position = position;
             Health = health;
@@ -32,21 +64,5 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             PendingAttack = pendingAttack;
             HasPendingAttack = pendingAttack.Id.IsNone == false;
         }
-
-        public PlayerId PlayerId { get; }
-
-        public Position3D Position { get; }
-
-        public Health Health { get; }
-
-        public WeaponKind SelectedWeapon { get; }
-
-        public GameTimePoint RangedReadyAt { get; }
-
-        public GameTimePoint MeleeReadyAt { get; }
-
-        public bool HasPendingAttack { get; }
-
-        public PendingPlayerAttack PendingAttack { get; }
     }
 }

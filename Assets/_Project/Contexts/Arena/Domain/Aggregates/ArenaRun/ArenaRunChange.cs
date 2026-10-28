@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Events;
 
@@ -8,7 +7,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRunChange
     {
-        private readonly ReadOnlyCollection<IArenaDomainEvent> _eventsSnapshot;
+        private IReadOnlyList<IArenaDomainEvent> _domainEvents;
+
+        internal ArenaRunChange()
+        {
+            _domainEvents = Array.Empty<IArenaDomainEvent>();
+        }
 
         public ArenaRunChange(
             AggregateRevision revision,
@@ -24,22 +28,29 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 throw new ArgumentNullException(nameof(domainEvents));
             }
 
-            IArenaDomainEvent[] events = new IArenaDomainEvent[domainEvents.Count];
-
             for (int index = 0; index < domainEvents.Count; index++)
             {
-                IArenaDomainEvent domainEvent = domainEvents[index];
-
-                events[index] = domainEvent ?? throw new ArgumentException("Domain events cannot contain null values.", nameof(domainEvents));
+                if (domainEvents[index] == null)
+                {
+                    throw new ArgumentException("Domain events cannot contain null values.", nameof(domainEvents));
+                }
             }
 
-            Revision = revision;
-            HasStateChange = hasStateChange;
-            _eventsSnapshot = Array.AsReadOnly(events);
+            Fill(revision, hasStateChange, domainEvents);
         }
 
-        public AggregateRevision Revision { get; }
-        public bool HasStateChange { get; }
-        public IReadOnlyList<IArenaDomainEvent> DomainEvents => _eventsSnapshot;
+        public AggregateRevision Revision { get; private set; }
+        public bool HasStateChange { get; private set; }
+        public IReadOnlyList<IArenaDomainEvent> DomainEvents => _domainEvents;
+
+        internal void Fill(
+            AggregateRevision revision,
+            bool hasStateChange,
+            IReadOnlyList<IArenaDomainEvent> domainEvents)
+        {
+            Revision = revision;
+            HasStateChange = hasStateChange;
+            _domainEvents = domainEvents;
+        }
     }
 }

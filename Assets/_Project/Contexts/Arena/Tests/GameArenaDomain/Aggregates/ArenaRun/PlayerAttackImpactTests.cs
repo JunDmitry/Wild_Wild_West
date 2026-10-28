@@ -334,10 +334,11 @@ namespace Game.Arena.Domain.Tests.Aggregates._ArenaRun
             FireRanged(run, enemyId);
 
             PlayerAttackStartOutcome tooEarly = run.StartPlayerAttack();
+            PlayerAttackStartStatus tooEarlyStatus = tooEarly.Status;
             run.AdvanceTime(new GameDuration(0.5d));
             PlayerAttackStartOutcome afterCooldown = run.StartPlayerAttack();
 
-            Assert.That(tooEarly.Status, Is.EqualTo(PlayerAttackStartStatus.WeaponNotReady));
+            Assert.That(tooEarlyStatus, Is.EqualTo(PlayerAttackStartStatus.WeaponNotReady));
             Assert.That(afterCooldown.IsStarted, Is.True);
         }
 

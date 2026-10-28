@@ -7,7 +7,12 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class EnemyAttackStartOutcome
     {
-        private readonly ReadOnlyCollection<PendingEnemyAttack> _startedAttacks;
+        private IReadOnlyList<PendingEnemyAttack> _startedAttacks;
+
+        internal EnemyAttackStartOutcome()
+        {
+            _startedAttacks = Array.Empty<PendingEnemyAttack>();
+        }
 
         private EnemyAttackStartOutcome(
             EnemyAttackStartStatus status,
@@ -36,10 +41,30 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Change = change;
         }
 
-        public EnemyAttackStartStatus Status { get; }
-        public ArenaRunChange Change { get; }
+        public EnemyAttackStartStatus Status { get; private set; }
+        public ArenaRunChange Change { get; private set; }
         public IReadOnlyList<PendingEnemyAttack> StartedAttacks => _startedAttacks;
         public bool IsStarted => Status == EnemyAttackStartStatus.Started;
+
+        internal void Fill(
+            EnemyAttackStartStatus status,
+            IReadOnlyList<PendingEnemyAttack> startedAttacks,
+            ArenaRunChange change)
+        {
+            if (startedAttacks == null)
+            {
+                throw new ArgumentNullException(nameof(startedAttacks));
+            }
+
+            if (change == null)
+            {
+                throw new ArgumentNullException(nameof(change));
+            }
+
+            Status = status;
+            _startedAttacks = startedAttacks;
+            Change = change;
+        }
 
         public static EnemyAttackStartOutcome Started(IReadOnlyList<PendingEnemyAttack> startedAttacks, ArenaRunChange change)
         {

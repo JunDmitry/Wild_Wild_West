@@ -9,6 +9,23 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRunStateSnapshot
     {
+        private readonly List<EnemyStateSnapshot> _enemyBuffer;
+        private EnemyStateSnapshot[] _enemySlots;
+
+        internal ArenaRunStateSnapshot(int enemyCapacity)
+        {
+            if (enemyCapacity < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(enemyCapacity));
+            }
+
+            _enemyBuffer = new List<EnemyStateSnapshot>(enemyCapacity);
+            _enemySlots = new EnemyStateSnapshot[enemyCapacity];
+            PlayerSlot = new PlayerStateSnapshot();
+            WaveSlot = new WaveStateSnapshot();
+            Enemies = _enemyBuffer.AsReadOnly();
+        }
+
         public ArenaRunStateSnapshot(
             ArenaRunId arenaRunId,
             AggregateRevision revision,
@@ -50,29 +67,76 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Status = status;
             CurrentTime = currentTime;
             Bounds = bounds;
-            Player = player;
+            PlayerSlot = player;
             Enemies = CopyEnemies(enemies);
-            Wave = wave;
+            WaveSlot = wave;
             WaveTotal = waveTotal;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision Revision { get; }
+        public AggregateRevision Revision { get; private set; }
 
-        public ArenaRunStatus Status { get; }
+        public ArenaRunStatus Status { get; private set; }
 
-        public GameTimePoint CurrentTime { get; }
+        public GameTimePoint CurrentTime { get; private set; }
 
-        public ArenaBounds Bounds { get; }
+        public ArenaBounds Bounds { get; private set; }
 
-        public PlayerStateSnapshot Player { get; }
+        public PlayerStateSnapshot Player => PlayerSlot;
 
-        public IReadOnlyList<EnemyStateSnapshot> Enemies { get; }
+        public IReadOnlyList<EnemyStateSnapshot> Enemies { get; private set; }
 
-        public WaveStateSnapshot Wave { get; }
+        public WaveStateSnapshot Wave => WaveSlot;
 
-        public WaveNumber WaveTotal { get; }
+        public WaveNumber WaveTotal { get; private set; }
+
+        internal PlayerStateSnapshot PlayerSlot { get; }
+
+        internal WaveStateSnapshot WaveSlot { get; }
+
+        internal List<EnemyStateSnapshot> EnemyBuffer => _enemyBuffer;
+
+        internal EnemyStateSnapshot GetOrCreateEnemySlot(int index)
+        {
+            if (index < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (index >= _enemySlots.Length)
+            {
+                EnemyStateSnapshot[] grown = new EnemyStateSnapshot[index + 1];
+                Array.Copy(_enemySlots, grown, _enemySlots.Length);
+                _enemySlots = grown;
+            }
+
+            EnemyStateSnapshot slot = _enemySlots[index];
+
+            if (slot == null)
+            {
+                slot = new EnemyStateSnapshot();
+                _enemySlots[index] = slot;
+            }
+
+            return slot;
+        }
+
+        internal void FillMeta(
+            ArenaRunId arenaRunId,
+            AggregateRevision revision,
+            ArenaRunStatus status,
+            GameTimePoint currentTime,
+            ArenaBounds bounds,
+            WaveNumber waveTotal)
+        {
+            ArenaRunId = arenaRunId;
+            Revision = revision;
+            Status = status;
+            CurrentTime = currentTime;
+            Bounds = bounds;
+            WaveTotal = waveTotal;
+        }
 
         private static IReadOnlyList<EnemyStateSnapshot> CopyEnemies(
             IReadOnlyList<EnemyStateSnapshot> enemies)

@@ -5,6 +5,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class TimeAdvanceOutcome
     {
+        internal TimeAdvanceOutcome()
+        {
+        }
+
         private TimeAdvanceOutcome(TimeAdvanceStatus status, GameTimePoint currentTime, ArenaRunChange change)
         {
             Status = status;
@@ -12,13 +16,20 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Change = change ?? throw new ArgumentNullException(nameof(change));
         }
 
-        public TimeAdvanceStatus Status { get; }
+        public TimeAdvanceStatus Status { get; private set; }
 
-        public GameTimePoint CurrentTime { get; }
+        public GameTimePoint CurrentTime { get; private set; }
 
-        public ArenaRunChange Change { get; }
+        public ArenaRunChange Change { get; private set; }
 
         public bool IsAdvanced => Status == TimeAdvanceStatus.Advanced;
+
+        internal void Fill(TimeAdvanceStatus status, GameTimePoint currentTime, ArenaRunChange change)
+        {
+            Status = status;
+            CurrentTime = currentTime;
+            Change = change ?? throw new ArgumentNullException(nameof(change));
+        }
 
         public static TimeAdvanceOutcome Advanced(GameTimePoint currentTime, ArenaRunChange change)
         {

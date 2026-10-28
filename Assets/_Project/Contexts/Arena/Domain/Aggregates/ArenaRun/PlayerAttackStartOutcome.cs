@@ -4,6 +4,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class PlayerAttackStartOutcome
     {
+        internal PlayerAttackStartOutcome()
+        {
+        }
+
         private PlayerAttackStartOutcome(
             PlayerAttackStartStatus status,
             PendingPlayerAttack attack,
@@ -14,11 +18,21 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Change = change ?? throw new System.ArgumentNullException(nameof(change));
         }
 
-        public PlayerAttackStartStatus Status { get; }
-        public PendingPlayerAttack Attack { get; }
-        public ArenaRunChange Change { get; }
+        public PlayerAttackStartStatus Status { get; private set; }
+        public PendingPlayerAttack Attack { get; private set; }
+        public ArenaRunChange Change { get; private set; }
 
         public bool IsStarted => Status == PlayerAttackStartStatus.Started;
+
+        internal void Fill(
+            PlayerAttackStartStatus status,
+            PendingPlayerAttack attack,
+            ArenaRunChange change)
+        {
+            Status = status;
+            Attack = attack;
+            Change = change ?? throw new System.ArgumentNullException(nameof(change));
+        }
 
         public static PlayerAttackStartOutcome Started(PendingPlayerAttack attack, ArenaRunChange change)
         {
