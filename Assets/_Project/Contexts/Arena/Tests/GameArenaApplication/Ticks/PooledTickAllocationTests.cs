@@ -10,6 +10,7 @@ using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Attack;
 using Game.Arena.Domain.Interactions.Movement;
+using Game.Arena.Domain.Interactions.Spawn;
 using Game.Arena.Domain.Time;
 using Game.Arena.Domain.Vitality;
 using NUnit.Framework;
@@ -94,14 +95,12 @@ namespace Game.Arena.Application.Tests.Ticks
 
             // Warm-up: wave one is cleared so every pooled event type this
             // frame needs has a live instance in the slot.
-            List<EnemyId> waveOne = SpawnRegulars(kit, run, 10, 1);
-            MoveAllToMeleeRange(run, waveOne);
+            List<EnemyId> waveOne = SpawnRegulars(run, 10, 1);
             SwingMelee(run, waveOne);
             Assert.That(WaveNumberOf(run), Is.EqualTo(WaveNumber.First));
 
             run.AdvanceTime(new GameDuration(1d));
-            EnemyId bossId = SpawnBoss(kit, run, 500UL);
-            MoveAllToMeleeRange(run, new List<EnemyId> { bossId });
+            EnemyId bossId = SpawnBoss(run, 500UL);
             SwingMelee(run, new List<EnemyId> { bossId });
             Assert.That(WaveNumberOf(run), Is.EqualTo(WaveNumber.First.Next()));
 
@@ -109,8 +108,7 @@ namespace Game.Arena.Application.Tests.Ticks
             run.BeginTick();
             run.BeginTick();
 
-            List<EnemyId> waveTwo = SpawnRegulars(kit, run, 10, 11);
-            MoveAllToMeleeRange(run, waveTwo);
+            List<EnemyId> waveTwo = SpawnRegulars(run, 10, 11);
             run.AdvanceTime(new GameDuration(1d));
             BeginAttack(run);
 
@@ -190,14 +188,17 @@ namespace Game.Arena.Application.Tests.Ticks
 
             return new ArenaRunCreationParameters(
                 defaults.ArenaDefinition,
-                defaults.PlayerDefinition,
+                new PlayerDefinition(
+                    new Position3D(19.5f, 0f, 0f),
+                    defaults.PlayerDefinition.InitialHealth,
+                    defaults.PlayerDefinition.MovementSpeed,
+                    defaults.PlayerDefinition.CollisionRadius),
                 weapons,
                 enemies,
                 waves);
         }
 
         private static List<EnemyId> SpawnRegulars(
-            TickCoordinatorTestKit kit,
             ArenaRun run,
             int count,
             int firstValue)
@@ -206,40 +207,38 @@ namespace Game.Arena.Application.Tests.Ticks
 
             for (int index = 0; index < count; index++)
             {
-                float x = 22f + (index * 0.1f);
-                ids.Add(kit.Spawn(
-                    run,
-                    (ulong)(firstValue + index),
-                    new Position3D(x, 0f, 0f)));
+                float x = 21f + (index * 0.05f);
+                EnemySpawnRequest request = run.RequestEnemySpawn().Request;
+                EnemyId enemyId = EnemyId.FromValue((ulong)(firstValue + index));
+                EnemySpawnResolutionOutcome outcome = run.ApplyEnemySpawn(
+                    new EnemySpawnResolution(request.Correlation, enemyId, new Position3D(x, 0f, 0f)));
+
+                Assert.That(
+                    outcome.IsSpawned,
+                    Is.True,
+                    "spawn rejected: " + outcome.RejectionReason);
+
+                ids.Add(enemyId);
             }
 
             return ids;
         }
 
         private static EnemyId SpawnBoss(
-            TickCoordinatorTestKit kit,
             ArenaRun run,
             ulong value)
         {
-            return kit.Spawn(run, value, new Position3D(22f, 0f, 0f));
-        }
+            EnemySpawnRequest request = run.RequestEnemySpawn().Request;
+            EnemyId enemyId = EnemyId.FromValue(value);
+            EnemySpawnResolutionOutcome outcome = run.ApplyEnemySpawn(
+                new EnemySpawnResolution(request.Correlation, enemyId, new Position3D(21f, 0f, 0f)));
 
-        private static void MoveAllToMeleeRange(ArenaRun run, List<EnemyId> ids)
-        {
-            EnemyMovementBatchRequest request =
-                run.RequestEnemyMovementBatch(new GameDuration(20d)).Request;
-            EnemyMovementBatchResolutionEntry[] entries =
-                new EnemyMovementBatchResolutionEntry[ids.Count];
+            Assert.That(
+                outcome.IsSpawned,
+                Is.True,
+                "boss spawn rejected: " + outcome.RejectionReason);
 
-            for (int index = 0; index < ids.Count; index++)
-            {
-                entries[index] = new EnemyMovementBatchResolutionEntry(
-                    ids[index],
-                    new Position3D(1.5f, 0f, 0f));
-            }
-
-            run.ApplyEnemyMovementBatch(
-                new EnemyMovementBatchResolution(request.Correlation, entries));
+            return enemyId;
         }
 
         private static void SwingMelee(ArenaRun run, List<EnemyId> targets)
@@ -252,10 +251,21 @@ namespace Game.Arena.Application.Tests.Ticks
         {
             if (run.SelectedWeapon != WeaponKind.Melee)
             {
-                run.SwitchWeapon();
+                WeaponSwitchOutcome switchOutcome = run.SwitchWeapon();
+
+                Assert.That(
+                    switchOutcome.IsSwitched,
+                    Is.True,
+                    "weapon switch did not happen: " + switchOutcome.Status);
             }
 
-            run.StartPlayerAttack();
+            PlayerAttackStartOutcome startOutcome = run.StartPlayerAttack();
+
+            Assert.That(
+                startOutcome.IsStarted,
+                Is.True,
+                "attack did not start: " + startOutcome.Status);
+
             run.AdvanceTime(new GameDuration(0.3d));
         }
 
