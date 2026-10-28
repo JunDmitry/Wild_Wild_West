@@ -65,7 +65,8 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0032 | Load the Arena scene from bootstrap and create the initial run on scene entry | Accepted | 2026-10-25 | [ADR-0032](ADR-0032-bootstrap-scene-load-and-initial-run.md) |
 | ADR-0033 | Fix performance thresholds for the production cut-over | Accepted | 2026-10-25 | [ADR-0033](ADR-0033-performance-thresholds-for-cut-over.md) |
 | ADR-0034 | Measure performance with a development-only harness | Accepted | 2026-10-26 | [ADR-0034](ADR-0034-automated-performance-measurement.md) |
-| ADR-0035 | Reuse preallocated frame buffers to make the Arena tick path allocate nothing | Accepted | 2026-10-27 | [ADR-0035](ADR-0035-reusable-frame-buffers.md) |
+| ADR-0035 | Reuse preallocated frame buffers to make the Arena tick path allocate nothing | Accepted (event representation amended by ADR-0036) | 2026-10-27 | [ADR-0035](ADR-0035-reusable-frame-buffers.md) |
+| ADR-0036 | Pool class-based Domain events per run | Accepted | 2026-10-28 | [ADR-0036](ADR-0036-class-based-domain-events-for-pooling.md) |
 
 ## New ADR Template
 

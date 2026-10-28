@@ -1,6 +1,6 @@
 # ADR-0035: Reusable frame buffers for the Arena tick path
 
-- **Status:** Accepted
+- **Status:** Accepted (event representation amended by [ADR-0036](ADR-0036-class-based-domain-events-for-pooling.md))
 - **Date:** 2026-10-27
 - **Authors:** architect-role
 - **Reviewers:** user (strategy approved 2026-10-27 on task `t9-gc-allocation`)
@@ -33,7 +33,7 @@ The contract:
 2. **Two-slot publication.** Each tick fills the slot not published by the previous tick. A published `ArenaRunTickResult` — and everything reachable from it: snapshots, HUD snapshot, domain events, notifications, executed stages — stays valid for the tick that published it **and the tick after it**. Nothing may be retained longer than one further tick. The second slot exists precisely so that a handler comparing "now" against "the previous tick" keeps working; the existing presenters do exactly that.
 3. **Fill, do not construct, on the hot path.** Types gain an internal `Fill`/`Reset` path; the public constructors stay for tests, manual construction and cold paths, and public properties stay read-only. A filled instance is a shell whose value is replaced wholesale each time the slot is reused.
 4. **Ping-pong for every per-tick graph.** The domain state snapshot, the Application read models, the HUD snapshot, the tick result, the recorder and the interaction objects are all filled into their preallocated instance. Wrapper objects that can be built once over a stable array (`Array.AsReadOnly`, the enemy list) are built once, in the buffer's constructor.
-5. **Domain events and changes are pooled per run.** A mutation fills a reused `ArenaRunChange` and reuses event instances from a per-run pool; they are returned to the pool at the start of the following tick, which is the same one-tick lifetime rule. `ArenaRunChange` stops copying its caller's list.
+5. **Domain events and changes are pooled per run.** A mutation fills a reused `ArenaRunChange` and reuses event instances from a per-run pool; they are returned to the pool at the start of the following tick, which is the same one-tick lifetime rule. `ArenaRunChange` stops copying its caller's list. *[Amended by [ADR-0036](ADR-0036-class-based-domain-events-for-pooling.md): the events are `sealed class` rather than `readonly struct`; the pool is owned by `ArenaRun` and released when its slot is reused two ticks later, which is the two-tick rule of point 2; a change is valid until the next operation.]*
 6. **Interaction objects are per-kind singletons.** One reusable instance per interaction class, refilled when a new request opens and never reset while the interaction is pending — the sequential interaction protocol admits at most one pending interaction at a time (ADR-0006).
 7. **The dispatcher allocates no delegate.** Handler invocation moves behind direct, per-category `try`/`catch` calls (or a generic method resolved once at registration); the error policy and stage ordering of ADR-0027 are unchanged.
 8. **Presentation reuses its own collections** (the per-frame `HashSet`) and may retain a snapshot for at most one further tick — the rule in point 2, which the four combat presenters and `ArenaRunNotificationPresenter` already satisfy.
