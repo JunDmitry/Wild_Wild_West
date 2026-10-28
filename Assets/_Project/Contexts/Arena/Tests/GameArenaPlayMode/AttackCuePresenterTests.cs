@@ -199,17 +199,16 @@ namespace Game.Arena.PlayMode.Tests
             _harness.Tick(false, Direction3D.Forward, true);
             ArenaRunSnapshot windup = _harness.Tick(true, Direction3D.Forward).Snapshot;
 
-            for (int index = 0; index < TicksAfterAttackStart; index++)
+            for (int index = 0; index < TicksAfterAttackStart - 1; index++)
             {
                 _harness.TickIdle();
             }
 
-            ArenaRunSnapshot afterImpact = _harness.TickIdle().Snapshot;
             MeleeSwingPresenter presenter = CreateSwingPresenter();
-
             presenter.Present(windup);
             Assert.That(presenter.IsSwingVisible, Is.True);
 
+            ArenaRunSnapshot afterImpact = _harness.TickIdle().Snapshot;
             presenter.Present(afterImpact);
             Assert.That(presenter.IsSwingVisible, Is.False);
         }
@@ -226,7 +225,7 @@ namespace Game.Arena.PlayMode.Tests
             _harness.Tick(false, Direction3D.Forward, true);
             ArenaRunSnapshot windup = _harness.Tick(true, Direction3D.Forward).Snapshot;
 
-            for (int index = 0; index < TicksAfterAttackStart; index++)
+            for (int index = 0; index < TicksAfterAttackStart - 1; index++)
             {
                 _harness.TickIdle();
             }
