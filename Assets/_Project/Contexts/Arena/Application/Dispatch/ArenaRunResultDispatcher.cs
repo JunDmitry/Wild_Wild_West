@@ -138,6 +138,11 @@ namespace Game.Arena.Application.Dispatch
                 throw new ArgumentNullException(nameof(result));
             }
 
+            if (result.IsPublished)
+            {
+                ArenaTickLifetimeGuard.Validate(result.Generation);
+            }
+
             if (_dispatching)
             {
                 throw new InvalidOperationException(

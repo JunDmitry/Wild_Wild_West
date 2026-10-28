@@ -53,6 +53,16 @@ namespace Game.Arena.Application.Ticks
         public ArenaRunSnapshot Snapshot { get; private set; }
         public ArenaRunHudSnapshot Hud { get; private set; }
 
+        internal int Generation { get; private set; }
+
+        internal bool IsPublished { get; private set; }
+
+        internal void MarkPublished(int generation)
+        {
+            Generation = generation;
+            IsPublished = true;
+        }
+
         public IReadOnlyList<IArenaDomainEvent> DomainEvents { get; }
         public IReadOnlyList<ArenaRunTickStage> ExecutedStages { get; }
         public IReadOnlyList<IArenaRunNotification> Notifications { get; }

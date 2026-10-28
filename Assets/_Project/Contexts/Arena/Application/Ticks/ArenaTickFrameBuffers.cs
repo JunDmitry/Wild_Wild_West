@@ -24,6 +24,7 @@ namespace Game.Arena.Application.Ticks
         private readonly ArenaRunStateSnapshot _stateSnapshot;
 
         private int _active;
+        private int _generation;
 
         public ArenaTickFrameBuffers(int enemyCapacity, ArenaRunStateSnapshot stateSnapshot)
         {
@@ -48,6 +49,7 @@ namespace Game.Arena.Application.Ticks
         public void BeginTick()
         {
             _active ^= 1;
+            _generation = ArenaTickLifetimeGuard.Advance();
             _slots[_active].Release();
             _recorder.Reset();
         }
@@ -65,13 +67,17 @@ namespace Game.Arena.Application.Ticks
             _hudMapper.Map(slot.Snapshot, slot.Hud);
             slot.NotificationPool.Fill(_recorder.Events, slot.NotificationList);
 
-            return _recorder.BuildInto(
+            ArenaRunTickResult result = _recorder.BuildInto(
                 slot.Result,
                 run.Id,
                 run.Revision,
                 slot.Snapshot,
                 slot.Hud,
                 slot.NotificationList);
+
+            result.MarkPublished(_generation);
+
+            return result;
         }
 
         private sealed class Slot
