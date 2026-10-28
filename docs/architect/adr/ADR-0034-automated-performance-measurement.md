@@ -81,6 +81,15 @@ Concrete consequences:
 
 Each step leaves the build green.
 
+## Amendment — 2026-10-28: metric 3's scope and the attribution oracle
+
+This amendment settles the question raised by `docs/architect/coder-inbox/c6.md`. It changes no code, no threshold value, and no measurement profile.
+
+- **Metric 3 stays global.** Per-frame managed allocation remains **0 B after warm-up**, measured by the single `GC.Alloc` recorder summed over the whole capture window (ADR-0033). It is not narrowed to "the game's own scope", and no global allocation budget is introduced. ADR-0033 permits revising a threshold only when it is demonstrably wrong for a platform reason; that demonstration does not exist.
+- **The measurement player is the only accepted attribution oracle.** Editor-side `GC.GetAllocatedBytesForCurrentThread()` readings are not evidence of player behaviour: the same method read 0 B for a `HashSet.UnionWith` path that allocated roughly 190 B/frame in the player build (measured at `2072667`). An editor reading of 0 B therefore neither attributes nor exonerates a site.
+- **Attribution is player-side.** A residual allocation is attributed by method-level A/B in temporary player builds (reverted before the acceptance runs), or by an allocation call-stack capture (`Profiler.enableAllocationCallstacks` with `-profiler-enable -profiler-log-file`) analysed in the Profiler window. Neither changes the harness's five metrics or its capture protocol.
+- **A metric-3 revision needs capture evidence.** Only a call-stack capture showing an allocation with no game-code call site justifies a superseding ADR, and that ADR carries the capture as its evidence.
+
 ## References
 
 - `docs/architect/adr/ADR-0033-performance-thresholds-for-cut-over.md`

@@ -131,6 +131,7 @@ An aborted run is not a pass. Stop and report to the architect; do not substitut
 
 - The `GC.Alloc` recorder must be started with `ProfilerRecorderOptions.SumAllSamplesInFrame | ProfilerRecorderOptions.WrapAroundWhenCapacityReached`. Without wrap-around, a capacity-1 recorder captures one sample at startup and repeats it for the whole run. Runs recorded before 2026-10-27 with that defect are invalid for metric 3 and are annotated as such below.
 - The physics counter is the sum of the three named markers (metric 5); no single `Physics.Query` counter exists in this player.
+- **Allocation attribution is player-side only.** Editor `GC.GetAllocatedBytesForCurrentThread()` readings are not evidence of player behaviour — the same method read 0 B for a `UnionWith` path that allocated ~190 B/frame in the player — so attribute a residual with method-level A/B in temporary player builds or an allocation call-stack capture. Metric 3 stays global 0 B (ADR-0034 amendment, 2026-10-28).
 
 ## Recording results
 
