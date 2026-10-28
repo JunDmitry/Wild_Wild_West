@@ -29,6 +29,7 @@ namespace Game.Performance
         private bool _started;
         private double _startTime;
         private long _lastWholeSecond = -1;
+        private readonly PlayerFrameInput _frameInput = new();
 
         /// <summary>
         /// Marks the moment the run became active. The cadence is measured in
@@ -45,11 +46,13 @@ namespace Game.Performance
         {
             if (_started == false)
             {
-                return new PlayerFrameInput(
+                _frameInput.Fill(
                     MovementAxes.Zero,
                     Direction3D.Forward,
                     false,
                     false);
+
+                return _frameInput;
             }
 
             double elapsed = Time.unscaledTimeAsDouble - _startTime;
@@ -85,11 +88,13 @@ namespace Game.Performance
 
             bool attack = firstFrameOfSecond;
 
-            return new PlayerFrameInput(
+            _frameInput.Fill(
                 movementAxes,
                 viewDirection,
                 attack,
                 switchWeapon);
+
+            return _frameInput;
         }
     }
 }

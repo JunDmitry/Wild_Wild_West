@@ -14,6 +14,7 @@ namespace Game.Arena.Presentation.Enemies
         [SerializeField] private ArenaRunAnnouncer _announcer;
 
         private readonly HashSet<EnemyId> _wasInside = new();
+        private readonly HashSet<EnemyId> _inside = new();
 
         private ArenaRunId _presentedRunId;
         private bool _hasPresented;
@@ -55,9 +56,10 @@ namespace Game.Arena.Presentation.Enemies
             _wasInside.UnionWith(inside);
         }
 
-        private static HashSet<EnemyId> CollectInside(ArenaRunSnapshot snapshot)
+        private HashSet<EnemyId> CollectInside(ArenaRunSnapshot snapshot)
         {
-            HashSet<EnemyId> inside = new();
+            HashSet<EnemyId> inside = _inside;
+            inside.Clear();
 
             for (int index = 0; index < snapshot.Enemies.Count; index++)
             {

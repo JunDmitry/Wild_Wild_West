@@ -17,6 +17,7 @@ namespace Game.Arena.Infrastructure.Input
 
         private IUnityInputDevice _device;
         private Direction3D _lastViewDirection = Direction3D.Forward;
+        private readonly PlayerFrameInput _frameInput = new();
 
         public Transform ViewTransform
         {
@@ -44,11 +45,13 @@ namespace Game.Arena.Infrastructure.Input
                 device.GetAxisRaw(VerticalAxis),
                 device.GetAxisRaw(HorizontalAxis));
 
-            return new PlayerFrameInput(
+            _frameInput.Fill(
                 movementAxes,
                 ReadViewDirection(),
                 device.GetButtonDown(AttackButton),
                 device.GetKeyDown(_switchWeaponKey));
+
+            return _frameInput;
         }
 
         private Direction3D ReadViewDirection()

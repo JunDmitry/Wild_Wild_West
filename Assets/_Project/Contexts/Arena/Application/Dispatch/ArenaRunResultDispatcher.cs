@@ -227,11 +227,14 @@ namespace Game.Arena.Application.Dispatch
             {
                 SnapshotRegistration registration = registrations[index];
 
-                Invoke(
-                    stage,
-                    registration.Handler,
-                    typeof(ArenaRunSnapshot),
-                    () => registration.Handler.Handle(snapshot));
+                try
+                {
+                    registration.Handler.Handle(snapshot);
+                }
+                catch (Exception exception)
+                {
+                    Report(stage, registration.Handler, typeof(ArenaRunSnapshot), exception);
+                }
             }
         }
 
@@ -249,11 +252,14 @@ namespace Game.Arena.Application.Dispatch
             {
                 HudRegistration registration = registrations[index];
 
-                Invoke(
-                    stage,
-                    registration.Handler,
-                    typeof(ArenaRunHudSnapshot),
-                    () => registration.Handler.Handle(snapshot, hud));
+                try
+                {
+                    registration.Handler.Handle(snapshot, hud);
+                }
+                catch (Exception exception)
+                {
+                    Report(stage, registration.Handler, typeof(ArenaRunHudSnapshot), exception);
+                }
             }
         }
 
@@ -279,28 +285,15 @@ namespace Game.Arena.Application.Dispatch
                         continue;
                     }
 
-                    Invoke(
-                        stage,
-                        registration.Handler,
-                        notification.GetType(),
-                        () => registration.Invoke(notification));
+                    try
+                    {
+                        registration.Invoke(notification);
+                    }
+                    catch (Exception exception)
+                    {
+                        Report(stage, registration.Handler, notification.GetType(), exception);
+                    }
                 }
-            }
-        }
-
-        private void Invoke(
-            ArenaRunDispatchStage stage,
-            object handler,
-            Type payloadType,
-            Action action)
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception exception)
-            {
-                Report(stage, handler, payloadType, exception);
             }
         }
 

@@ -5,7 +5,34 @@ namespace Game.Arena.Application.Input
 {
     public sealed class PlayerFrameInput
     {
+        public PlayerFrameInput()
+        {
+            ViewDirection = Direction3D.Forward;
+        }
+
         public PlayerFrameInput(
+            MovementAxes movementAxes,
+            Direction3D viewDirection,
+            bool attackPressed,
+            bool switchWeaponPressed)
+            : this()
+        {
+            Fill(movementAxes, viewDirection, attackPressed, switchWeaponPressed);
+        }
+
+        public MovementAxes MovementAxes { get; private set; }
+
+        public Direction3D ViewDirection { get; private set; }
+
+        public bool AttackPressed { get; private set; }
+
+        public bool SwitchWeaponPressed { get; private set; }
+
+        /// <summary>
+        /// Refills this instance for the next frame (ADR-0035 point 9). The
+        /// value is valid for one tick; no consumer may retain it.
+        /// </summary>
+        public void Fill(
             MovementAxes movementAxes,
             Direction3D viewDirection,
             bool attackPressed,
@@ -26,13 +53,5 @@ namespace Game.Arena.Application.Input
             AttackPressed = attackPressed;
             SwitchWeaponPressed = switchWeaponPressed;
         }
-
-        public MovementAxes MovementAxes { get; }
-
-        public Direction3D ViewDirection { get; }
-
-        public bool AttackPressed { get; }
-
-        public bool SwitchWeaponPressed { get; }
     }
 }
