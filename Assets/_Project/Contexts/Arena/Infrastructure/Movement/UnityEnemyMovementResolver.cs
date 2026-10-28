@@ -28,6 +28,7 @@ namespace Game.Arena.Infrastructure.Movement
         private readonly ArenaDefinition _arena;
         private readonly int _layerMask;
         private readonly RaycastHit[] _hitsBuffer;
+        private readonly List<EnemyMovementBatchResolutionEntry> _entries = new();
 
         public UnityEnemyMovementResolver(
             IEnemyTransformRegistry enemyTransforms,
@@ -48,14 +49,14 @@ namespace Game.Arena.Infrastructure.Movement
             }
 
             IReadOnlyList<EnemyMovementIntent> intents = request.Intents;
-            EnemyMovementBatchResolutionEntry[] entries = new EnemyMovementBatchResolutionEntry[intents.Count];
+            _entries.Clear();
 
             for (int index = 0; index < intents.Count; index++)
             {
-                entries[index] = ResolveIntent(intents[index]);
+                _entries.Add(ResolveIntent(intents[index]));
             }
 
-            return entries;
+            return _entries;
         }
 
         private EnemyMovementBatchResolutionEntry ResolveIntent(EnemyMovementIntent intent)

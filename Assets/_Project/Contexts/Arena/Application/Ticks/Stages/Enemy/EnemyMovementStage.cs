@@ -11,6 +11,8 @@ namespace Game.Arena.Application.Ticks.Stages
         private readonly IEnemyMovementResolver _resolver;
         private readonly PendingInteractionTracker _interactionTracker;
 
+        private EnemyMovementBatchResolution _resolution;
+
         public EnemyMovementStage(IEnemyMovementResolver resolver, PendingInteractionTracker interactionTracker)
         {
             _resolver = resolver ?? throw new System.ArgumentNullException(nameof(resolver));
@@ -40,7 +42,15 @@ namespace Game.Arena.Application.Ticks.Stages
                 throw new System.InvalidOperationException("Enemy movement resolver returned null.");
             }
 
-            EnemyMovementBatchResolution resolution = new(request.Correlation, entries);
+            EnemyMovementBatchResolution resolution = _resolution;
+
+            if (resolution == null)
+            {
+                resolution = new EnemyMovementBatchResolution(entries.Count);
+                _resolution = resolution;
+            }
+
+            resolution.Fill(request.Correlation, entries);
             EnemyMovementBatchResolutionOutcome outcome = run.ApplyEnemyMovementBatch(resolution);
 
             recorder.RecordChange(outcome.Change);

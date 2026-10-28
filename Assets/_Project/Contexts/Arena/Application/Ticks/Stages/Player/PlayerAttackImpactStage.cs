@@ -13,6 +13,8 @@ namespace Game.Arena.Application.Ticks.Stages
         private readonly IPlayerAttackTargetingResolver _resolver;
         private readonly PendingInteractionTracker _interactionTracker;
 
+        private PlayerAttackImpactResolution _resolution;
+
         public PlayerAttackImpactStage(IPlayerAttackTargetingResolver resolver, PendingInteractionTracker interactionTracker)
         {
             _resolver = resolver ?? throw new System.ArgumentNullException(nameof(resolver));
@@ -42,7 +44,15 @@ namespace Game.Arena.Application.Ticks.Stages
                 throw new System.InvalidOperationException("Attack targeting resolver returned null.");
             }
 
-            PlayerAttackImpactResolution attackImpactResolution = new(request.Correlation, hitEnemies);
+            PlayerAttackImpactResolution attackImpactResolution = _resolution;
+
+            if (attackImpactResolution == null)
+            {
+                attackImpactResolution = new PlayerAttackImpactResolution(hitEnemies.Count);
+                _resolution = attackImpactResolution;
+            }
+
+            attackImpactResolution.Fill(request.Correlation, hitEnemies);
             PlayerAttackImpactOutcome outcome = run.ApplyPlayerAttackImpact(attackImpactResolution);
 
             recorder.RecordChange(outcome.Change);

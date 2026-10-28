@@ -15,10 +15,13 @@ namespace Game.Arena.Infrastructure.Targeting
         private const float MinimumOffsetLengthSquared = 1e-8f;
 
         private static readonly IReadOnlyList<EnemyId> s_noTargets = Array.Empty<EnemyId>();
+        private static readonly EnemyId[] s_singleTarget = new EnemyId[1];
 
         private readonly IEnemyColliderRegistry _enemyColliders;
         private readonly RaycastHit[] _raycastHitsBuffer;
         private readonly Collider[] _collidersBuffer;
+        private readonly List<EnemyId> _meleeTargets = new();
+        private readonly HashSet<EnemyId> _meleeSeen = new();
 
         public UnityPlayerAttackTargetingResolver(IEnemyColliderRegistry enemyColliders)
         {
@@ -81,7 +84,9 @@ namespace Game.Arena.Infrastructure.Targeting
                 return s_noTargets;
             }
 
-            return new[] { nearestEnemy };
+            s_singleTarget[0] = nearestEnemy;
+
+            return s_singleTarget;
         }
 
         private IReadOnlyList<EnemyId> ResolveMelee(
@@ -97,8 +102,10 @@ namespace Game.Arena.Infrastructure.Targeting
                 QueryTriggerInteraction.Ignore);
 
             float rangeSquared = request.Range.Value * request.Range.Value;
-            List<EnemyId> targets = new();
-            HashSet<EnemyId> seen = new();
+            List<EnemyId> targets = _meleeTargets;
+            HashSet<EnemyId> seen = _meleeSeen;
+            targets.Clear();
+            seen.Clear();
 
             for (int index = 0; index < overlapsCount; index++)
             {
