@@ -1283,7 +1283,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         /// </summary>
         public ArenaRunStateSnapshot CreateSnapshot(ArenaRunStateSnapshot target)
         {
-            if (target == null)
+            if (target == null || target.EnemyBuffer == null)
             {
                 return CreateSnapshot();
             }
