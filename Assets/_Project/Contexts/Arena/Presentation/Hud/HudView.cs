@@ -6,12 +6,15 @@ namespace Game.Arena.Presentation.Hud
 {
     public sealed class HudView : MonoBehaviour
     {
-        [SerializeField] private TextMeshPro _equippedWeaponText;
-        [SerializeField] private TextMeshPro _healthText;
+        [SerializeField] private TextMeshProUGUI _equippedWeaponText;
+        [SerializeField] private TextMeshProUGUI _healthText;
         [SerializeField] private Transform _healthFill;
-        [SerializeField] private TextMeshPro _waveText;
-        [SerializeField] private TextMeshPro _bossText;
+        [SerializeField] private TextMeshProUGUI _waveText;
+
+        [SerializeField] private TextMeshProUGUI _bossLabel;
+        [SerializeField] private TextMeshProUGUI _bossHealthText;
         [SerializeField] private Transform _bossFill;
+        [SerializeField] private Transform _bossViewRoot;
 
         public string EquippedWeaponLabel { get; private set; }
 
@@ -47,7 +50,7 @@ namespace Game.Arena.Presentation.Hud
 
         public bool IsShown => EquippedWeaponText != null;
 
-        public TextMeshPro HealthTextMesh
+        public TextMeshProUGUI HealthTextMesh
         {
             get => _healthText;
             set => _healthText = value;
@@ -59,16 +62,22 @@ namespace Game.Arena.Presentation.Hud
             set => _healthFill = value;
         }
 
-        public TextMeshPro WaveTextMesh
+        public TextMeshProUGUI WaveTextMesh
         {
             get => _waveText;
             set => _waveText = value;
         }
 
-        public TextMeshPro BossTextMesh
+        public TextMeshProUGUI BossLabelMesh
         {
-            get => _bossText;
-            set => _bossText = value;
+            get => _bossLabel;
+            set => _bossLabel = value;
+        }
+
+        public TextMeshProUGUI BossHealthTextMesh
+        {
+            get => _bossHealthText;
+            set => _bossHealthText = value;
         }
 
         public Transform BossFill
@@ -77,7 +86,7 @@ namespace Game.Arena.Presentation.Hud
             set => _bossFill = value;
         }
 
-        private TextMeshPro EquippedWeaponTextMesh => _equippedWeaponText != null ? _equippedWeaponText : GetComponent<TextMeshPro>();
+        private TextMeshProUGUI EquippedWeaponTextMesh => _equippedWeaponText != null ? _equippedWeaponText : GetComponent<TextMeshProUGUI>();
 
         public void ShowEquippedWeapon(string label, string text)
         {
@@ -94,7 +103,7 @@ namespace Game.Arena.Presentation.Hud
             EquippedWeaponLabel = label;
             EquippedWeaponText = text;
 
-            TextMeshPro textMesh = EquippedWeaponTextMesh;
+            TextMeshProUGUI textMesh = EquippedWeaponTextMesh;
 
             if (textMesh != null)
             {
@@ -193,15 +202,25 @@ namespace Game.Arena.Presentation.Hud
             BossHealthFraction = fraction;
             IsBossPresent = true;
 
-            if (_bossText != null)
+            if (_bossLabel != null)
             {
-                _bossText.text = label + ": " + text;
+                _bossLabel.text = label;
+            }
+
+            if (_bossHealthText != null)
+            {
+                _bossHealthText.text = text;
             }
 
             if (_bossFill != null)
             {
                 Vector3 scale = _bossFill.localScale;
                 _bossFill.localScale = new Vector3(fraction, scale.y, scale.z);
+            }
+
+            if (_bossViewRoot != null)
+            {
+                _bossViewRoot.gameObject.SetActive(true);
             }
         }
 
@@ -213,15 +232,25 @@ namespace Game.Arena.Presentation.Hud
             BossHealthFraction = 0f;
             IsBossPresent = false;
 
-            if (_bossText != null)
+            if (_bossLabel != null)
             {
-                _bossText.text = string.Empty;
+                _bossLabel.text = string.Empty;
+            }
+
+            if (_bossHealthText != null)
+            {
+                _bossHealthText.text = string.Empty;
             }
 
             if (_bossFill != null)
             {
                 Vector3 scale = _bossFill.localScale;
                 _bossFill.localScale = new Vector3(0f, scale.y, scale.z);
+            }
+
+            if (_bossViewRoot != null)
+            {
+                _bossViewRoot.gameObject.SetActive(false);
             }
         }
 

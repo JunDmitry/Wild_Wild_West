@@ -10,18 +10,18 @@ namespace Game.Arena.Presentation.Windows
         public const string Statement = "Defeat";
         public const string WaveReachedLabel = "Wave reached";
 
-        [SerializeField] private TextMeshPro _statementText;
-        [SerializeField] private TextMeshPro _waveText;
+        [SerializeField] private TextMeshProUGUI _statementText;
+        [SerializeField] private TextMeshProUGUI _waveText;
 
         public string Label => WaveReachedLabel;
 
-        public TextMeshPro StatementTextMesh
+        public TextMeshProUGUI StatementTextMesh
         {
             get => _statementText;
             set => _statementText = value;
         }
 
-        public TextMeshPro WaveTextMesh
+        public TextMeshProUGUI WaveTextMesh
         {
             get => _waveText;
             set => _waveText = value;

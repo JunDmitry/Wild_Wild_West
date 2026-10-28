@@ -24,7 +24,7 @@ namespace Game.Arena.PlayMode.Tests
         private EquippedWeaponPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMeshPro _textMesh;
+        private TextMeshProUGUI _textMesh;
 
         [SetUp]
         public void SetUp()
@@ -32,7 +32,7 @@ namespace Game.Arena.PlayMode.Tests
             _objects.Clear();
 
             GameObject root = Track(new GameObject("Hud"));
-            _textMesh = root.AddComponent<TextMeshPro>();
+            _textMesh = root.AddComponent<TextMeshProUGUI>();
             _hudView = root.AddComponent<HudView>();
             _announcer = root.AddComponent<ArenaRunAnnouncer>();
             _presenter = root.AddComponent<EquippedWeaponPresenter>();

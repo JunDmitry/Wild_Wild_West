@@ -10,8 +10,9 @@ namespace Game.CompositionRoot
     /// </summary>
     public sealed class BootstrapLifetimeScope : LifetimeScope
     {
-        [SerializeField]
-        private bool _loadArenaOnStart = true;
+        [SerializeField] private bool _loadArenaOnStart = true;
+
+        private ArenaGameConfiguration _configuration;
 
         /// <summary>
         /// Gets or sets whether building this scope loads the configured arena
@@ -23,8 +24,6 @@ namespace Game.CompositionRoot
             get => _loadArenaOnStart;
             set => _loadArenaOnStart = value;
         }
-
-        private ArenaGameConfiguration _configuration;
 
         /// <summary>
         /// Gets or sets the configuration this scope registers. It is null in

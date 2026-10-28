@@ -24,7 +24,8 @@ namespace Game.Arena.PlayMode.Tests
         private ArenaRunAnnouncer _announcer;
         private BossIndicatorPresenter _presenter;
         private HudView _hudView;
-        private TextMeshPro _bossText;
+        private TextMeshProUGUI _bossLabel;
+        private TextMeshProUGUI _bossText;
         private Transform _bossFill;
 
         [SetUp]
@@ -37,16 +38,19 @@ namespace Game.Arena.PlayMode.Tests
             _announcer = root.AddComponent<ArenaRunAnnouncer>();
             _presenter = root.AddComponent<BossIndicatorPresenter>();
 
-            GameObject bossText = Track(new GameObject("BossText"));
-            bossText.transform.SetParent(root.transform, false);
-            _bossText = bossText.AddComponent<TextMeshPro>();
+            GameObject boss = Track(new GameObject("BossText"));
+            boss.transform.SetParent(root.transform, false);
+            _bossLabel = boss.AddComponent<TextMeshProUGUI>();
+            _bossText = new GameObject().AddComponent<TextMeshProUGUI>();
+            _bossText.transform.SetParent(boss.transform, true);
 
             GameObject bossFill = Track(new GameObject("BossFill"));
             bossFill.transform.SetParent(root.transform, false);
             _bossFill = bossFill.transform;
             _bossFill.localScale = new Vector3(1f, 1f, 1f);
 
-            _hudView.BossTextMesh = _bossText;
+            _hudView.BossLabelMesh = _bossLabel;
+            _hudView.BossHealthTextMesh = _bossText;
             _hudView.BossFill = _bossFill;
             _presenter.HudView = _hudView;
             _presenter.Announcer = _announcer;
@@ -70,7 +74,7 @@ namespace Game.Arena.PlayMode.Tests
 
             Assert.That(_hudView.IsBossPresent, Is.False);
             Assert.That(_hudView.BossHealthText, Is.Empty);
-            Assert.That(_bossText.text, Is.Empty);
+            Assert.That(_bossLabel.text, Is.Empty);
             Assert.That(_announcer.AnnouncementCount, Is.Zero);
         }
 
@@ -84,7 +88,8 @@ namespace Game.Arena.PlayMode.Tests
             Assert.That(_hudView.BossLabel, Is.EqualTo("Boss"));
             Assert.That(_hudView.BossHealthText, Is.EqualTo("300 / 300"));
             Assert.That(_hudView.BossHealthFraction, Is.EqualTo(1f));
-            Assert.That(_bossText.text, Is.EqualTo("Boss: 300 / 300"));
+            Assert.That(_bossLabel.text, Is.EqualTo("Boss"));
+            Assert.That(_bossText.text, Is.EqualTo("300 / 300"));
             Assert.That(_bossFill.localScale.x, Is.EqualTo(1f).Within(1e-4f));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
             Assert.That(
@@ -107,7 +112,8 @@ namespace Game.Arena.PlayMode.Tests
             Assert.That(_hudView.BossHealthCurrent, Is.EqualTo(180));
             Assert.That(_hudView.BossHealthText, Is.EqualTo("180 / 300"));
             Assert.That(_hudView.BossHealthFraction, Is.EqualTo(0.6f));
-            Assert.That(_bossText.text, Is.EqualTo("Boss: 180 / 300"));
+            Assert.That(_bossLabel.text, Is.EqualTo("Boss"));
+            Assert.That(_bossText.text, Is.EqualTo("180 / 300"));
             Assert.That(_bossFill.localScale.x, Is.EqualTo(0.6f).Within(1e-4f));
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(1));
             Assert.That(
@@ -125,7 +131,7 @@ namespace Game.Arena.PlayMode.Tests
 
             Assert.That(_hudView.IsBossPresent, Is.False);
             Assert.That(_hudView.BossHealthText, Is.Empty);
-            Assert.That(_bossText.text, Is.Empty);
+            Assert.That(_bossLabel.text, Is.Empty);
             Assert.That(_bossFill.localScale.x, Is.Zero);
             Assert.That(_announcer.AnnouncementCount, Is.EqualTo(2));
             Assert.That(

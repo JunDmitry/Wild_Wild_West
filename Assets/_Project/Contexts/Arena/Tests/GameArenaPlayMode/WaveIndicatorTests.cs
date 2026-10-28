@@ -26,7 +26,7 @@ namespace Game.Arena.PlayMode.Tests
         private WaveIndicatorPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMeshPro _textMesh;
+        private TextMeshProUGUI _textMesh;
         private TestEnemyColliderRegistry _registry;
         private PlayModeTickHarness _harness;
 
@@ -44,7 +44,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject waveText = Track(new GameObject("WaveText"));
             waveText.transform.SetParent(root.transform, false);
-            _textMesh = waveText.AddComponent<TextMeshPro>();
+            _textMesh = waveText.AddComponent<TextMeshProUGUI>();
 
             _hudView.WaveTextMesh = _textMesh;
             _presenter.HudView = _hudView;

@@ -31,8 +31,8 @@ namespace Game.Arena.PlayMode.Tests
         private DefeatWindowPresenter _presenter;
         private HudView _hudView;
         private WaveIndicatorPresenter _wavePresenter;
-        private TextMeshPro _statementText;
-        private TextMeshPro _waveText;
+        private TextMeshProUGUI _statementText;
+        private TextMeshProUGUI _waveText;
         private FixedInputSource _input;
         private PlayModeTickHarness _harness;
 
@@ -53,11 +53,11 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject statement = Track(new GameObject("Statement"));
             statement.transform.SetParent(viewObject.transform, false);
-            _statementText = statement.AddComponent<TextMeshPro>();
+            _statementText = statement.AddComponent<TextMeshProUGUI>();
 
             GameObject wave = Track(new GameObject("WaveReached"));
             wave.transform.SetParent(viewObject.transform, false);
-            _waveText = wave.AddComponent<TextMeshPro>();
+            _waveText = wave.AddComponent<TextMeshProUGUI>();
 
             _view.StatementTextMesh = _statementText;
             _view.WaveTextMesh = _waveText;
@@ -69,7 +69,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject hudWave = Track(new GameObject("HudWave"));
             hudWave.transform.SetParent(root.transform, false);
-            TextMeshPro hudWaveText = hudWave.AddComponent<TextMeshPro>();
+            TextMeshProUGUI hudWaveText = hudWave.AddComponent<TextMeshProUGUI>();
 
             _hudView.WaveTextMesh = hudWaveText;
             _wavePresenter.HudView = _hudView;

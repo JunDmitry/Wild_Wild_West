@@ -10,16 +10,16 @@ namespace Game.Arena.Presentation.Windows
         public const string Title = "Victory";
         public const string Message = "the run was won";
 
-        [SerializeField] private TextMeshPro _titleText;
-        [SerializeField] private TextMeshPro _messageText;
+        [SerializeField] private TextMeshProUGUI _titleText;
+        [SerializeField] private TextMeshProUGUI _messageText;
 
-        public TextMeshPro TitleTextMesh
+        public TextMeshProUGUI TitleTextMesh
         {
             get => _titleText;
             set => _titleText = value;
         }
 
-        public TextMeshPro MessageTextMesh
+        public TextMeshProUGUI MessageTextMesh
         {
             get => _messageText;
             set => _messageText = value;

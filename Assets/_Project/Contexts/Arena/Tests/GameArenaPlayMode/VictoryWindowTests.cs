@@ -36,8 +36,8 @@ namespace Game.Arena.PlayMode.Tests
         private ArenaRunAnnouncer _announcer;
         private VictoryView _view;
         private ArenaRunNotificationPresenter _presenter;
-        private TextMeshPro _titleText;
-        private TextMeshPro _messageText;
+        private TextMeshProUGUI _titleText;
+        private TextMeshProUGUI _messageText;
         private FixedInputSource _input;
         private PlayModeTickHarness _harness;
         private ArenaRunResultDispatcher _dispatcher;
@@ -58,11 +58,11 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject title = Track(new GameObject("Title"));
             title.transform.SetParent(root.transform, false);
-            _titleText = title.AddComponent<TextMeshPro>();
+            _titleText = title.AddComponent<TextMeshProUGUI>();
 
             GameObject message = Track(new GameObject("Message"));
             message.transform.SetParent(root.transform, false);
-            _messageText = message.AddComponent<TextMeshPro>();
+            _messageText = message.AddComponent<TextMeshProUGUI>();
 
             _view.TitleTextMesh = _titleText;
             _view.MessageTextMesh = _messageText;

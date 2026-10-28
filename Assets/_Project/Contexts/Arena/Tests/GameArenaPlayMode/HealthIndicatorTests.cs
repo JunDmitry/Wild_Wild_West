@@ -21,7 +21,7 @@ namespace Game.Arena.PlayMode.Tests
         private HealthIndicatorPresenter _presenter;
         private HudView _hudView;
         private ArenaRunAnnouncer _announcer;
-        private TextMeshPro _textMesh;
+        private TextMeshProUGUI _textMesh;
         private Transform _fill;
 
         [SetUp]
@@ -36,7 +36,7 @@ namespace Game.Arena.PlayMode.Tests
 
             GameObject healthText = Track(new GameObject("HealthText"));
             healthText.transform.SetParent(root.transform, false);
-            _textMesh = healthText.AddComponent<TextMeshPro>();
+            _textMesh = healthText.AddComponent<TextMeshProUGUI>();
 
             GameObject fill = Track(new GameObject("HealthFill"));
             fill.transform.SetParent(root.transform, false);
