@@ -19,10 +19,28 @@ namespace Game.Arena.Application.Hud
                 throw new ArgumentNullException(nameof(source));
             }
 
+            ArenaRunHudSnapshot target = new();
+            Map(source, target);
+
+            return target;
+        }
+
+        internal void Map(ArenaRunSnapshot source, ArenaRunHudSnapshot target)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
             Health health = source.Player.Health;
             EnemySnapshot boss = FindPresentedBoss(source);
 
-            return new ArenaRunHudSnapshot(
+            target.Fill(
                 HealthLabel,
                 health.Current,
                 health.Maximum,
@@ -39,8 +57,10 @@ namespace Game.Arena.Application.Hud
 
         private static EnemySnapshot FindPresentedBoss(ArenaRunSnapshot source)
         {
-            foreach (EnemySnapshot enemy in source.Enemies)
+            for (int index = 0; index < source.Enemies.Count; index++)
             {
+                EnemySnapshot enemy = source.Enemies[index];
+
                 if (enemy.Kind != EnemyKind.Boss)
                 {
                     continue;

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using Game.Arena.Application.Hud;
+using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Concurrency;
@@ -19,6 +21,14 @@ namespace Game.Arena.Application.Ticks
         }
 
         public int EventCount => _events.Count;
+
+        internal IReadOnlyList<IArenaDomainEvent> Events => _events;
+
+        public void Reset()
+        {
+            _events.Clear();
+            _stages.Clear();
+        }
 
         public void RecordStage(ArenaRunTickStage stage)
         {
@@ -56,6 +66,31 @@ namespace Game.Arena.Application.Ticks
                 snapshot,
                 _events,
                 _stages);
+        }
+
+        internal ArenaRunTickResult BuildInto(
+            ArenaRunTickResult target,
+            ArenaRunId arenaRunId,
+            AggregateRevision finalRevision,
+            ArenaRunSnapshot snapshot,
+            ArenaRunHudSnapshot hud,
+            IReadOnlyList<IArenaRunNotification> notifications)
+        {
+            if (target == null)
+            {
+                throw new System.ArgumentNullException(nameof(target));
+            }
+
+            target.Fill(
+                arenaRunId,
+                finalRevision,
+                snapshot,
+                hud,
+                _events,
+                _stages,
+                notifications);
+
+            return target;
         }
     }
 }

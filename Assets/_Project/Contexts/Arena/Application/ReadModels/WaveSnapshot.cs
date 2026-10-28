@@ -5,7 +5,28 @@ namespace Game.Arena.Application.ReadModels
 {
     public sealed class WaveSnapshot
     {
+        internal WaveSnapshot()
+        {
+        }
+
         public WaveSnapshot(
+            WaveNumber number,
+            WavePhase phase,
+            int regularEnemiesRemainingToSpawn,
+            BossStatus bossStatus)
+        {
+            Fill(number, phase, regularEnemiesRemainingToSpawn, bossStatus);
+        }
+
+        public WaveNumber Number { get; private set; }
+
+        public WavePhase Phase { get; private set; }
+
+        public int RegularEnemiesRemainingToSpawn { get; private set; }
+
+        public BossStatus BossStatus { get; private set; }
+
+        internal void Fill(
             WaveNumber number,
             WavePhase phase,
             int regularEnemiesRemainingToSpawn,
@@ -16,13 +37,5 @@ namespace Game.Arena.Application.ReadModels
             RegularEnemiesRemainingToSpawn = regularEnemiesRemainingToSpawn;
             BossStatus = bossStatus;
         }
-
-        public WaveNumber Number { get; }
-
-        public WavePhase Phase { get; }
-
-        public int RegularEnemiesRemainingToSpawn { get; }
-
-        public BossStatus BossStatus { get; }
     }
 }

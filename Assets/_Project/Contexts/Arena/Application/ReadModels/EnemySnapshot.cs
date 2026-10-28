@@ -8,7 +8,48 @@ namespace Game.Arena.Application.ReadModels
 {
     public sealed class EnemySnapshot
     {
+        internal EnemySnapshot()
+        {
+        }
+
         public EnemySnapshot(
+            EnemyId enemyId,
+            EnemyKind kind,
+            Position3D position,
+            Health health,
+            CollisionRadius collisionRadius,
+            GameTimePoint attackReadyAt,
+            bool hasPendingAttack,
+            PendingEnemyAttack pendingAttack)
+        {
+            Fill(
+                enemyId,
+                kind,
+                position,
+                health,
+                collisionRadius,
+                attackReadyAt,
+                hasPendingAttack,
+                pendingAttack);
+        }
+
+        public EnemyId EnemyId { get; private set; }
+
+        public EnemyKind Kind { get; private set; }
+
+        public Position3D Position { get; private set; }
+
+        public Health Health { get; private set; }
+
+        public CollisionRadius CollisionRadius { get; private set; }
+
+        public GameTimePoint AttackReadyAt { get; private set; }
+
+        public bool HasPendingAttack { get; private set; }
+
+        public PendingEnemyAttack PendingAttack { get; private set; }
+
+        internal void Fill(
             EnemyId enemyId,
             EnemyKind kind,
             Position3D position,
@@ -27,21 +68,5 @@ namespace Game.Arena.Application.ReadModels
             HasPendingAttack = hasPendingAttack;
             PendingAttack = pendingAttack;
         }
-
-        public EnemyId EnemyId { get; }
-
-        public EnemyKind Kind { get; }
-
-        public Position3D Position { get; }
-
-        public Health Health { get; }
-
-        public CollisionRadius CollisionRadius { get; }
-
-        public GameTimePoint AttackReadyAt { get; }
-
-        public bool HasPendingAttack { get; }
-
-        public PendingEnemyAttack PendingAttack { get; }
     }
 }

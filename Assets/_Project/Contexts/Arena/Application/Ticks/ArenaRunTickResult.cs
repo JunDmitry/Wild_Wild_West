@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Game.Arena.Application.Hud;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
@@ -12,9 +11,16 @@ namespace Game.Arena.Application.Ticks
 {
     public sealed class ArenaRunTickResult
     {
-        private readonly ReadOnlyCollection<IArenaDomainEvent> _domainEvents;
-        private readonly ReadOnlyCollection<ArenaRunTickStage> _executedStages;
-        private readonly ReadOnlyCollection<IArenaRunNotification> _notifications;
+        private readonly List<IArenaDomainEvent> _eventsBuffer = new();
+        private readonly List<ArenaRunTickStage> _stagesBuffer = new();
+        private readonly List<IArenaRunNotification> _notificationsBuffer = new();
+
+        internal ArenaRunTickResult()
+        {
+            DomainEvents = _eventsBuffer.AsReadOnly();
+            ExecutedStages = _stagesBuffer.AsReadOnly();
+            Notifications = _notificationsBuffer.AsReadOnly();
+        }
 
         public ArenaRunTickResult(
             ArenaRunId arenaRunId,
@@ -22,6 +28,43 @@ namespace Game.Arena.Application.Ticks
             ArenaRunSnapshot snapshot,
             IReadOnlyList<IArenaDomainEvent> domainEvents,
             IReadOnlyList<ArenaRunTickStage> executedStages)
+            : this()
+        {
+            if (snapshot == null)
+            {
+                throw new ArgumentException(nameof(snapshot));
+            }
+
+            IArenaRunNotification[] notifications =
+                CopyNotifications(new ArenaRunNotificationMapper().Map(domainEvents));
+
+            Fill(
+                arenaRunId,
+                finalRevision,
+                snapshot,
+                new ArenaRunHudSnapshotMapper().Map(snapshot),
+                domainEvents,
+                executedStages,
+                notifications);
+        }
+
+        public ArenaRunId ArenaRunId { get; private set; }
+        public AggregateRevision FinalRevision { get; private set; }
+        public ArenaRunSnapshot Snapshot { get; private set; }
+        public ArenaRunHudSnapshot Hud { get; private set; }
+
+        public IReadOnlyList<IArenaDomainEvent> DomainEvents { get; }
+        public IReadOnlyList<ArenaRunTickStage> ExecutedStages { get; }
+        public IReadOnlyList<IArenaRunNotification> Notifications { get; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision finalRevision,
+            ArenaRunSnapshot snapshot,
+            ArenaRunHudSnapshot hud,
+            IReadOnlyList<IArenaDomainEvent> domainEvents,
+            IReadOnlyList<ArenaRunTickStage> executedStages,
+            IReadOnlyList<IArenaRunNotification> notifications)
         {
             if (arenaRunId.IsNone)
             {
@@ -43,6 +86,11 @@ namespace Game.Arena.Application.Ticks
                 throw new ArgumentException("Snapshot revision must match the final revision.", nameof(snapshot));
             }
 
+            if (hud == null)
+            {
+                throw new ArgumentNullException(nameof(hud));
+            }
+
             if (domainEvents == null)
             {
                 throw new ArgumentNullException(nameof(domainEvents));
@@ -53,31 +101,12 @@ namespace Game.Arena.Application.Ticks
                 throw new ArgumentNullException(nameof(executedStages));
             }
 
-            IArenaDomainEvent[] copiedEvents = CopyEvents(arenaRunId, finalRevision, domainEvents);
-            ArenaRunTickStage[] copiedStages = CopyStages(executedStages);
-            IArenaRunNotification[] copiedNotifications = CopyNotifications(copiedEvents);
+            if (notifications == null)
+            {
+                throw new ArgumentNullException(nameof(notifications));
+            }
 
-            ArenaRunId = arenaRunId;
-            FinalRevision = finalRevision;
-            Snapshot = snapshot;
-            Hud = new ArenaRunHudSnapshotMapper().Map(snapshot);
-            _domainEvents = Array.AsReadOnly(copiedEvents);
-            _executedStages = Array.AsReadOnly(copiedStages);
-            _notifications = Array.AsReadOnly(copiedNotifications);
-        }
-
-        public ArenaRunId ArenaRunId { get; }
-        public AggregateRevision FinalRevision { get; }
-        public ArenaRunSnapshot Snapshot { get; }
-        public ArenaRunHudSnapshot Hud { get; }
-
-        public IReadOnlyList<IArenaDomainEvent> DomainEvents => _domainEvents;
-        public IReadOnlyList<ArenaRunTickStage> ExecutedStages => _executedStages;
-        public IReadOnlyList<IArenaRunNotification> Notifications => _notifications;
-
-        private static IArenaDomainEvent[] CopyEvents(ArenaRunId arenaRunId, AggregateRevision finalRevision, IReadOnlyList<IArenaDomainEvent> domainEvents)
-        {
-            IArenaDomainEvent[] copiedEvents = new IArenaDomainEvent[domainEvents.Count];
+            _eventsBuffer.Clear();
             AggregateRevision previousRevision = AggregateRevision.Initial;
 
             for (int index = 0; index < domainEvents.Count; index++)
@@ -104,33 +133,11 @@ namespace Game.Arena.Application.Ticks
                     throw new ArgumentException("Domain event revisions must not decrease.", nameof(domainEvents));
                 }
 
-                copiedEvents[index] = domainEvent;
+                _eventsBuffer.Add(domainEvent);
                 previousRevision = domainEvent.AggregateRevision;
             }
 
-            return copiedEvents;
-        }
-
-        private static IArenaRunNotification[] CopyNotifications(
-            IReadOnlyList<IArenaDomainEvent> domainEvents)
-        {
-            IReadOnlyList<IArenaRunNotification> mapped =
-                new ArenaRunNotificationMapper().Map(domainEvents);
-
-            IArenaRunNotification[] copiedNotifications =
-                new IArenaRunNotification[mapped.Count];
-
-            for (int index = 0; index < mapped.Count; index++)
-            {
-                copiedNotifications[index] = mapped[index];
-            }
-
-            return copiedNotifications;
-        }
-
-        private static ArenaRunTickStage[] CopyStages(IReadOnlyList<ArenaRunTickStage> executedStages)
-        {
-            ArenaRunTickStage[] copiedStages = new ArenaRunTickStage[executedStages.Count];
+            _stagesBuffer.Clear();
 
             for (int index = 0; index < executedStages.Count; index++)
             {
@@ -141,10 +148,33 @@ namespace Game.Arena.Application.Ticks
                     throw new ArgumentException("Executed stages contain an unknown value.", nameof(executedStages));
                 }
 
-                copiedStages[index] = stage;
+                _stagesBuffer.Add(stage);
             }
 
-            return copiedStages;
+            _notificationsBuffer.Clear();
+
+            for (int index = 0; index < notifications.Count; index++)
+            {
+                _notificationsBuffer.Add(notifications[index]);
+            }
+
+            ArenaRunId = arenaRunId;
+            FinalRevision = finalRevision;
+            Snapshot = snapshot;
+            Hud = hud;
+        }
+
+        private static IArenaRunNotification[] CopyNotifications(
+            IReadOnlyList<IArenaRunNotification> notifications)
+        {
+            IArenaRunNotification[] copied = new IArenaRunNotification[notifications.Count];
+
+            for (int index = 0; index < notifications.Count; index++)
+            {
+                copied[index] = notifications[index];
+            }
+
+            return copied;
         }
     }
 }

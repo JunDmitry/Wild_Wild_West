@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 
 namespace Game.Arena.Application.ReadModels
@@ -12,7 +13,25 @@ namespace Game.Arena.Application.ReadModels
                 throw new ArgumentNullException(nameof(source));
             }
 
-            PlayerSnapshot player = new(
+            ArenaRunSnapshot target = new(source.Enemies.Count);
+            Map(source, target);
+
+            return target;
+        }
+
+        internal void Map(ArenaRunStateSnapshot source, ArenaRunSnapshot target)
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            target.Player.Fill(
                 source.Player.PlayerId,
                 source.Player.Position,
                 source.Player.Health,
@@ -22,38 +41,39 @@ namespace Game.Arena.Application.ReadModels
                 source.Player.HasPendingAttack,
                 source.Player.PendingAttack);
 
-            EnemySnapshot[] enemies = new EnemySnapshot[source.Enemies.Count];
+            List<EnemySnapshot> enemies = target.EnemyBuffer;
+            enemies.Clear();
 
             for (int index = 0; index < source.Enemies.Count; index++)
             {
-                EnemyStateSnapshot enemy = source.Enemies[index];
+                EnemyStateSnapshot sourceEnemy = source.Enemies[index];
+                EnemySnapshot enemy = target.GetOrCreateEnemySlot(index);
 
-                enemies[index] = new EnemySnapshot(
-                    enemy.EnemyId,
-                    enemy.Kind,
-                    enemy.Position,
-                    enemy.Health,
-                    enemy.CollisionRadius,
-                    enemy.AttackReadyAt,
-                    enemy.HasPendingAttack,
-                    enemy.PendingAttack);
+                enemy.Fill(
+                    sourceEnemy.EnemyId,
+                    sourceEnemy.Kind,
+                    sourceEnemy.Position,
+                    sourceEnemy.Health,
+                    sourceEnemy.CollisionRadius,
+                    sourceEnemy.AttackReadyAt,
+                    sourceEnemy.HasPendingAttack,
+                    sourceEnemy.PendingAttack);
+
+                enemies.Add(enemy);
             }
 
-            WaveSnapshot wave = new(
+            target.Wave.Fill(
                 source.Wave.Number,
                 source.Wave.Phase,
                 source.Wave.RegularEnemiesRemainingToSpawn,
                 source.Wave.BossStatus);
 
-            return new ArenaRunSnapshot(
+            target.FillMeta(
                 source.ArenaRunId,
                 source.Revision,
                 source.Status,
                 source.CurrentTime,
                 source.Bounds,
-                player,
-                enemies,
-                wave,
                 source.WaveTotal);
         }
     }

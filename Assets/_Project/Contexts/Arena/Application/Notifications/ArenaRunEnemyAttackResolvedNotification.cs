@@ -6,7 +6,28 @@ namespace Game.Arena.Application.Notifications
 {
     public sealed class ArenaRunEnemyAttackResolvedNotification : IArenaRunNotification
     {
+        internal ArenaRunEnemyAttackResolvedNotification()
+        {
+        }
+
         public ArenaRunEnemyAttackResolvedNotification(
+            ArenaRunId arenaRunId,
+            AggregateRevision revision,
+            EnemyId enemyId,
+            ArenaRunEnemyAttackOutcome outcome)
+        {
+            Fill(arenaRunId, revision, enemyId, outcome);
+        }
+
+        public ArenaRunId ArenaRunId { get; private set; }
+
+        public AggregateRevision Revision { get; private set; }
+
+        public EnemyId EnemyId { get; private set; }
+
+        public ArenaRunEnemyAttackOutcome Outcome { get; private set; }
+
+        internal void Fill(
             ArenaRunId arenaRunId,
             AggregateRevision revision,
             EnemyId enemyId,
@@ -27,13 +48,5 @@ namespace Game.Arena.Application.Notifications
             EnemyId = enemyId;
             Outcome = outcome;
         }
-
-        public ArenaRunId ArenaRunId { get; }
-
-        public AggregateRevision Revision { get; }
-
-        public EnemyId EnemyId { get; }
-
-        public ArenaRunEnemyAttackOutcome Outcome { get; }
     }
 }

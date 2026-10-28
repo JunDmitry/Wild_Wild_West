@@ -6,7 +6,22 @@ namespace Game.Arena.Application.Notifications
 {
     public sealed class ArenaRunVictoryNotification : IArenaRunNotification
     {
+        internal ArenaRunVictoryNotification()
+        {
+        }
+
         public ArenaRunVictoryNotification(
+            ArenaRunId arenaRunId,
+            AggregateRevision revision)
+        {
+            Fill(arenaRunId, revision);
+        }
+
+        public ArenaRunId ArenaRunId { get; private set; }
+
+        public AggregateRevision Revision { get; private set; }
+
+        internal void Fill(
             ArenaRunId arenaRunId,
             AggregateRevision revision)
         {
@@ -18,9 +33,5 @@ namespace Game.Arena.Application.Notifications
             ArenaRunId = arenaRunId;
             Revision = revision;
         }
-
-        public ArenaRunId ArenaRunId { get; }
-
-        public AggregateRevision Revision { get; }
     }
 }
