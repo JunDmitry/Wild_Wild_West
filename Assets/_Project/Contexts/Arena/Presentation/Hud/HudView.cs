@@ -100,8 +100,16 @@ namespace Game.Arena.Presentation.Hud
                 throw new ArgumentException("Equipped weapon text cannot be empty.", nameof(text));
             }
 
+            bool equippedWeaponChanged = EquippedWeaponLabel != label
+                || EquippedWeaponText != text;
+
             EquippedWeaponLabel = label;
             EquippedWeaponText = text;
+
+            if (equippedWeaponChanged == false)
+            {
+                return;
+            }
 
             TextMeshProUGUI textMesh = EquippedWeaponTextMesh;
 
@@ -144,6 +152,9 @@ namespace Game.Arena.Presentation.Hud
                 throw new ArgumentOutOfRangeException(nameof(fraction));
             }
 
+            bool healthTextChanged = HealthLabel != label
+                || HealthText != text;
+
             HealthLabel = label;
             HealthCurrent = current;
             HealthMaximum = maximum;
@@ -151,7 +162,7 @@ namespace Game.Arena.Presentation.Hud
             HealthFraction = fraction;
             IsDefeated = isDefeated;
 
-            if (_healthText != null)
+            if (_healthText != null && healthTextChanged)
             {
                 _healthText.text = label + ": " + text;
             }
@@ -202,12 +213,12 @@ namespace Game.Arena.Presentation.Hud
             BossHealthFraction = fraction;
             IsBossPresent = true;
 
-            if (_bossLabel != null)
+            if (_bossLabel != null && _bossLabel.text != label)
             {
                 _bossLabel.text = label;
             }
 
-            if (_bossHealthText != null)
+            if (_bossHealthText != null && _bossHealthText.text != text)
             {
                 _bossHealthText.text = text;
             }
@@ -218,7 +229,7 @@ namespace Game.Arena.Presentation.Hud
                 _bossFill.localScale = new Vector3(fraction, scale.y, scale.z);
             }
 
-            if (_bossViewRoot != null)
+            if (_bossViewRoot != null && _bossViewRoot.gameObject.activeSelf == false)
             {
                 _bossViewRoot.gameObject.SetActive(true);
             }
@@ -232,12 +243,12 @@ namespace Game.Arena.Presentation.Hud
             BossHealthFraction = 0f;
             IsBossPresent = false;
 
-            if (_bossLabel != null)
+            if (_bossLabel != null && string.IsNullOrEmpty(_bossLabel.text) == false)
             {
                 _bossLabel.text = string.Empty;
             }
 
-            if (_bossHealthText != null)
+            if (_bossHealthText != null && string.IsNullOrEmpty(_bossHealthText.text) == false)
             {
                 _bossHealthText.text = string.Empty;
             }
@@ -248,7 +259,7 @@ namespace Game.Arena.Presentation.Hud
                 _bossFill.localScale = new Vector3(0f, scale.y, scale.z);
             }
 
-            if (_bossViewRoot != null)
+            if (_bossViewRoot != null && _bossViewRoot.gameObject.activeSelf)
             {
                 _bossViewRoot.gameObject.SetActive(false);
             }
@@ -269,7 +280,7 @@ namespace Game.Arena.Presentation.Hud
             WaveLabel = label;
             WaveText = text;
 
-            if (_waveText != null)
+            if (_waveText != null && _waveText.text != text)
             {
                 _waveText.text = text;
             }
