@@ -18,6 +18,8 @@ namespace Game.Arena.Presentation.Combat
         private readonly Dictionary<EnemyId, EnemyAttackCueView> _active = new();
         private readonly HashSet<EnemyId> _pending = new();
         private readonly HashSet<EnemyId> _wasPending = new();
+        private readonly Stack<EnemyAttackCueView> _pool = new();
+        private readonly List<EnemyId> _resolved = new();
 
         private ArenaRunSnapshot _snapshot;
 
@@ -100,7 +102,11 @@ namespace Game.Arena.Presentation.Combat
             RemoveResolvedCues();
 
             _wasPending.Clear();
-            _wasPending.UnionWith(_pending);
+
+            foreach (EnemyId enemyId in _pending)
+            {
+                _wasPending.Add(enemyId);
+            }
         }
 
         private void ShowCue(EnemySnapshot enemy)
@@ -111,8 +117,7 @@ namespace Game.Arena.Presentation.Combat
                 return;
             }
 
-            EnemyAttackCueView created = CreateView();
-            created.name = "EnemyAttackCue " + enemy.EnemyId;
+            EnemyAttackCueView created = TakeView(enemy.EnemyId);
             created.Show(enemy.Position);
 
             _active.Add(enemy.EnemyId, created);
@@ -120,28 +125,22 @@ namespace Game.Arena.Presentation.Combat
 
         private void RemoveResolvedCues()
         {
-            List<EnemyId> resolved = null;
+            _resolved.Clear();
 
             foreach (KeyValuePair<EnemyId, EnemyAttackCueView> entry in _active)
             {
-                if (_pending.Contains(entry.Key))
+                if (_pending.Contains(entry.Key) == false)
                 {
-                    continue;
+                    _resolved.Add(entry.Key);
                 }
-
-                resolved ??= new List<EnemyId>();
-                resolved.Add(entry.Key);
             }
 
-            if (resolved == null)
+            for (int index = 0; index < _resolved.Count; index++)
             {
-                return;
-            }
-
-            for (int index = 0; index < resolved.Count; index++)
-            {
-                Destroy(_active[resolved[index]].gameObject);
-                _active.Remove(resolved[index]);
+                EnemyId enemyId = _resolved[index];
+                EnemyAttackCueView view = _active[enemyId];
+                _active.Remove(enemyId);
+                Release(view);
             }
         }
 
@@ -149,12 +148,31 @@ namespace Game.Arena.Presentation.Combat
         {
             foreach (EnemyAttackCueView view in _active.Values)
             {
-                Destroy(view.gameObject);
+                Release(view);
             }
 
             _active.Clear();
             _pending.Clear();
             _wasPending.Clear();
+        }
+
+        private EnemyAttackCueView TakeView(EnemyId enemyId)
+        {
+            if (_pool.Count > 0)
+            {
+                return _pool.Pop();
+            }
+
+            EnemyAttackCueView created = CreateView();
+            created.name = "EnemyAttackCue " + enemyId;
+
+            return created;
+        }
+
+        private void Release(EnemyAttackCueView view)
+        {
+            view.Hide();
+            _pool.Push(view);
         }
 
         private EnemyAttackCueView CreateView()

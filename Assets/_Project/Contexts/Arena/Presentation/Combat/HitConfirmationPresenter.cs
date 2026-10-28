@@ -13,6 +13,8 @@ namespace Game.Arena.Presentation.Combat
         [SerializeField] private float _lifetimeSeconds = 0.25f;
 
         private readonly Dictionary<EnemyId, HitConfirmationView> _active = new();
+        private readonly Stack<HitConfirmationView> _pool = new();
+        private readonly List<EnemyId> _expired = new();
 
         public float LifetimeSeconds
         {
@@ -47,8 +49,7 @@ namespace Game.Arena.Presentation.Combat
                 return;
             }
 
-            HitConfirmationView created = CreateView();
-            created.name = "HitConfirmation " + enemyId;
+            HitConfirmationView created = TakeView(enemyId);
             created.LifetimeSeconds = _lifetimeSeconds;
             created.Show(position);
 
@@ -57,28 +58,22 @@ namespace Game.Arena.Presentation.Combat
 
         public void Advance(float deltaSeconds)
         {
-            List<EnemyId> expired = null;
+            _expired.Clear();
 
             foreach (KeyValuePair<EnemyId, HitConfirmationView> entry in _active)
             {
-                if (entry.Value.Advance(deltaSeconds) == false)
+                if (entry.Value.Advance(deltaSeconds))
                 {
-                    continue;
+                    _expired.Add(entry.Key);
                 }
-
-                expired ??= new List<EnemyId>();
-                expired.Add(entry.Key);
             }
 
-            if (expired == null)
+            for (int index = 0; index < _expired.Count; index++)
             {
-                return;
-            }
-
-            for (int index = 0; index < expired.Count; index++)
-            {
-                Destroy(_active[expired[index]].gameObject);
-                _active.Remove(expired[index]);
+                EnemyId enemyId = _expired[index];
+                HitConfirmationView view = _active[enemyId];
+                _active.Remove(enemyId);
+                Release(view);
             }
         }
 
@@ -86,7 +81,7 @@ namespace Game.Arena.Presentation.Combat
         {
             foreach (HitConfirmationView view in _active.Values)
             {
-                Destroy(view.gameObject);
+                Release(view);
             }
 
             _active.Clear();
@@ -95,6 +90,25 @@ namespace Game.Arena.Presentation.Combat
         private void Update()
         {
             Advance(Time.deltaTime);
+        }
+
+        private HitConfirmationView TakeView(EnemyId enemyId)
+        {
+            if (_pool.Count > 0)
+            {
+                return _pool.Pop();
+            }
+
+            HitConfirmationView created = CreateView();
+            created.name = "HitConfirmation " + enemyId;
+
+            return created;
+        }
+
+        private void Release(HitConfirmationView view)
+        {
+            view.Hide();
+            _pool.Push(view);
         }
 
         private HitConfirmationView CreateView()
