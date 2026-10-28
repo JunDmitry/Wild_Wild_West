@@ -142,6 +142,8 @@ Append one row per run; never edit a recorded row. A rerun after a code change i
 | 2 | `38f856e` | 2026-10-26T23:39:08Z | 16.666 | 19.593 | 23.727 | 31 200 † | 10 | 12 | fail (GC, physics) |
 | 3 | `00903f4` | 2026-10-27T00:19:15Z | 16.666 | 19.635 | 23.229 | 6 087 | 10 | 12 | fail (GC, physics) |
 | 4 | `00903f4` | 2026-10-27T00:20:19Z | 16.667 | 19.823 | 23.389 | 6 277 | 10 | 12 | fail (GC, physics) |
+| 5 | `0d946e2` | 2026-10-28T14:33:43Z | 16.666 | 22.323 | 26.320 | 525 | 10 | 12 | fail (GC, physics) |
+| 6 | `0d946e2` | 2026-10-28T14:34:47Z | 16.666 | 21.930 | 25.037 | 587 | 10 | 12 | fail (GC, physics) |
 
 † **Invalid for metric 3.** Runs 1–2 used the capacity-1 `GC.Alloc` recorder without wrap-around, which froze its first sample, so the GC column repeats one startup value. They are left unedited as the audit record; runs 3–4 are the corrected baseline (recorder fixed in `00903f4`). Their frame-time, enemy, and physics columns are valid.
 
@@ -149,6 +151,7 @@ Append one row per run; never edit a recorded row. A rerun after a code change i
 - **Window:** both runs captured 3 301 frames over 55 s, `runEndedEarly = false`.
 - **Harness attribution:** `GC.GetAllocatedBytesForCurrentThread()` is unsupported in this player (a deliberate 4 KiB allocation produces no delta), so harness allocation is established by inspection: the capture path allocates nothing.
 - **GC allocation:** every captured frame allocates in both corrected runs, at 6 087 B/frame (run 3) and 6 277 B/frame (run 4). The allocation sits in the per-tick path — the domain/application snapshot graph, the per-frame enemy movement batch and its domain events, and presenter collections — not in TextMeshPro text assignment (a change-driven HUD spike lowered the total by only ~2 %).
+- **GC allocation after ADR-0035/0036 (runs 5–6):** the pooled tick path is implemented (commits `d5f9fa4`…`acd1dd7`) and the editor allocation fixture measures 0 B over 300 steady ticks and a ten-event frame, but the player build still allocates on 3 253 and 3 264 of 3 301 captured frames — 525 and 587 B/frame, about 91 % below runs 3–4. The residual therefore lies outside the Application/Domain tick path the fixture exercises. The implementation report names `HitConfirmationPresenter` and `EnemyAttackCuePresenter` (view instantiation on events, lazily allocated lists) as the unattributed candidates; per-frame HUD/string work is a second. Attribution is the next step; metric 3 is not met.
 - **Preliminary run (not recorded):** the implementing coder's run of the same code produced 31.1 KB/frame and physics peak 12. Its `build-info.json` recorded `-perfcommit e633b4f`, the specification commit rather than the code commit, so it is not attributable and is not entered as a results row.
 
 **Legacy comparison:** not applicable — no runnable legacy scene exists (scene-GUID evidence in § Scope).
