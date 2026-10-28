@@ -5,8 +5,12 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct EnemyAttackCancelled : IArenaDomainEvent, IEquatable<EnemyAttackCancelled>
+    public sealed class EnemyAttackCancelled : IPooledArenaDomainEvent, IEquatable<EnemyAttackCancelled>
     {
+        internal EnemyAttackCancelled()
+        {
+        }
+
         public EnemyAttackCancelled(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -36,18 +40,46 @@ namespace Game.Arena.Domain.Events
             Cause = cause;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public EnemyId EnemyId { get; }
+        public EnemyId EnemyId { get; private set; }
 
-        public AttackId AttackId { get; }
+        public AttackId AttackId { get; private set; }
 
-        public AttackCancellationCause Cause { get; }
+        public AttackCancellationCause Cause { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            EnemyId enemyId,
+            AttackId attackId,
+            AttackCancellationCause cause)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            EnemyId = enemyId;
+            AttackId = attackId;
+            Cause = cause;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            EnemyId = default;
+            AttackId = default;
+            Cause = default;
+        }
 
         public bool Equals(EnemyAttackCancelled other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && EnemyId.Equals(other.EnemyId)

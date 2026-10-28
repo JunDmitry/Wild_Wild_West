@@ -6,8 +6,12 @@ using Game.Arena.Domain.Vitality;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct PlayerDamaged : IArenaDomainEvent, IEquatable<PlayerDamaged>
+    public sealed class PlayerDamaged : IPooledArenaDomainEvent, IEquatable<PlayerDamaged>
     {
+        internal PlayerDamaged()
+        {
+        }
+
         public PlayerDamaged(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -51,22 +55,56 @@ namespace Game.Arena.Domain.Events
             RemainingHealth = remainingHealth;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public PlayerId PlayerId { get; }
+        public PlayerId PlayerId { get; private set; }
 
-        public EnemyId SourceEnemyId { get; }
+        public EnemyId SourceEnemyId { get; private set; }
 
-        public AttackId SourceAttackId { get; }
+        public AttackId SourceAttackId { get; private set; }
 
-        public DamageAmount AppliedDamage { get; }
+        public DamageAmount AppliedDamage { get; private set; }
 
-        public Health RemainingHealth { get; }
+        public Health RemainingHealth { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            PlayerId playerId,
+            EnemyId sourceEnemyId,
+            AttackId sourceAttackId,
+            DamageAmount appliedDamage,
+            Health remainingHealth)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            PlayerId = playerId;
+            SourceEnemyId = sourceEnemyId;
+            SourceAttackId = sourceAttackId;
+            AppliedDamage = appliedDamage;
+            RemainingHealth = remainingHealth;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            PlayerId = default;
+            SourceEnemyId = default;
+            SourceAttackId = default;
+            AppliedDamage = default;
+            RemainingHealth = default;
+        }
 
         public bool Equals(PlayerDamaged other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && PlayerId.Equals(other.PlayerId)

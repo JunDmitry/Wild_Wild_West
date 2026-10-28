@@ -6,8 +6,12 @@ using Game.Arena.Domain.Time;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct EnemyAttackStarted : IArenaDomainEvent, IEquatable<EnemyAttackStarted>
+    public sealed class EnemyAttackStarted : IPooledArenaDomainEvent, IEquatable<EnemyAttackStarted>
     {
+        internal EnemyAttackStarted()
+        {
+        }
+
         public EnemyAttackStarted(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -44,20 +48,51 @@ namespace Game.Arena.Domain.Events
             ImpactAt = impactAt;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public EnemyId EnemyId { get; }
+        public EnemyId EnemyId { get; private set; }
 
-        public AttackId AttackId { get; }
+        public AttackId AttackId { get; private set; }
 
-        public GameTimePoint StartedAt { get; }
+        public GameTimePoint StartedAt { get; private set; }
 
-        public GameTimePoint ImpactAt { get; }
+        public GameTimePoint ImpactAt { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            EnemyId enemyId,
+            AttackId attackId,
+            GameTimePoint startedAt,
+            GameTimePoint impactAt)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            EnemyId = enemyId;
+            AttackId = attackId;
+            StartedAt = startedAt;
+            ImpactAt = impactAt;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            EnemyId = default;
+            AttackId = default;
+            StartedAt = default;
+            ImpactAt = default;
+        }
 
         public bool Equals(EnemyAttackStarted other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && EnemyId.Equals(other.EnemyId)

@@ -4,8 +4,12 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct PlayerDefeated : IArenaDomainEvent, IEquatable<PlayerDefeated>
+    public sealed class PlayerDefeated : IPooledArenaDomainEvent, IEquatable<PlayerDefeated>
     {
+        internal PlayerDefeated()
+        {
+        }
+
         public PlayerDefeated(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -26,14 +30,36 @@ namespace Game.Arena.Domain.Events
             PlayerId = playerId;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public PlayerId PlayerId { get; }
+        public PlayerId PlayerId { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            PlayerId playerId)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            PlayerId = playerId;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            PlayerId = default;
+        }
 
         public bool Equals(PlayerDefeated other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && PlayerId.Equals(other.PlayerId);

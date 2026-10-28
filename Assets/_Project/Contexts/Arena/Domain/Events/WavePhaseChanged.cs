@@ -5,8 +5,12 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct WavePhaseChanged : IArenaDomainEvent, IEquatable<WavePhaseChanged>
+    public sealed class WavePhaseChanged : IPooledArenaDomainEvent, IEquatable<WavePhaseChanged>
     {
+        internal WavePhaseChanged()
+        {
+        }
+
         public WavePhaseChanged(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -31,18 +35,46 @@ namespace Game.Arena.Domain.Events
             NewPhase = newPhase;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public WaveNumber WaveNumber { get; }
+        public WaveNumber WaveNumber { get; private set; }
 
-        public WavePhase PreviousPhase { get; }
+        public WavePhase PreviousPhase { get; private set; }
 
-        public WavePhase NewPhase { get; }
+        public WavePhase NewPhase { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            WaveNumber waveNumber,
+            WavePhase previousPhase,
+            WavePhase newPhase)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            WaveNumber = waveNumber;
+            PreviousPhase = previousPhase;
+            NewPhase = newPhase;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            WaveNumber = default;
+            PreviousPhase = default;
+            NewPhase = default;
+        }
 
         public bool Equals(WavePhaseChanged other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && WaveNumber.Equals(other.WaveNumber)

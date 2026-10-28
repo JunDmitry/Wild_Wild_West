@@ -4,8 +4,12 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct ArenaRunVictorious : IArenaDomainEvent, IEquatable<ArenaRunVictorious>
+    public sealed class ArenaRunVictorious : IPooledArenaDomainEvent, IEquatable<ArenaRunVictorious>
     {
+        internal ArenaRunVictorious()
+        {
+        }
+
         public ArenaRunVictorious(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision)
@@ -19,12 +23,31 @@ namespace Game.Arena.Domain.Events
             AggregateRevision = aggregateRevision;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+        }
 
         public bool Equals(ArenaRunVictorious other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision);
         }

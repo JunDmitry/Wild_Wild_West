@@ -4,8 +4,12 @@ using Game.Arena.Domain.Identity;
 
 namespace Game.Arena.Domain.Events
 {
-    public readonly struct WaveCompleted : IArenaDomainEvent, IEquatable<WaveCompleted>
+    public sealed class WaveCompleted : IPooledArenaDomainEvent, IEquatable<WaveCompleted>
     {
+        internal WaveCompleted()
+        {
+        }
+
         public WaveCompleted(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -21,14 +25,36 @@ namespace Game.Arena.Domain.Events
             WaveNumber = waveNumber;
         }
 
-        public ArenaRunId ArenaRunId { get; }
+        public ArenaRunId ArenaRunId { get; private set; }
 
-        public AggregateRevision AggregateRevision { get; }
+        public AggregateRevision AggregateRevision { get; private set; }
 
-        public WaveNumber WaveNumber { get; }
+        public WaveNumber WaveNumber { get; private set; }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            WaveNumber waveNumber)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            WaveNumber = waveNumber;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            WaveNumber = default;
+        }
 
         public bool Equals(WaveCompleted other)
         {
+            if (other is null)
+            {
+                return false;
+            }
+
             return ArenaRunId.Equals(other.ArenaRunId)
                 && AggregateRevision.Equals(other.AggregateRevision)
                 && WaveNumber.Equals(other.WaveNumber);
