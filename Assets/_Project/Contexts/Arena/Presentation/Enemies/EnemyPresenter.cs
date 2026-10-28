@@ -53,7 +53,11 @@ namespace Game.Arena.Presentation.Enemies
             }
 
             _wasInside.Clear();
-            _wasInside.UnionWith(inside);
+
+            foreach (EnemyId enemyId in inside)
+            {
+                _wasInside.Add(enemyId);
+            }
         }
 
         private HashSet<EnemyId> CollectInside(ArenaRunSnapshot snapshot)
