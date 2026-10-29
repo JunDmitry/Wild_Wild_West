@@ -59,8 +59,25 @@ namespace Game.Arena.Presentation.Camera
             _pitch = Mathf.Clamp(_initialPitch, _minimumPitch, _maximumPitch);
         }
 
+        // TEMPORARY 3a positive control (t9-gc-metric-3-baseline): a deliberate
+        // 4096-byte allocation from this game-code method, fired once inside
+        // the capture window so a capture can prove it resolves a game frame.
+        // Reverted before the acceptance runs.
+        private static byte[] _attributionPositiveControl;
+        private static int _attributionFrames;
+
         private void Update()
         {
+            if (_attributionFrames < 1350)
+            {
+                _attributionFrames++;
+
+                if (_attributionFrames == 1350)
+                {
+                    _attributionPositiveControl = new byte[4096];
+                }
+            }
+
             ApplyLook(
                 UnityEngine.Input.GetAxis(MouseHorizontalAxis),
                 UnityEngine.Input.GetAxis(MouseVerticalAxis));
