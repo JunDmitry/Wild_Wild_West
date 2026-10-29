@@ -18,6 +18,7 @@ namespace Game.Performance
         private const string MeasureFlag = "-perfmeasure";
         private const string OutputFlag = "-perfout";
         private const string CommitFlag = "-perfcommit";
+        private const string AllocationStacksFlag = "-perfallocstacks";
         private const string ArenaSceneName = "ArenaScene";
 
         private ScriptedPlayerInputSource _scriptedInput;
@@ -45,6 +46,14 @@ namespace Game.Performance
                 Debug.LogError("[Performance] '-perfout <path>' is required.");
                 Environment.Exit(1);
                 return;
+            }
+
+            // TEMPORARY attribution support (t9-gc-residual-b): capture the
+            // call stack of every allocation so the residual can be named in a
+            // player run. Inert unless the flag is present.
+            if (HasFlag(arguments, AllocationStacksFlag))
+            {
+                UnityEngine.Profiling.Profiler.enableAllocationCallstacks = true;
             }
 
             string commit = ReadValue(arguments, CommitFlag);
