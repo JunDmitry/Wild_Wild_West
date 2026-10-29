@@ -1,6 +1,6 @@
 # ADR-0034: Automated performance measurement for the production cut-over
 
-- **Status:** Accepted
+- **Status:** Accepted (metric 3 rule amended by [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md))
 - **Date:** 2026-10-26
 - **Authors:** architect-role
 - **Reviewers:** user (approved the `t9-performance-measurement` plan on 2026-10-26)
@@ -89,6 +89,14 @@ This amendment settles the question raised by `docs/architect/coder-inbox/c6.md`
 - **The measurement player is the only accepted attribution oracle.** Editor-side `GC.GetAllocatedBytesForCurrentThread()` readings are not evidence of player behaviour: the same method read 0 B for a `HashSet.UnionWith` path that allocated roughly 190 B/frame in the player build (measured at `2072667`). An editor reading of 0 B therefore neither attributes nor exonerates a site.
 - **Attribution is player-side.** A residual allocation is attributed by method-level A/B in temporary player builds (reverted before the acceptance runs), or by an allocation call-stack capture (`Profiler.enableAllocationCallstacks` with `-profiler-enable -profiler-log-file`) analysed in the Profiler window. Neither changes the harness's five metrics or its capture protocol.
 - **A metric-3 revision needs capture evidence.** Only a call-stack capture showing an allocation with no game-code call site justifies a superseding ADR, and that ADR carries the capture as its evidence.
+
+## Amendment — 2026-10-29: metric 3 superseded
+
+`t9-gc-residual-b` produced the capture the 2026-10-28 amendment required, and [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md) replaces metric 3 with a two-part rule: **3a** game-code allocation 0 B/frame, proven by a capture with a positive control, and **3b** total global allocation ≤ 250 B/frame, compared against the recorded baseline. Everything else in this ADR stands unchanged:
+
+- the measurement player remains the **only** accepted attribution oracle, and editor `GC.GetAllocatedBytesForCurrentThread()` readings remain non-evidence of player behaviour;
+- the five-metric capture protocol, the measurement profile, and the seam-based harness construction are unchanged;
+- `pass.gcAlloc` reports 3b's baseline comparison; `gcAlloc` gains `bytesPerFrame` and `baselineBytesPerFrame` in the result file. 3a's status is recorded alongside the capture, not in the counter.
 
 ## References
 

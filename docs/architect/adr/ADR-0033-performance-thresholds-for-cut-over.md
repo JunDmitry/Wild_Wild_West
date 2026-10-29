@@ -1,10 +1,12 @@
 # ADR-0033: Performance thresholds for the production cut-over
 
-- **Status:** Accepted
+- **Status:** Accepted (metric 3 superseded by [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md))
 - **Date:** 2026-10-25
 - **Authors:** architect-role
 - **Reviewers:** user (thresholds approved with the `t8-audit-t9-plan` plan on 2026-10-25)
 - **Related ADRs:** [ADR-0007](ADR-0007-unity-isolation-and-layer-dependencies.md), [ADR-0015](ADR-0015-standalone-core-build.md), [ADR-0029](ADR-0029-scene-reload-through-application-port.md), [ADR-0030](ADR-0030-composition-root-scopes.md)
+
+> **Metric 3 superseded.** The global 0 B allocation threshold in this record is replaced by the two-part rule in [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md), on the capture evidence recorded there. Metrics 1, 2, 4, and 5 remain as written.
 
 ## Context
 
