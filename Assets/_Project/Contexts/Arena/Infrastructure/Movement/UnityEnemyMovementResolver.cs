@@ -13,22 +13,38 @@ namespace Game.Arena.Infrastructure.Movement
     /// <summary>
     /// Unity adapter behind <see cref="IEnemyMovementResolver"/>: accepts a
     /// position along each Domain pursuit intent, shortened only by Arena Bounds
-    /// and scene geometry. The Domain remains the authority that validates the
-    /// movement path and applies the step, so this resolver never re-aims,
-    /// extends, adds, or drops an intent.
+    /// and scene geometry. On each resolve it spends at most
+    /// <see cref="QueryBudget"/> scene-geometry queries, picking enemies by age
+    /// priority (never queried, then oldest, then a materially changed
+    /// direction); a skipped enemy reuses its last queried reachable distance
+    /// along its current direction (ADR-0038). The Domain remains the authority
+    /// that validates the movement path and applies the step, so this resolver
+    /// never re-aims, extends, adds, or drops an intent.
     /// </summary>
     public sealed class UnityEnemyMovementResolver : IEnemyMovementResolver
     {
         private const int BufferSize = 64;
+        private const int QueryBudget = 3;
+        private const int InitialCacheCapacity = 64;
         private const float MinimumDirectionLengthSquared = 1e-8f;
         private const float GroundNormalThreshold = 0.5f;
         private const float CollisionSkin = 1e-3f;
+
+        // Dot product below which a pursuit direction counts as materially
+        // changed when breaking an equal-age tie between cached results.
+        private const float MaterialDirectionChangeDot = 0.999f;
 
         private readonly IEnemyTransformRegistry _enemyTransforms;
         private readonly ArenaDefinition _arena;
         private readonly int _layerMask;
         private readonly RaycastHit[] _hitsBuffer;
         private readonly List<EnemyMovementBatchResolutionEntry> _entries = new();
+        private readonly Dictionary<EnemyId, GeometryCacheEntry> _geometryCache =
+            new(InitialCacheCapacity);
+        private readonly List<EnemyId> _pruneBuffer = new(InitialCacheCapacity);
+        private bool[] _selected = new bool[InitialCacheCapacity];
+        private int _selectionCount;
+        private long _tick;
 
         public UnityEnemyMovementResolver(
             IEnemyTransformRegistry enemyTransforms,
@@ -50,20 +66,158 @@ namespace Game.Arena.Infrastructure.Movement
 
             IReadOnlyList<EnemyMovementIntent> intents = request.Intents;
             _entries.Clear();
+            _tick++;
+            SelectQueries(intents);
 
             for (int index = 0; index < intents.Count; index++)
             {
-                _entries.Add(ResolveIntent(intents[index]));
+                _entries.Add(ResolveIntent(intents[index], _selected[index]));
             }
+
+            PruneAbsentEntries();
 
             return _entries;
         }
 
-        private EnemyMovementBatchResolutionEntry ResolveIntent(EnemyMovementIntent intent)
+        /// <summary>
+        /// Marks up to <see cref="QueryBudget"/> intents for a fresh geometry
+        /// query: never-queried enemies first, then the enemies whose cached
+        /// result is oldest, with a materially changed direction breaking an
+        /// age tie and the stable batch index breaking the rest.
+        /// </summary>
+        private void SelectQueries(IReadOnlyList<EnemyMovementIntent> intents)
+        {
+            int count = intents.Count;
+            PrepareSelection(count);
+            _selectionCount = 0;
+
+            for (int index = 0; index < count && _selectionCount < QueryBudget; index++)
+            {
+                if (_geometryCache.ContainsKey(intents[index].EnemyId))
+                {
+                    continue;
+                }
+
+                _selected[index] = true;
+                _selectionCount++;
+            }
+
+            while (_selectionCount < QueryBudget)
+            {
+                int best = -1;
+                GeometryCacheEntry bestEntry = default;
+                bool bestChanged = false;
+
+                for (int index = 0; index < count; index++)
+                {
+                    if (_selected[index]
+                        || !_geometryCache.TryGetValue(intents[index].EnemyId, out GeometryCacheEntry entry))
+                    {
+                        continue;
+                    }
+
+                    bool changed = HasMateriallyChangedDirection(intents[index], entry);
+
+                    if (best < 0
+                        || entry.LastQueryTick < bestEntry.LastQueryTick
+                        || (entry.LastQueryTick == bestEntry.LastQueryTick && changed && !bestChanged))
+                    {
+                        best = index;
+                        bestEntry = entry;
+                        bestChanged = changed;
+                    }
+                }
+
+                if (best < 0)
+                {
+                    break;
+                }
+
+                _selected[best] = true;
+                _selectionCount++;
+            }
+        }
+
+        private void PrepareSelection(int count)
+        {
+            if (_selected.Length < count)
+            {
+                _selected = new bool[count];
+                return;
+            }
+
+            Array.Clear(_selected, 0, count);
+        }
+
+        private static bool HasMateriallyChangedDirection(
+            EnemyMovementIntent intent,
+            in GeometryCacheEntry entry)
+        {
+            PlanarMovementIntent movement = intent.Intent;
+            float x = movement.Direction.X;
+            float z = movement.Direction.Z;
+            float lengthSquared = (x * x) + (z * z);
+
+            if (lengthSquared <= MinimumDirectionLengthSquared)
+            {
+                return true;
+            }
+
+            float length = Mathf.Sqrt(lengthSquared);
+            float dot = ((x / length) * entry.DirectionX) + ((z / length) * entry.DirectionZ);
+
+            return dot < MaterialDirectionChangeDot;
+        }
+
+        private void PruneAbsentEntries()
+        {
+            _pruneBuffer.Clear();
+
+            foreach (KeyValuePair<EnemyId, GeometryCacheEntry> pair in _geometryCache)
+            {
+                if (pair.Value.LastSeenTick != _tick)
+                {
+                    _pruneBuffer.Add(pair.Key);
+                }
+            }
+
+            for (int index = 0; index < _pruneBuffer.Count; index++)
+            {
+                _geometryCache.Remove(_pruneBuffer[index]);
+            }
+        }
+
+        private void StoreGeometry(EnemyId enemyId, Vector3 direction, float reachableDistance)
+        {
+            GeometryCacheEntry entry = _geometryCache.TryGetValue(
+                enemyId,
+                out GeometryCacheEntry cached)
+                ? cached
+                : default;
+
+            entry.ReachableDistance = reachableDistance;
+            entry.DirectionX = direction.x;
+            entry.DirectionZ = direction.z;
+            entry.LastQueryTick = _tick;
+            entry.LastSeenTick = _tick;
+            _geometryCache[enemyId] = entry;
+        }
+
+        private EnemyMovementBatchResolutionEntry ResolveIntent(
+            EnemyMovementIntent intent,
+            bool queryGeometry)
         {
             PlanarMovementIntent movement = intent.Intent;
             float requested = movement.RequestedDistance.Value;
             Vector3 direction = new(movement.Direction.X, 0f, movement.Direction.Z);
+
+            bool hasCached = _geometryCache.TryGetValue(intent.EnemyId, out GeometryCacheEntry cached);
+
+            if (hasCached)
+            {
+                cached.LastSeenTick = _tick;
+                _geometryCache[intent.EnemyId] = cached;
+            }
 
             if (direction.sqrMagnitude <= MinimumDirectionLengthSquared || requested <= 0f)
             {
@@ -76,9 +230,27 @@ namespace Game.Arena.Infrastructure.Movement
             float radius = intent.CollisionRadius.Value.Value;
 
             float travel = Mathf.Min(requested, BoundsLimitedDistance(from, direction, radius));
-            travel = Mathf.Min(
-                travel,
-                GeometryLimitedDistance(intent.EnemyId, from, direction, travel, radius));
+
+            float geometryLimited;
+
+            if (queryGeometry)
+            {
+                geometryLimited = GeometryLimitedDistance(
+                    intent.EnemyId,
+                    from,
+                    direction,
+                    travel,
+                    radius);
+                StoreGeometry(intent.EnemyId, direction, geometryLimited);
+            }
+            else
+            {
+                geometryLimited = hasCached
+                    ? cached.ReachableDistance
+                    : float.PositiveInfinity;
+            }
+
+            travel = Mathf.Min(travel, geometryLimited);
 
             if (travel <= 0f)
             {
@@ -209,6 +381,15 @@ namespace Game.Arena.Infrastructure.Movement
             return enemyCollider != null
                 ? enemyCollider.bounds.center.y - enemyTransform.position.y
                 : radius;
+        }
+
+        private struct GeometryCacheEntry
+        {
+            public float ReachableDistance;
+            public float DirectionX;
+            public float DirectionZ;
+            public long LastQueryTick;
+            public long LastSeenTick;
         }
     }
 }
