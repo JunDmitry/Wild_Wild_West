@@ -20,6 +20,18 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage.AnalyticsAndDiagnostics,
         };
 
+        // TEMPORARY attribution support (t9-gc-residual-b): a precomputed name
+        // table avoids the per-frame string allocation of Enum.ToString().
+        private static readonly string[] StageNames =
+        {
+            nameof(ArenaRunDispatchStage.SnapshotPublication),
+            nameof(ArenaRunDispatchStage.EntityViewSynchronization),
+            nameof(ArenaRunDispatchStage.GameplayVisual),
+            nameof(ArenaRunDispatchStage.Hud),
+            nameof(ArenaRunDispatchStage.AudioAndVisualEffects),
+            nameof(ArenaRunDispatchStage.AnalyticsAndDiagnostics),
+        };
+
         private readonly Dictionary<ArenaRunDispatchStage, List<SnapshotRegistration>> _snapshotHandlers;
         private readonly Dictionary<ArenaRunDispatchStage, List<HudRegistration>> _hudHandlers;
         private readonly Dictionary<ArenaRunDispatchStage, List<NotificationRegistration>> _notificationHandlers;
@@ -232,7 +244,7 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             ArenaRunSnapshot snapshot)
         {
-            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
             {
                 return;
             }
@@ -246,7 +258,7 @@ namespace Game.Arena.Application.Dispatch
             {
                 SnapshotRegistration registration = registrations[index];
 
-                if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                if (AttributionFlags.SkipsHandler(registration.HandlerName))
                 {
                     continue;
                 }
@@ -267,7 +279,7 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunSnapshot snapshot,
             ArenaRunHudSnapshot hud)
         {
-            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
             {
                 return;
             }
@@ -281,7 +293,7 @@ namespace Game.Arena.Application.Dispatch
             {
                 HudRegistration registration = registrations[index];
 
-                if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                if (AttributionFlags.SkipsHandler(registration.HandlerName))
                 {
                     continue;
                 }
@@ -301,7 +313,7 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             IReadOnlyList<IArenaRunNotification> notifications)
         {
-            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
             {
                 return;
             }
@@ -319,7 +331,7 @@ namespace Game.Arena.Application.Dispatch
                 {
                     NotificationRegistration registration = registrations[handlerIndex];
 
-                    if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                    if (AttributionFlags.SkipsHandler(registration.HandlerName))
                     {
                         continue;
                     }
@@ -371,9 +383,12 @@ namespace Game.Arena.Application.Dispatch
             public SnapshotRegistration(IArenaRunSnapshotHandler handler)
             {
                 Handler = handler;
+                HandlerName = handler.GetType().Name;
             }
 
             public IArenaRunSnapshotHandler Handler { get; }
+
+            public string HandlerName { get; }
         }
 
         private sealed class HudRegistration
@@ -381,9 +396,12 @@ namespace Game.Arena.Application.Dispatch
             public HudRegistration(IArenaRunHudHandler handler)
             {
                 Handler = handler;
+                HandlerName = handler.GetType().Name;
             }
 
             public IArenaRunHudHandler Handler { get; }
+
+            public string HandlerName { get; }
         }
 
         private sealed class NotificationRegistration
@@ -395,12 +413,15 @@ namespace Game.Arena.Application.Dispatch
             {
                 NotificationType = notificationType;
                 Handler = handler;
+                HandlerName = handler.GetType().Name;
                 Invoke = invoke;
             }
 
             public Type NotificationType { get; }
 
             public object Handler { get; }
+
+            public string HandlerName { get; }
 
             public Action<IArenaRunNotification> Invoke { get; }
         }
