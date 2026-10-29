@@ -21,6 +21,7 @@ namespace Game.Arena.Application.Diagnostics
         private const string SkipTickStageFlag = "-perfskiptickstage";
         private const string SkipHandlerFlag = "-perfskiphandler";
         private const string SkipPhysicsFlag = "-perfskipphysics";
+        private const string SkipResolveFlag = "-perfskipresolve";
         private const string WaveEnemiesFlag = "-perfwaveenemies";
 
         private static readonly HashSet<string> Tokens =
@@ -69,6 +70,8 @@ namespace Game.Arena.Application.Diagnostics
         public static bool SkipDispatch => Has(SkipDispatchFlag);
 
         public static bool SkipPhysicsQueries => Has(SkipPhysicsFlag);
+
+        public static bool SkipMovementResolve => Has(SkipResolveFlag);
 
         public static int? WaveEnemies => ReadInt(WaveEnemiesFlag);
 

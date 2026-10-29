@@ -37,7 +37,9 @@ namespace Game.Arena.Application.Ticks.Stages
             PlayerMovementRequest request = requestOutcome.Request;
             _interactionTracker.Track(request.Correlation);
 
-            Position3D acceptedPosition = _resolver.Resolve(request);
+            Position3D acceptedPosition = Game.Arena.Application.Diagnostics.AttributionFlags.SkipMovementResolve
+                ? request.RequestedPosition
+                : _resolver.Resolve(request);
             PlayerMovementResolution movementResolution = new(request.Correlation, acceptedPosition);
             PlayerMovementResolutionOutcome resolutionOutcome = run.ApplyPlayerMovement(movementResolution);
 

@@ -10,6 +10,7 @@ namespace Game.Arena.Application.Ticks.Stages
     {
         private readonly IEnemyMovementResolver _resolver;
         private readonly PendingInteractionTracker _interactionTracker;
+        private readonly List<EnemyMovementBatchResolutionEntry> _skipEntries = new();
 
         private EnemyMovementBatchResolution _resolution;
 
@@ -35,7 +36,9 @@ namespace Game.Arena.Application.Ticks.Stages
 
             EnemyMovementBatchRequest request = requestOutcome.Request;
             _interactionTracker.Track(request.Correlation);
-            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = _resolver.Resolve(request);
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = Game.Arena.Application.Diagnostics.AttributionFlags.SkipMovementResolve
+                ? UnresolvedEntries(request)
+                : _resolver.Resolve(request);
 
             if (entries == null)
             {
@@ -63,6 +66,27 @@ namespace Game.Arena.Application.Ticks.Stages
             _interactionTracker.Clear();
 
             return StageExecutionStatus.Completed;
+        }
+
+        // TEMPORARY attribution path (t9-gc-residual-b); reverted before the
+        // acceptance runs. Accepts each intent unchanged, skipping the Unity
+        // resolver and its physics query.
+        private IReadOnlyList<EnemyMovementBatchResolutionEntry> UnresolvedEntries(
+            EnemyMovementBatchRequest request)
+        {
+            _skipEntries.Clear();
+
+            IReadOnlyList<EnemyMovementIntent> intents = request.Intents;
+
+            for (int index = 0; index < intents.Count; index++)
+            {
+                EnemyMovementIntent intent = intents[index];
+                _skipEntries.Add(new EnemyMovementBatchResolutionEntry(
+                    intent.EnemyId,
+                    intent.Intent.RequestedPosition));
+            }
+
+            return _skipEntries;
         }
     }
 }
