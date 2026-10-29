@@ -13,6 +13,12 @@ namespace Game.Arena.Application.Ticks
         private ArenaTickFrameBuffers _buffers;
         private ArenaRunId _buffersRunId;
 
+        // TEMPORARY attribution support (t9-gc-residual-b); reverted before the
+        // acceptance runs. Holding the previous result lets a variant return
+        // it so the tick's stage work or its result build can be measured in
+        // isolation. Only used with dispatch disabled.
+        private ArenaRunTickResult _attributionCachedResult;
+
         public ArenaRunTickCoordinator(ArenaRunTickCoordinatorDependencies dependencies)
         {
             _dependencies = dependencies ?? throw new System.ArgumentNullException(nameof(dependencies));
@@ -28,6 +34,11 @@ namespace Game.Arena.Application.Ticks
             // recovery stage, so events filled two ticks ago are released.
             run.BeginTick();
             buffers.BeginTick();
+
+            if (Diagnostics.AttributionFlags.SkipTickStages && _attributionCachedResult != null)
+            {
+                return _attributionCachedResult;
+            }
 
             ArenaRunTickRecorder recorder = buffers.Recorder;
 
@@ -102,9 +113,16 @@ namespace Game.Arena.Application.Ticks
 
         private ArenaRunTickResult BuildResult(ArenaTickFrameBuffers buffers, ArenaRun run)
         {
+            if (Diagnostics.AttributionFlags.SkipBuildResult && _attributionCachedResult != null)
+            {
+                return _attributionCachedResult;
+            }
+
             ArenaRunStateSnapshot stateSnapshot = run.CreateSnapshot(buffers.StateSnapshot);
 
-            return buffers.BuildResult(run, stateSnapshot);
+            _attributionCachedResult = buffers.BuildResult(run, stateSnapshot);
+
+            return _attributionCachedResult;
         }
 
         private ArenaTickFrameBuffers EnsureBuffers(ArenaRun run)
