@@ -142,13 +142,6 @@ namespace Game.Arena.Infrastructure.Movement
             float distance,
             float radius)
         {
-            // TEMPORARY attribution switch (t9-gc-residual-b); reverted before
-            // the acceptance runs.
-            if (Game.Arena.Application.Diagnostics.AttributionFlags.SkipPhysicsQueries)
-            {
-                return distance;
-            }
-
             bool hasTransform = _enemyTransforms.TryGetTransform(enemyId, out Transform enemyTransform)
                 && enemyTransform != null;
 

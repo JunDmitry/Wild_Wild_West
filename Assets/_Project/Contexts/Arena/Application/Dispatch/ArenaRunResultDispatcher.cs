@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Game.Arena.Application.Diagnostics;
 using Game.Arena.Application.Hud;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
@@ -18,18 +17,6 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage.Hud,
             ArenaRunDispatchStage.AudioAndVisualEffects,
             ArenaRunDispatchStage.AnalyticsAndDiagnostics,
-        };
-
-        // TEMPORARY attribution support (t9-gc-residual-b): a precomputed name
-        // table avoids the per-frame string allocation of Enum.ToString().
-        private static readonly string[] StageNames =
-        {
-            nameof(ArenaRunDispatchStage.SnapshotPublication),
-            nameof(ArenaRunDispatchStage.EntityViewSynchronization),
-            nameof(ArenaRunDispatchStage.GameplayVisual),
-            nameof(ArenaRunDispatchStage.Hud),
-            nameof(ArenaRunDispatchStage.AudioAndVisualEffects),
-            nameof(ArenaRunDispatchStage.AnalyticsAndDiagnostics),
         };
 
         private readonly Dictionary<ArenaRunDispatchStage, List<SnapshotRegistration>> _snapshotHandlers;
@@ -165,14 +152,6 @@ namespace Game.Arena.Application.Dispatch
             _registrationClosed = true;
             _dispatching = true;
 
-            // TEMPORARY attribution switch (t9-gc-residual-b); reverted before
-            // the acceptance runs.
-            if (AttributionFlags.SkipDispatch)
-            {
-                _dispatching = false;
-                return;
-            }
-
             try
             {
                 for (int index = 0; index < Stages.Length; index++)
@@ -244,11 +223,6 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             ArenaRunSnapshot snapshot)
         {
-            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
-            {
-                return;
-            }
-
             if (_snapshotHandlers.TryGetValue(stage, out List<SnapshotRegistration> registrations) == false)
             {
                 return;
@@ -257,11 +231,6 @@ namespace Game.Arena.Application.Dispatch
             for (int index = 0; index < registrations.Count; index++)
             {
                 SnapshotRegistration registration = registrations[index];
-
-                if (AttributionFlags.SkipsHandler(registration.HandlerName))
-                {
-                    continue;
-                }
 
                 try
                 {
@@ -279,11 +248,6 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunSnapshot snapshot,
             ArenaRunHudSnapshot hud)
         {
-            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
-            {
-                return;
-            }
-
             if (_hudHandlers.TryGetValue(stage, out List<HudRegistration> registrations) == false)
             {
                 return;
@@ -292,11 +256,6 @@ namespace Game.Arena.Application.Dispatch
             for (int index = 0; index < registrations.Count; index++)
             {
                 HudRegistration registration = registrations[index];
-
-                if (AttributionFlags.SkipsHandler(registration.HandlerName))
-                {
-                    continue;
-                }
 
                 try
                 {
@@ -313,11 +272,6 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             IReadOnlyList<IArenaRunNotification> notifications)
         {
-            if (AttributionFlags.SkipsDispatchStage(StageNames[(int)stage]))
-            {
-                return;
-            }
-
             if (_notificationHandlers.TryGetValue(stage, out List<NotificationRegistration> registrations) == false)
             {
                 return;
@@ -330,11 +284,6 @@ namespace Game.Arena.Application.Dispatch
                 for (int handlerIndex = 0; handlerIndex < registrations.Count; handlerIndex++)
                 {
                     NotificationRegistration registration = registrations[handlerIndex];
-
-                    if (AttributionFlags.SkipsHandler(registration.HandlerName))
-                    {
-                        continue;
-                    }
 
                     if (registration.NotificationType.IsInstanceOfType(notification) == false)
                     {
@@ -383,12 +332,9 @@ namespace Game.Arena.Application.Dispatch
             public SnapshotRegistration(IArenaRunSnapshotHandler handler)
             {
                 Handler = handler;
-                HandlerName = handler.GetType().Name;
             }
 
             public IArenaRunSnapshotHandler Handler { get; }
-
-            public string HandlerName { get; }
         }
 
         private sealed class HudRegistration
@@ -396,12 +342,9 @@ namespace Game.Arena.Application.Dispatch
             public HudRegistration(IArenaRunHudHandler handler)
             {
                 Handler = handler;
-                HandlerName = handler.GetType().Name;
             }
 
             public IArenaRunHudHandler Handler { get; }
-
-            public string HandlerName { get; }
         }
 
         private sealed class NotificationRegistration
@@ -413,15 +356,12 @@ namespace Game.Arena.Application.Dispatch
             {
                 NotificationType = notificationType;
                 Handler = handler;
-                HandlerName = handler.GetType().Name;
                 Invoke = invoke;
             }
 
             public Type NotificationType { get; }
 
             public object Handler { get; }
-
-            public string HandlerName { get; }
 
             public Action<IArenaRunNotification> Invoke { get; }
         }

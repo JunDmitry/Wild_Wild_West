@@ -1,5 +1,4 @@
-﻿using Game.Arena.Application.Diagnostics;
-using Game.Arena.Application.Input;
+﻿using Game.Arena.Application.Input;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.Ticks.Stages;
 using Game.Arena.Domain.Aggregates.ArenaRun;
@@ -33,34 +32,15 @@ namespace Game.Arena.Application.Ticks
                 return StageExecutionStatus.Completed;
             }
 
-            // TEMPORARY attribution switches (t9-gc-residual-b); reverted before
-            // the acceptance runs.
-            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.WeaponSwitch)) == false)
-            {
-                _weaponSwitch.Execute(run, input, recorder);
-            }
-
-            StageExecutionStatus movementStatus = StageExecutionStatus.Completed;
-
-            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.PlayerMovement)) == false)
-            {
-                movementStatus = _movement.Execute(run, input, delta, recorder);
-            }
+            _weaponSwitch.Execute(run, input, recorder);
+            StageExecutionStatus movementStatus = _movement.Execute(run, input, delta, recorder);
 
             if (movementStatus == StageExecutionStatus.InteractionLeftPending)
             {
                 return movementStatus;
             }
 
-            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.PlayerAttackStart)) == false)
-            {
-                _attackStart.Execute(run, input, recorder);
-            }
-
-            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.PlayerAttackImpact)))
-            {
-                return StageExecutionStatus.Completed;
-            }
+            _attackStart.Execute(run, input, recorder);
 
             return _attackImpact.Execute(run, input, recorder);
         }
