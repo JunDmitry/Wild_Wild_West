@@ -55,12 +55,20 @@ namespace Game.Arena.Application.Diagnostics
         private static HashSet<string> CollectValues(string flag)
         {
             HashSet<string> values = new(StringComparer.OrdinalIgnoreCase);
+            string prefix = flag + "=";
 
-            for (int index = 0; index < Arguments.Length - 1; index++)
+            for (int index = 0; index < Arguments.Length; index++)
             {
-                if (string.Equals(Arguments[index], flag, StringComparison.OrdinalIgnoreCase))
+                string argument = Arguments[index];
+
+                if (string.Equals(argument, flag, StringComparison.OrdinalIgnoreCase)
+                    && index < Arguments.Length - 1)
                 {
                     values.Add(Arguments[index + 1]);
+                }
+                else if (argument.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    values.Add(argument.Substring(prefix.Length));
                 }
             }
 
@@ -69,9 +77,12 @@ namespace Game.Arena.Application.Diagnostics
 
         private static bool HasFlag(string flag)
         {
+            string prefix = flag + "=";
+
             for (int index = 0; index < Arguments.Length; index++)
             {
-                if (string.Equals(Arguments[index], flag, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(Arguments[index], flag, StringComparison.OrdinalIgnoreCase)
+                    || Arguments[index].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -82,12 +93,23 @@ namespace Game.Arena.Application.Diagnostics
 
         private static int? ReadInt(string flag)
         {
-            for (int index = 0; index < Arguments.Length - 1; index++)
+            string prefix = flag + "=";
+
+            for (int index = 0; index < Arguments.Length; index++)
             {
-                if (string.Equals(Arguments[index], flag, StringComparison.OrdinalIgnoreCase)
-                    && int.TryParse(Arguments[index + 1], out int value))
+                string argument = Arguments[index];
+
+                if (string.Equals(argument, flag, StringComparison.OrdinalIgnoreCase)
+                    && index < Arguments.Length - 1
+                    && int.TryParse(Arguments[index + 1], out int separateValue))
                 {
-                    return value;
+                    return separateValue;
+                }
+
+                if (argument.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                    && int.TryParse(argument.Substring(prefix.Length), out int equalsValue))
+                {
+                    return equalsValue;
                 }
             }
 
