@@ -36,12 +36,6 @@ namespace Game.Performance
         // override so a forced-fail check needs no rebuild.
         private const double BaselineBytesPerFrameDefault = 250d;
         private const string BaselineFlag = "-perfbaseline";
-
-        // TEMPORARY 3a capture support (t9-gc-metric-3-baseline): a short
-        // window so one profiler capture (a 300-frame ring) covers the steady
-        // state. Reverted before the acceptance runs.
-        private const string WarmupOverrideFlag = "-perfwarmup";
-        private const string CaptureOverrideFlag = "-perfseconds";
         private const int MaxFrameSamples = 20000;
         private const string GcAllocMarker = "GC.Alloc";
         private const string ArenaSceneName = "ArenaScene";
@@ -99,8 +93,6 @@ namespace Game.Performance
         private int _peakPhysicsQueries;
         private double _baselineBytesPerFrame = BaselineBytesPerFrameDefault;
         private double _bytesPerFrame;
-        private double _warmupSeconds = WarmupSeconds;
-        private double _captureSeconds = CaptureSeconds;
 
         public void Initialize(
             string outputPath,
@@ -126,8 +118,6 @@ namespace Game.Performance
             _baselineBytesPerFrame = ReadPositiveDouble(
                 BaselineFlag,
                 BaselineBytesPerFrameDefault);
-            _warmupSeconds = ReadPositiveDouble(WarmupOverrideFlag, _warmupSeconds);
-            _captureSeconds = ReadPositiveDouble(CaptureOverrideFlag, _captureSeconds);
 
             _initialized = true;
         }
@@ -280,7 +270,7 @@ namespace Game.Performance
 
             if (_capturing == false)
             {
-                if (current - _warmupStartTime < _warmupSeconds)
+                if (current - _warmupStartTime < WarmupSeconds)
                 {
                     return;
                 }
@@ -313,9 +303,9 @@ namespace Game.Performance
 
             _captureElapsedSeconds = current - _captureStartTime;
 
-            if (_captureElapsedSeconds >= _captureSeconds)
+            if (_captureElapsedSeconds >= CaptureSeconds)
             {
-                _reportedCaptureSeconds = _captureSeconds;
+                _reportedCaptureSeconds = CaptureSeconds;
                 Finish(endedEarly: false);
             }
         }
@@ -698,7 +688,7 @@ namespace Game.Performance
             json.Append("},");
 
             json.Append("\"window\":{");
-            json.Append("\"warmupSeconds\":").Append(Number(_warmupSeconds, "0")).Append(',');
+            json.Append("\"warmupSeconds\":").Append(Number(WarmupSeconds, "0")).Append(',');
             json.Append("\"captureSeconds\":")
                 .Append(Number(_reportedCaptureSeconds, "0.###")).Append(',');
             json.Append("\"capturedFrames\":").Append(_capturedFrames).Append(',');

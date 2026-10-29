@@ -18,7 +18,6 @@ namespace Game.Performance
         private const string MeasureFlag = "-perfmeasure";
         private const string OutputFlag = "-perfout";
         private const string CommitFlag = "-perfcommit";
-        private const string AllocationStacksFlag = "-perfallocstacks";
         private const string ArenaSceneName = "ArenaScene";
 
         private ScriptedPlayerInputSource _scriptedInput;
@@ -46,13 +45,6 @@ namespace Game.Performance
                 Debug.LogError("[Performance] '-perfout <path>' is required.");
                 Environment.Exit(1);
                 return;
-            }
-
-            // TEMPORARY 3a capture support (t9-gc-metric-3-baseline); reverted
-            // before the acceptance runs.
-            if (HasFlag(arguments, AllocationStacksFlag))
-            {
-                UnityEngine.Profiling.Profiler.enableAllocationCallstacks = true;
             }
 
             string commit = ReadValue(arguments, CommitFlag);
