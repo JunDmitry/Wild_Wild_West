@@ -179,6 +179,206 @@ namespace Game.Arena.PlayMode.Tests
             Assert.That(second.AcceptedPosition.Z, Is.EqualTo(-0.5f).Within(0.0001f));
         }
 
+        [Test]
+        public void ResolveQueriesAtMostThreeIntentsPerBatch()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent[] intents = CreateLineOfEnemies(10, 3f, Direction3D.Left, 0.5f);
+            CreateLeftWalls(intents);
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> first =
+                resolver.Resolve(CreateRequest(intents));
+
+            for (int index = 0; index < first.Count; index++)
+            {
+                if (index < 3)
+                {
+                    AssertShortened(first, index);
+                }
+                else
+                {
+                    AssertUnshortened(first, index);
+                }
+            }
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> second =
+                resolver.Resolve(CreateRequest(intents));
+
+            for (int index = 0; index < second.Count; index++)
+            {
+                if (index < 6)
+                {
+                    AssertShortened(second, index);
+                }
+                else
+                {
+                    AssertUnshortened(second, index);
+                }
+            }
+        }
+
+        [Test]
+        public void EveryIntentIsQueriedWithinTheStalenessBound()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent[] intents = CreateLineOfEnemies(10, 3f, Direction3D.Left, 0.5f);
+            CreateLeftWalls(intents);
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = null;
+
+            for (int resolve = 0; resolve < 4; resolve++)
+            {
+                entries = resolver.Resolve(CreateRequest(intents));
+            }
+
+            for (int index = 0; index < entries.Count; index++)
+            {
+                AssertShortened(entries, index);
+            }
+        }
+
+        [Test]
+        public void FirstSightEnemyIsQueriedBeforeCachedPeers()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent first = CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f);
+            EnemyMovementIntent second = CreateIntent(2UL, new Position3D(10f, GroundY, 4f), Direction3D.Left, 0.5f);
+            EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
+            EnemyMovementIntent newcomer = CreateIntent(4UL, new Position3D(10f, GroundY, 12f), Direction3D.Left, 0.5f);
+
+            resolver.Resolve(CreateRequest(first, second, third));
+
+            CreateWall(new Vector3(9.2f, GroundY, 0f), new Vector3(0.2f, 1f, 2f));
+            CreateWall(new Vector3(9.2f, GroundY, 12f), new Vector3(0.2f, 1f, 2f));
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
+                resolver.Resolve(CreateRequest(first, second, third, newcomer));
+
+            AssertShortened(entries, 3);
+            AssertUnshortened(entries, 2);
+        }
+
+        [Test]
+        public void ChangedDirectionBreaksTheAgeTie()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent first = CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f);
+            EnemyMovementIntent second = CreateIntent(2UL, new Position3D(10f, GroundY, 4f), Direction3D.Left, 0.5f);
+            EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
+
+            resolver.Resolve(CreateRequest(first, second, third));
+
+            CreateWall(new Vector3(9.2f, GroundY, 0f), new Vector3(0.2f, 1f, 2f));
+            CreateWall(new Vector3(10f, GroundY, 7.2f), new Vector3(2f, 1f, 0.2f));
+
+            EnemyMovementIntent turnedThird = CreateIntent(
+                3UL,
+                new Position3D(10f, GroundY, 8f),
+                Direction3D.Back,
+                0.5f);
+            EnemyMovementIntent newcomer = CreateIntent(
+                4UL,
+                new Position3D(10f, GroundY, -6f),
+                Direction3D.Left,
+                0.5f);
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
+                resolver.Resolve(CreateRequest(first, second, turnedThird, newcomer));
+
+            AssertShortened(entries, 0);
+            AssertUnshortened(entries, 1);
+
+            Assert.That(entries[2].AcceptedPosition.X, Is.EqualTo(10f).Within(0.0001f));
+            Assert.That(entries[2].AcceptedPosition.Z, Is.GreaterThan(7.5f));
+            Assert.That(entries[2].AcceptedPosition.Z, Is.LessThan(8f));
+        }
+
+        [Test]
+        public void ReusedResultLiesOnTheRequestedPath()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
+            CreateLeftWalls(intents);
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> first =
+                resolver.Resolve(CreateRequest(intents));
+
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> second =
+                resolver.Resolve(CreateRequest(intents));
+
+            AssertShortened(first, 2);
+            AssertShortened(second, 2);
+            Assert.That(
+                second[2].AcceptedPosition.X,
+                Is.EqualTo(first[2].AcceptedPosition.X).Within(0.0001f),
+                "The reused result did not reapply the cached reachable distance.");
+            Assert.That(
+                second[2].AcceptedPosition.Z,
+                Is.EqualTo(first[2].AcceptedPosition.Z).Within(0.0001f));
+
+            Position3D from = intents[2].Intent.From;
+            Position3D reused = second[2].AcceptedPosition;
+
+            Assert.That(reused.Y, Is.EqualTo(from.Y).Within(0.0001f));
+            Assert.That(reused.Z, Is.EqualTo(from.Z).Within(0.0001f));
+            Assert.That(reused.GroundDistanceTo(from), Is.LessThanOrEqualTo(0.5f));
+            Assert.That(reused.GroundDistanceTo(from), Is.GreaterThan(0f));
+        }
+
+        private static EnemyMovementIntent[] CreateLineOfEnemies(
+            int count,
+            float spacing,
+            Direction3D direction,
+            float distance)
+        {
+            EnemyMovementIntent[] intents = new EnemyMovementIntent[count];
+            float start = -spacing * (count - 1) * 0.5f;
+
+            for (int index = 0; index < count; index++)
+            {
+                intents[index] = CreateIntent(
+                    (ulong)(index + 1),
+                    new Position3D(10f, GroundY, start + (spacing * index)),
+                    direction,
+                    distance);
+            }
+
+            return intents;
+        }
+
+        private void CreateLeftWalls(EnemyMovementIntent[] intents)
+        {
+            for (int index = 0; index < intents.Length; index++)
+            {
+                Position3D from = intents[index].Intent.From;
+                CreateWall(new Vector3(from.X - 0.8f, GroundY, from.Z), new Vector3(0.2f, 1f, 2f));
+            }
+        }
+
+        private static void AssertShortened(
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries,
+            int index)
+        {
+            Assert.That(
+                entries[index].AcceptedPosition.X,
+                Is.GreaterThan(9.5f),
+                "Entry " + index + " was not shortened by the wall.");
+            Assert.That(
+                entries[index].AcceptedPosition.X,
+                Is.LessThan(10f),
+                "Entry " + index + " did not stay behind its origin.");
+        }
+
+        private static void AssertUnshortened(
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries,
+            int index)
+        {
+            Assert.That(
+                entries[index].AcceptedPosition.X,
+                Is.EqualTo(9.5f).Within(0.0001f),
+                "Entry " + index + " was shortened although it should not have been queried.");
+        }
+
         private static EnemyMovementBatchResolutionEntry ResolveSingle(
             UnityEnemyMovementResolver resolver,
             EnemyMovementIntent intent)
@@ -230,12 +430,17 @@ namespace Game.Arena.PlayMode.Tests
 
         private void CreateWall(Vector3 position)
         {
+            CreateWall(position, new Vector3(0.2f, 1f, 4f));
+        }
+
+        private void CreateWall(Vector3 position, Vector3 size)
+        {
             GameObject wall = new("Wall");
             wall.transform.position = position;
 
             BoxCollider collider = wall.AddComponent<BoxCollider>();
             collider.center = new Vector3(0f, 0.5f, 0f);
-            collider.size = new Vector3(0.2f, 1f, 4f);
+            collider.size = size;
 
             _created.Add(wall);
             Physics.SyncTransforms();

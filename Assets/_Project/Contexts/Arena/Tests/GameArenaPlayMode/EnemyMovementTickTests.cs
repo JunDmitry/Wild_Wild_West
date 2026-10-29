@@ -138,6 +138,54 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
+        public void ReusedEnemyGeometryIsAcceptedByTheDomainAcrossTicks()
+        {
+            Position3D playerPosition = new(17.5f, GroundY, 0f);
+            PlayModeTickHarness harness = CreateHarness(playerPosition);
+            EnemyId[] enemies = new EnemyId[5];
+            float[] startZ = { -8f, -4f, 0f, 4f, 8f };
+
+            for (int index = 0; index < enemies.Length; index++)
+            {
+                enemies[index] = SeedEnemy(
+                    harness,
+                    (ulong)(index + 1),
+                    new Position3D(21f, GroundY, startZ[index]));
+            }
+
+            CreateWall(new Vector3(20.3f, 0f, 0f));
+
+            ArenaRunSnapshot previous = harness.TickIdle().Snapshot;
+
+            for (int tick = 0; tick < 3; tick++)
+            {
+                ArenaRunSnapshot current = harness.TickIdle().Snapshot;
+
+                Assert.That(
+                    current.Status,
+                    Is.EqualTo(ArenaRunStatus.Playing),
+                    "The Domain rejected a movement batch built from reused geometry.");
+
+                for (int index = 0; index < enemies.Length; index++)
+                {
+                    Position3D before = PositionOf(previous, enemies[index]);
+                    Position3D after = PositionOf(current, enemies[index]);
+
+                    Assert.That(
+                        after.GroundDistanceTo(playerPosition),
+                        Is.LessThan(before.GroundDistanceTo(playerPosition)),
+                        "Enemy " + enemies[index] + " did not move toward the player.");
+                    Assert.That(
+                        before.GroundDistanceTo(after),
+                        Is.LessThanOrEqualTo(0.2001f),
+                        "Enemy " + enemies[index] + " travelled farther than requested.");
+                }
+
+                previous = current;
+            }
+        }
+
+        [Test]
         public void PlayerMovementChangesTheEnemyPursuitDirection()
         {
             SettableInputSource input = new();
