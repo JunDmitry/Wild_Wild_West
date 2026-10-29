@@ -29,6 +29,11 @@ namespace Game.Performance
     {
         private const double WarmupSeconds = 5d;
         private const double CaptureSeconds = 55d;
+
+        // TEMPORARY attribution support (t9-gc-residual-b): a short window so
+        // one profiler capture (a 300-frame ring) covers the steady state.
+        private const string WarmupOverrideFlag = "-perfwarmup";
+        private const string CaptureOverrideFlag = "-perfseconds";
         private const int MaxFrameSamples = 20000;
         private const string GcAllocMarker = "GC.Alloc";
         private const string ArenaSceneName = "ArenaScene";
@@ -84,6 +89,8 @@ namespace Game.Performance
         private long _harnessAllocatedBytes;
         private int _peakActiveEnemies;
         private int _peakPhysicsQueries;
+        private double _warmupSeconds = WarmupSeconds;
+        private double _captureSeconds = CaptureSeconds;
 
         public void Initialize(
             string outputPath,
@@ -106,8 +113,31 @@ namespace Game.Performance
             _waveEnemies = configuration.CreationParameters.WaveCatalog
                 .Get(WaveNumber.First).RegularEnemyCount;
             _spawnIntervalSeconds = configuration.SpawnInterval.Seconds;
+            _warmupSeconds = ReadPositiveSeconds(WarmupOverrideFlag, _warmupSeconds);
+            _captureSeconds = ReadPositiveSeconds(CaptureOverrideFlag, _captureSeconds);
 
             _initialized = true;
+        }
+
+        private static double ReadPositiveSeconds(string flag, double fallback)
+        {
+            string[] arguments = Environment.GetCommandLineArgs();
+
+            for (int index = 0; index < arguments.Length - 1; index++)
+            {
+                if (string.Equals(arguments[index], flag, StringComparison.OrdinalIgnoreCase)
+                    && double.TryParse(
+                        arguments[index + 1],
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out double seconds)
+                    && seconds > 0d)
+                {
+                    return seconds;
+                }
+            }
+
+            return fallback;
         }
 
         private void Awake()
@@ -237,7 +267,7 @@ namespace Game.Performance
 
             if (_capturing == false)
             {
-                if (current - _warmupStartTime < WarmupSeconds)
+                if (current - _warmupStartTime < _warmupSeconds)
                 {
                     return;
                 }
@@ -270,9 +300,9 @@ namespace Game.Performance
 
             _captureElapsedSeconds = current - _captureStartTime;
 
-            if (_captureElapsedSeconds >= CaptureSeconds)
+            if (_captureElapsedSeconds >= _captureSeconds)
             {
-                _reportedCaptureSeconds = CaptureSeconds;
+                _reportedCaptureSeconds = _captureSeconds;
                 Finish(endedEarly: false);
             }
         }
@@ -647,7 +677,7 @@ namespace Game.Performance
             json.Append("},");
 
             json.Append("\"window\":{");
-            json.Append("\"warmupSeconds\":").Append(Number(WarmupSeconds, "0")).Append(',');
+            json.Append("\"warmupSeconds\":").Append(Number(_warmupSeconds, "0")).Append(',');
             json.Append("\"captureSeconds\":")
                 .Append(Number(_reportedCaptureSeconds, "0.###")).Append(',');
             json.Append("\"capturedFrames\":").Append(_capturedFrames).Append(',');
