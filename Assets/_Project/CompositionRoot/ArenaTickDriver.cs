@@ -15,6 +15,13 @@ namespace Game.CompositionRoot
         private readonly ArenaRunTickService _tickService;
         private readonly ArenaRunSession _session;
 
+        // TEMPORARY 3a positive control (t9-gc-metric-3-baseline): a deliberate
+        // 4096-byte allocation from this game-code method, fired once inside
+        // the capture window so a capture can prove it resolves a game frame.
+        // Reverted before the acceptance runs.
+        private static byte[] _attributionPositiveControl;
+        private static int _attributionTicks;
+
         public ArenaTickDriver(ArenaRunTickService tickService, ArenaRunSession session)
         {
             _tickService = tickService
@@ -26,6 +33,16 @@ namespace Game.CompositionRoot
 
         public void Tick()
         {
+            if (_attributionTicks < 1350)
+            {
+                _attributionTicks++;
+
+                if (_attributionTicks == 1350)
+                {
+                    _attributionPositiveControl = new byte[4096];
+                }
+            }
+
             if (_session.HasActiveRun == false)
             {
                 return;
