@@ -57,9 +57,11 @@ Concretely:
   `ceil(N / 3) - 1` ticks old: three ticks (about 50 ms at 60 Hz) for the
   measured 10 enemies, seven ticks (about 117 ms) at the 24-enemy ceiling of
   ADR-0033 metric 4.
-- **Lifecycle.** First sight of an enemy always queries. Entries absent from
-  a batch are pruned. The cache belongs to the resolver singleton, so a scene
-  reload rebuilds it empty.
+- **Lifecycle.** A first-sight enemy is served before any cached peer; when more
+  than three enemies first appear in the same batch, the budget wins and batch
+  order selects which three query, so the rest move without a geometry
+  constraint until a later resolve. Entries absent from a batch are pruned. The
+  cache belongs to the resolver singleton, so a scene reload rebuilds it empty.
 - **No metric evasion.** The adapters continue to use the three `NonAlloc`
   APIs the probe counts. Switching to an uncounted query API is not part of
   this decision.
