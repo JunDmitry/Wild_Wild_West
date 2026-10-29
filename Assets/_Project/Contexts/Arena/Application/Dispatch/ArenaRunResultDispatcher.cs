@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Diagnostics;
 using Game.Arena.Application.Hud;
 using Game.Arena.Application.Notifications;
 using Game.Arena.Application.ReadModels;
@@ -152,6 +153,14 @@ namespace Game.Arena.Application.Dispatch
             _registrationClosed = true;
             _dispatching = true;
 
+            // TEMPORARY attribution switch (t9-gc-residual-b); reverted before
+            // the acceptance runs.
+            if (AttributionFlags.SkipDispatch)
+            {
+                _dispatching = false;
+                return;
+            }
+
             try
             {
                 for (int index = 0; index < Stages.Length; index++)
@@ -223,6 +232,11 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             ArenaRunSnapshot snapshot)
         {
+            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            {
+                return;
+            }
+
             if (_snapshotHandlers.TryGetValue(stage, out List<SnapshotRegistration> registrations) == false)
             {
                 return;
@@ -231,6 +245,11 @@ namespace Game.Arena.Application.Dispatch
             for (int index = 0; index < registrations.Count; index++)
             {
                 SnapshotRegistration registration = registrations[index];
+
+                if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                {
+                    continue;
+                }
 
                 try
                 {
@@ -248,6 +267,11 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunSnapshot snapshot,
             ArenaRunHudSnapshot hud)
         {
+            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            {
+                return;
+            }
+
             if (_hudHandlers.TryGetValue(stage, out List<HudRegistration> registrations) == false)
             {
                 return;
@@ -256,6 +280,11 @@ namespace Game.Arena.Application.Dispatch
             for (int index = 0; index < registrations.Count; index++)
             {
                 HudRegistration registration = registrations[index];
+
+                if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                {
+                    continue;
+                }
 
                 try
                 {
@@ -272,6 +301,11 @@ namespace Game.Arena.Application.Dispatch
             ArenaRunDispatchStage stage,
             IReadOnlyList<IArenaRunNotification> notifications)
         {
+            if (AttributionFlags.SkipsDispatchStage(stage.ToString()))
+            {
+                return;
+            }
+
             if (_notificationHandlers.TryGetValue(stage, out List<NotificationRegistration> registrations) == false)
             {
                 return;
@@ -284,6 +318,11 @@ namespace Game.Arena.Application.Dispatch
                 for (int handlerIndex = 0; handlerIndex < registrations.Count; handlerIndex++)
                 {
                     NotificationRegistration registration = registrations[handlerIndex];
+
+                    if (AttributionFlags.SkipsHandler(registration.Handler.GetType().Name))
+                    {
+                        continue;
+                    }
 
                     if (registration.NotificationType.IsInstanceOfType(notification) == false)
                     {

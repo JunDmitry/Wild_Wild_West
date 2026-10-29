@@ -1,4 +1,5 @@
 using System;
+using Game.Arena.Application.Diagnostics;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Application.Ticks;
 using VContainer.Unity;
@@ -27,6 +28,13 @@ namespace Game.CompositionRoot
         public void Tick()
         {
             if (_session.HasActiveRun == false)
+            {
+                return;
+            }
+
+            // TEMPORARY attribution switch (t9-gc-residual-b); reverted before
+            // the acceptance runs.
+            if (AttributionFlags.NotTick)
             {
                 return;
             }

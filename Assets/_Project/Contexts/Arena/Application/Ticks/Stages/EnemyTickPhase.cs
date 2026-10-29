@@ -1,4 +1,5 @@
-﻿using Game.Arena.Application.Identity;
+﻿using Game.Arena.Application.Diagnostics;
+using Game.Arena.Application.Identity;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.Spawning;
 using Game.Arena.Application.Ticks.Stages;
@@ -37,17 +38,36 @@ namespace Game.Arena.Application.Ticks
                 return StageExecutionStatus.Completed;
             }
 
-            StageExecutionStatus movementStatus = _movementStage.Execute(run, delta, recorder);
+            // TEMPORARY attribution switches (t9-gc-residual-b); reverted before
+            // the acceptance runs.
+            StageExecutionStatus movementStatus = StageExecutionStatus.Completed;
+
+            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.EnemyMovement)) == false)
+            {
+                movementStatus = _movementStage.Execute(run, delta, recorder);
+            }
 
             if (movementStatus == StageExecutionStatus.InteractionLeftPending)
             {
                 return movementStatus;
             }
 
-            _enemyAttackStartStage.Execute(run, recorder);
-            _enemyAttackImpactStage.Execute(run, recorder);
+            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.EnemyAttackStart)) == false)
+            {
+                _enemyAttackStartStage.Execute(run, recorder);
+            }
+
+            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.EnemyAttackImpact)) == false)
+            {
+                _enemyAttackImpactStage.Execute(run, recorder);
+            }
 
             if (run.Status != ArenaRunStatus.Playing)
+            {
+                return StageExecutionStatus.Completed;
+            }
+
+            if (AttributionFlags.SkipsTickStage(nameof(ArenaRunTickStage.EnemySpawn)))
             {
                 return StageExecutionStatus.Completed;
             }

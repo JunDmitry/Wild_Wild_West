@@ -1,6 +1,8 @@
+using Game.Arena.Application.Diagnostics;
 using Game.Arena.Application.Sessions;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Configuration;
+using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Vitality;
 using Game.CompositionRoot;
 
@@ -36,12 +38,20 @@ namespace Game.Performance
                     shippedParameters.EnemyCatalog.Get(EnemyKind.Boss),
                     MeasurementHealth + 1));
 
+            // TEMPORARY attribution switch (t9-gc-residual-b); reverted before
+            // the acceptance runs. The override keeps one regular enemy per
+            // wave to test the per-enemy-frame hypothesis.
+            int? waveEnemies = AttributionFlags.WaveEnemies;
+            WaveCatalog waves = waveEnemies.HasValue
+                ? ResizeWaves(shippedParameters.WaveCatalog, waveEnemies.Value)
+                : shippedParameters.WaveCatalog;
+
             ArenaRunCreationParameters measurementParameters = new(
                 shippedParameters.ArenaDefinition,
                 player,
                 shippedParameters.WeaponCatalog,
                 enemies,
-                shippedParameters.WaveCatalog);
+                waves);
 
             return new ArenaGameConfiguration(
                 shipped.Arena,
@@ -49,6 +59,20 @@ namespace Game.Performance
                 shipped.RestartDelay,
                 shipped.SpawnInterval,
                 shipped.ArenaSceneName);
+        }
+
+        private static WaveCatalog ResizeWaves(WaveCatalog shipped, int regularEnemyCount)
+        {
+            System.Collections.Generic.List<WaveDefinition> resized = new();
+
+            for (WaveNumber number = WaveNumber.First;
+                 number.Value <= shipped.Last.Value;
+                 number = number.Next())
+            {
+                resized.Add(new WaveDefinition(number, regularEnemyCount));
+            }
+
+            return new WaveCatalog(resized);
         }
 
         private static EnemyDefinition RaiseHealth(
