@@ -153,7 +153,13 @@ namespace Game.Arena.PlayMode.Tests
                     new Position3D(21f, GroundY, startZ[index]));
             }
 
+            // The wall spans x 20.2..20.4 and z -2..2, so only the enemy at z = 0
+            // is behind it. With the 0.5 radius its centre must stay at or beyond
+            // x = 20.9: a reused result that re-applied a per-tick allowance
+            // would step it straight through the wall.
             CreateWall(new Vector3(20.3f, 0f, 0f));
+            const int BlockedEnemyIndex = 2;
+            const float WallFacePlusRadius = 20.4f + EnemyRadius;
 
             ArenaRunSnapshot previous = harness.TickIdle().Snapshot;
 
@@ -172,13 +178,23 @@ namespace Game.Arena.PlayMode.Tests
                     Position3D after = PositionOf(current, enemies[index]);
 
                     Assert.That(
-                        after.GroundDistanceTo(playerPosition),
-                        Is.LessThan(before.GroundDistanceTo(playerPosition)),
-                        "Enemy " + enemies[index] + " did not move toward the player.");
-                    Assert.That(
                         before.GroundDistanceTo(after),
                         Is.LessThanOrEqualTo(0.2001f),
                         "Enemy " + enemies[index] + " travelled farther than requested.");
+
+                    if (index == BlockedEnemyIndex)
+                    {
+                        Assert.That(
+                            after.X,
+                            Is.GreaterThanOrEqualTo(WallFacePlusRadius),
+                            "Enemy " + enemies[index] + " crossed the wall on a reused result.");
+                        continue;
+                    }
+
+                    Assert.That(
+                        after.GroundDistanceTo(playerPosition),
+                        Is.LessThan(before.GroundDistanceTo(playerPosition)),
+                        "Enemy " + enemies[index] + " did not move toward the player.");
                 }
 
                 previous = current;

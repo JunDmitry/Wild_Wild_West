@@ -325,6 +325,118 @@ namespace Game.Arena.PlayMode.Tests
             Assert.That(reused.GroundDistanceTo(from), Is.GreaterThan(0f));
         }
 
+        [Test]
+        public void SkippedEnemyDoesNotCrossACachedObstructionAcrossTicks()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
+
+            // Walls ahead of the first three enemies only. The fourth has a
+            // clear path, so its blind first-sight step crosses nothing.
+            for (int index = 0; index < 3; index++)
+            {
+                Position3D from = intents[index].Intent.From;
+                CreateWall(new Vector3(from.X - 0.8f, GroundY, from.Z), new Vector3(0.2f, 1f, 2f));
+            }
+
+            // Wall face at x = 9.3; with the 0.5 radius the centre may never
+            // fall below 9.8. A reused per-tick allowance would take it inside.
+            const float MinimumCentreX = 9.8f;
+
+            for (int tick = 0; tick < 6; tick++)
+            {
+                IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
+                    resolver.Resolve(CreateRequest(intents));
+
+                for (int index = 0; index < 3; index++)
+                {
+                    Assert.That(
+                        entries[index].AcceptedPosition.X,
+                        Is.GreaterThanOrEqualTo(MinimumCentreX),
+                        "Enemy " + index + " crossed the wall on tick " + tick + ".");
+                }
+
+                Advance(intents, entries);
+            }
+        }
+
+        [Test]
+        public void SkippedEnemyDoesNotMoveIntoTheBlockerItDetected()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+
+            // The target is the third intent, so the age-priority selection
+            // skips it on the second resolve and makes it reuse a result.
+            EnemyMovementIntent[] intents =
+            {
+                CreateIntent(1UL, new Position3D(10f, GroundY, -6f), Direction3D.Left, 0.5f),
+                CreateIntent(2UL, new Position3D(10f, GroundY, -2f), Direction3D.Left, 0.5f),
+                CreateIntent(3UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f),
+                CreateIntent(4UL, new Position3D(10f, GroundY, 6f), Direction3D.Left, 0.5f),
+            };
+
+            // A stationary 1x1x1 body whose +x face is at x = 8.9. The target
+            // starts with a 0.5 step against a 0.6 gap, so a reused per-tick
+            // allowance would carry it inside the body.
+            CreateBody("Blocker", new Vector3(8.4f, GroundY, 0f));
+
+            const float MinimumTargetX = 9.4f;
+
+            for (int tick = 0; tick < 4; tick++)
+            {
+                IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
+                    resolver.Resolve(CreateRequest(intents));
+
+                Assert.That(
+                    entries[2].AcceptedPosition.X,
+                    Is.GreaterThanOrEqualTo(MinimumTargetX),
+                    "The target moved into the blocker on tick " + tick + ".");
+
+                Advance(intents, entries);
+            }
+        }
+
+        [Test]
+        public void UnblockedEnemyKeepsItsFullStepOnSkippedTicks()
+        {
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
+
+            for (int tick = 0; tick < 4; tick++)
+            {
+                IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
+                    resolver.Resolve(CreateRequest(intents));
+
+                for (int index = 0; index < intents.Length; index++)
+                {
+                    Assert.That(
+                        intents[index].Intent.From.GroundDistanceTo(entries[index].AcceptedPosition),
+                        Is.EqualTo(0.5f).Within(0.0001f),
+                        "Enemy " + index + " stalled on tick " + tick + " without an obstruction.");
+                }
+
+                Advance(intents, entries);
+            }
+        }
+
+        private static void Advance(
+            EnemyMovementIntent[] intents,
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries)
+        {
+            for (int index = 0; index < intents.Length; index++)
+            {
+                intents[index] = WithFrom(intents[index], entries[index].AcceptedPosition);
+            }
+        }
+
+        private static EnemyMovementIntent WithFrom(EnemyMovementIntent intent, Position3D from)
+        {
+            return new EnemyMovementIntent(
+                intent.EnemyId,
+                new PlanarMovementIntent(from, intent.Intent.Direction, intent.Intent.RequestedDistance),
+                intent.CollisionRadius);
+        }
+
         private static EnemyMovementIntent[] CreateLineOfEnemies(
             int count,
             float spacing,
