@@ -68,6 +68,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0035 | Reuse preallocated frame buffers to make the Arena tick path allocate nothing | Accepted (event representation amended by ADR-0036) | 2026-10-27 | [ADR-0035](ADR-0035-reusable-frame-buffers.md) |
 | ADR-0036 | Pool class-based Domain events per run | Accepted | 2026-10-28 | [ADR-0036](ADR-0036-class-based-domain-events-for-pooling.md) |
 | ADR-0037 | Scope metric 3 to game-code allocation and bound the engine residual | Accepted | 2026-10-29 | [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md) |
+| ADR-0038 | Bound per-frame physics queries with an age-priority budget | Accepted | 2026-10-29 | [ADR-0038](ADR-0038-physics-query-budget.md) |
 
 ## New ADR Template
 

@@ -110,6 +110,15 @@ The adapter must also keep the Enemy's collision radius inside the Arena
 Bounds — an Enemy spawned in the Spawn Band may legitimately start outside
 them — and the Domain does not re-validate the Bounds for enemy movement.
 
+The adapter may reuse a scene-geometry result from a recent tick within the
+bound recorded in [ADR-0038](../../adr/ADR-0038-physics-query-budget.md): with
+`N` intents in the batch, each Enemy is re-queried at least every
+`ceil(N / 3)` ticks, and a reused reachable distance is applied along the
+current intent's path and clamped to its requested distance. Only scene
+geometry may be stale; Arena Bounds are recomputed from the current intent on
+every tick, and an Enemy seen for the first time in a batch is queried before
+its first resolved step.
+
 Player stages are implemented as internal Application collaborators composed by PlayerTickPhase. They are not public API and are not invoked by Presentation or CompositionRoot directly.
 
 ## Spawn Pacing
