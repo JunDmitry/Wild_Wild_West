@@ -1,7 +1,7 @@
 # Performance measurement for the production cut-over
 
 - **Authority:** [ADR-0033](../adr/ADR-0033-performance-thresholds-for-cut-over.md) fixes the thresholds and the player-build procedure; [ADR-0034](../adr/ADR-0034-automated-performance-measurement.md) fixes the harness and the measurement profile.
-- **Status:** measured 2026-10-27; corrected baseline on build `00903f4` (runs 3–4) reports ~6.1–6.3 KB/frame. 3 of 5 thresholds pass; GC allocation and physics queries fail. T-9 remains blocked.
+- **Status:** measured 2026-10-29 on build `8f38346` (runs 9–10). 4 of 5 thresholds pass: metric 3 passes under ADR-0037 — 3a's capture with a positive control is recorded below, and 3b measures 221.1 / 248.6 B/frame against the 250 B/frame baseline. Physics queries fail (12/frame against ≤ 5), so T-9 remains blocked on `t9-physics-query-budget`.
 - **Owner:** `architect-role`; the harness is implemented by `coder-role`.
 
 ## Scope
@@ -150,17 +150,40 @@ Append one row per run; never edit a recorded row. A rerun after a code change i
 | 6 | `0d946e2` | 2026-10-28T14:34:47Z | 16.666 | 21.930 | 25.037 | 587 | 10 | 12 | fail (GC, physics) |
 | 7 | `2bd8fed` | 2026-10-29 | — ‡ | — ‡ | — ‡ | 241.9 ‡ | 10 | 12 | metric 3b baseline |
 | 8 | `2bd8fed` | 2026-10-29 | — ‡ | — ‡ | — ‡ | 235.3 ‡ | 10 | 12 | metric 3b baseline |
+| 9 | `8f38346` | 2026-10-29 | 16.666 | 19.854 | 24.004 | 221.145 | 10 | 12 | metric 3b pass; physics fail |
+| 10 | `8f38346` | 2026-10-29 | 16.666 | 19.603 | 22.049 | 248.561 | 10 | 12 | metric 3b pass; physics fail |
 
 † **Invalid for metric 3.** Runs 1–2 used the capacity-1 `GC.Alloc` recorder without wrap-around, which froze its first sample, so the GC column repeats one startup value. They are left unedited as the audit record; runs 3–4 are the corrected baseline (recorder fixed in `00903f4`). Their frame-time, enemy, and physics columns are valid.
 
 ‡ **Runs 7–8 are the `t9-gc-residual-b` acceptance runs**, taken at `2bd8fed` (instrumentation reverted; `Assets/` identical to `561ff78`). The report records the GC column and states the frame-time, enemy, and physics columns as unchanged from runs 5–6; the raw `run-*.json` files are not committed, so the frame-time cells are left blank rather than transcribed. Both runs allocated on nearly every captured frame (2 651/3 299 and 2 668/3 301). Under ADR-0037 they are the **metric 3b baseline**: 241.9 and 235.3 B/frame, threshold 250 B/frame.
+
+- **Metric 3 after ADR-0037 (runs 9–10):** the probe now reports 3b itself. At `8f38346` two clean sessions measured 221.145 and 248.561 B/frame against the 250 B/frame baseline, allocating on 2 523/3 301 and 2 635/3 301 frames — **metric 3b passes in both**. Run 10 sits 1.44 B/frame under the threshold: the ADR's rounding is the only headroom, so a rerun on a busier machine can exceed it. The 3a capture is recorded in § Metric 3a below. Physics queries still fail (12/frame against ≤ 5).
 
 - **Machine:** Windows 10 (10.0.19045) 64-bit, Intel Core i5-10500H @ 2.50 GHz, NVIDIA GeForce GTX 1650 Max-Q, 24 393 MB.
 - **Window:** both runs captured 3 301 frames over 55 s, `runEndedEarly = false`.
 - **Harness attribution:** `GC.GetAllocatedBytesForCurrentThread()` is unsupported in this player (a deliberate 4 KiB allocation produces no delta), so harness allocation is established by inspection: the capture path allocates nothing.
 - **GC allocation:** every captured frame allocates in both corrected runs, at 6 087 B/frame (run 3) and 6 277 B/frame (run 4). The allocation sits in the per-tick path — the domain/application snapshot graph, the per-frame enemy movement batch and its domain events, and presenter collections — not in TextMeshPro text assignment (a change-driven HUD spike lowered the total by only ~2 %).
 - **GC allocation after ADR-0035/0036 (runs 5–6):** the pooled tick path is implemented (commits `d5f9fa4`…`acd1dd7`) and the editor allocation fixture measures 0 B over 300 steady ticks and a ten-event frame, but the player build still allocates on 3 253 and 3 264 of 3 301 captured frames — 525 and 587 B/frame, about 91 % below runs 3–4. The residual therefore lies outside the Application/Domain tick path the fixture exercises. The implementation report names `HitConfirmationPresenter` and `EnemyAttackCuePresenter` (view instantiation on events, lazily allocated lists) as the unattributed candidates; per-frame HUD/string work is a second. Attribution is the next step; metric 3 is not met.
-- **GC allocation after ADR-0037 (runs 7–8):** attribution is complete. Disabling the tick leaves 0.1 B/frame, skipping the player movement stage 31.1, and an allocation call-stack capture bottoms at `VContainerUpdate/UpdateFunction.Invoke()` with no game-code frame — the residual tracks motion of the rendered entities (report `docs/architect/coder-inbox/t9-gc-residual-b.md`). ADR-0037 replaces metric 3 with 3a (game-code 0 B, capture with a positive control) and 3b (total ≤ 250 B/frame). Runs 7–8 are the 3b baseline; the 3a capture is still to be taken.
+- **GC allocation after ADR-0037 (runs 7–8):** attribution is complete. Disabling the tick leaves 0.1 B/frame, skipping the player movement stage 31.1, and an allocation call-stack capture bottoms at `VContainerUpdate/UpdateFunction.Invoke()` with no game-code frame — the residual tracks motion of the rendered entities (report `docs/architect/coder-inbox/t9-gc-residual-b.md`). ADR-0037 replaces metric 3 with 3a (game-code 0 B, capture with a positive control) and 3b (total ≤ 250 B/frame). Runs 7–8 are the 3b baseline; the 3a capture is recorded in § Metric 3a.
+
+## Metric 3a — allocation call-stack capture (2026-10-29, `8f38346`)
+
+Taken in the measurement player with `-perfallocstacks -profiler-enable -profiler-log-file`; 22 s warm-up and a 4 s capture, profiler frames 1255–1554. The temporary control, switches, and reader were reverted in `e616017`; `Assets/` at `e616017` is identical to `8f38346`.
+
+| Bytes | Frames | Allocating stack | Game frame? |
+|---|---|---|---|
+| 4 128 | 1 | `Update.ScriptRunBehaviourUpdate/BehaviourUpdate/Game.Arena.Presentation.dll!…ThirdPersonCameraController.Update() [Invoke]/GC.Alloc` | **yes — the positive control** (temporary `new byte[4096]`, rounded to 4 128) |
+| 17 100 | 300/300 | `PlayerLoop/VContainerUpdate/…UpdateFunction.Invoke() [Invoke]/GC.Alloc` | **no** — one steady sample per frame |
+| 168 | 1 | `PlayerLoop/Destroy/…Game.Arena.Presentation.dll!…NotificationPresenter.OnDisable() [Invoke]/GC.Alloc` | **yes** — process teardown, after the capture window |
+
+`Game.Performance.*` lines also appear (probe finishing, console logging, `OnDestroy`); they are the harness, not game code. A `-perfnotick` capture of the same method contains no `VContainerUpdate/GC.Alloc` line, so the steady sample is a real tick-triggered allocation.
+
+Limits of this record, stated so it is not read as stronger evidence than it is:
+
+- The accepted control resolves on `ScriptRunBehaviourUpdate`. A first control placed in `ArenaTickDriver.Tick` did **not** resolve; the capture therefore does not establish symbol resolution on the `VContainerUpdate` tick path. Per ADR-0037 the A/B ladder (`-perfnotick` → 0.1 B/frame) is the load-bearing evidence; the control proves only that this capture can resolve game frames in this build.
+- The 168 B teardown allocation is game code but is neither inside the capture window nor per-frame; 3a's per-frame claim is unaffected.
+
+**Verdict: 3a met as recorded.** Metric 3 passes as the two-part rule; T-9 stays blocked on metric 5 only.
 - **Preliminary run (not recorded):** the implementing coder's run of the same code produced 31.1 KB/frame and physics peak 12. Its `build-info.json` recorded `-perfcommit e633b4f`, the specification commit rather than the code commit, so it is not attributable and is not entered as a results row.
 
 **Legacy comparison:** not applicable — no runnable legacy scene exists (scene-GUID evidence in § Scope).
