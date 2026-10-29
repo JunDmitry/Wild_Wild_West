@@ -29,6 +29,13 @@ namespace Game.Performance
     {
         private const double WarmupSeconds = 5d;
         private const double CaptureSeconds = 55d;
+
+        // ADR-0037 metric 3b: total global allocation must not exceed the
+        // recorded baseline (241.9 / 235.3 B/frame at 2bd8fed, threshold = the
+        // higher run rounded up to the next 10 B). The value is a command-line
+        // override so a forced-fail check needs no rebuild.
+        private const double BaselineBytesPerFrameDefault = 250d;
+        private const string BaselineFlag = "-perfbaseline";
         private const int MaxFrameSamples = 20000;
         private const string GcAllocMarker = "GC.Alloc";
         private const string ArenaSceneName = "ArenaScene";
@@ -84,6 +91,8 @@ namespace Game.Performance
         private long _harnessAllocatedBytes;
         private int _peakActiveEnemies;
         private int _peakPhysicsQueries;
+        private double _baselineBytesPerFrame = BaselineBytesPerFrameDefault;
+        private double _bytesPerFrame;
 
         public void Initialize(
             string outputPath,
@@ -106,8 +115,32 @@ namespace Game.Performance
             _waveEnemies = configuration.CreationParameters.WaveCatalog
                 .Get(WaveNumber.First).RegularEnemyCount;
             _spawnIntervalSeconds = configuration.SpawnInterval.Seconds;
+            _baselineBytesPerFrame = ReadPositiveDouble(
+                BaselineFlag,
+                BaselineBytesPerFrameDefault);
 
             _initialized = true;
+        }
+
+        private static double ReadPositiveDouble(string flag, double fallback)
+        {
+            string[] arguments = Environment.GetCommandLineArgs();
+
+            for (int index = 0; index < arguments.Length - 1; index++)
+            {
+                if (string.Equals(arguments[index], flag, StringComparison.OrdinalIgnoreCase)
+                    && double.TryParse(
+                        arguments[index + 1],
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out double value)
+                    && value > 0d)
+                {
+                    return value;
+                }
+            }
+
+            return fallback;
         }
 
         private void Awake()
@@ -491,12 +524,20 @@ namespace Game.Performance
 
             FrameStatistics statistics = SummarizeFrames();
 
+            // A run with no captured frames is an abort, never a pass; the
+            // division is guarded rather than allowed to produce 0 B/frame.
+            _bytesPerFrame = _capturedFrames > 0
+                ? (double)_totalAllocatedBytes / _capturedFrames
+                : 0d;
+
             bool passAverage = endedEarly == false
                 && statistics.AverageMs <= AverageFrameTimeLimitMs;
             bool passWorst = endedEarly == false
                 && statistics.P99Ms <= P99FrameTimeLimitMs
                 && statistics.MaxMs <= MaxFrameTimeLimitMs;
-            bool passGcAlloc = endedEarly == false && _totalAllocatedBytes == 0;
+            bool passGcAlloc = endedEarly == false
+                && _capturedFrames > 0
+                && _bytesPerFrame <= _baselineBytesPerFrame;
             bool passActiveEnemies = endedEarly == false
                 && _peakActiveEnemies <= ActiveEnemyLimit;
             bool passPhysicsQueries = endedEarly == false
@@ -663,7 +704,10 @@ namespace Game.Performance
 
             json.Append("\"gcAlloc\":{");
             json.Append("\"totalBytes\":").Append(_totalAllocatedBytes).Append(',');
-            json.Append("\"framesWithAllocation\":").Append(_framesWithAllocation);
+            json.Append("\"framesWithAllocation\":").Append(_framesWithAllocation).Append(',');
+            json.Append("\"bytesPerFrame\":").Append(Number(_bytesPerFrame, "0.###")).Append(',');
+            json.Append("\"baselineBytesPerFrame\":")
+                .Append(Number(_baselineBytesPerFrame, "0.###"));
             json.Append("},");
 
             json.Append("\"activeEnemies\":{");
