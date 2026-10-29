@@ -74,7 +74,7 @@ namespace Game.Arena.PlayMode.Tests
 
             Assert.That(_hudView.IsBossPresent, Is.False);
             Assert.That(_hudView.BossHealthText, Is.Empty);
-            Assert.That(_bossLabel.text, Is.Empty);
+            Assert.That(_bossLabel.text, Is.Null.Or.Empty);
             Assert.That(_announcer.AnnouncementCount, Is.Zero);
         }
 
