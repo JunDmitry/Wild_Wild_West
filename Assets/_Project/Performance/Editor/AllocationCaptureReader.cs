@@ -84,15 +84,18 @@ namespace Game.Performance.Editor
                     continue;
                 }
 
-                if (view == null)
+                if (view == null || view.valid == false)
                 {
                     continue;
                 }
 
-                int itemCount = view.GetItemCount();
+                List<int> pending = new();
+                List<int> children = new();
+                pending.Add(view.GetRootItemID());
 
-                for (int id = 0; id < itemCount; id++)
+                for (int cursor = 0; cursor < pending.Count; cursor++)
                 {
+                    int id = pending[cursor];
                     float gcBytes;
 
                     try
@@ -101,30 +104,46 @@ namespace Game.Performance.Editor
                     }
                     catch (Exception)
                     {
-                        continue;
+                        gcBytes = 0f;
                     }
 
-                    if (gcBytes <= 0f)
+                    if (gcBytes > 0f)
                     {
-                        continue;
+                        string path = view.GetItemPath(id);
+
+                        if (string.IsNullOrEmpty(path))
+                        {
+                            path = view.GetItemName(id) ?? "(unnamed)";
+                        }
+
+                        bytesByPath[path] = bytesByPath.TryGetValue(path, out double total)
+                            ? total + gcBytes
+                            : gcBytes;
+                        framesByPath[path] = framesByPath.TryGetValue(path, out int frames)
+                            ? frames + 1
+                            : 1;
+                        samplesByPath[path] = samplesByPath.TryGetValue(path, out int samples)
+                            ? samples + 1
+                            : 1;
                     }
 
-                    string path = view.GetItemPath(id);
-
-                    if (string.IsNullOrEmpty(path))
+                    try
                     {
-                        path = view.GetItemName(id) ?? "(unnamed)";
-                    }
+                        if (view.HasItemChildren(id))
+                        {
+                            children.Clear();
+                            view.GetItemChildren(id, children);
 
-                    bytesByPath[path] = bytesByPath.TryGetValue(path, out double total)
-                        ? total + gcBytes
-                        : gcBytes;
-                    framesByPath[path] = framesByPath.TryGetValue(path, out int frames)
-                        ? frames + 1
-                        : 1;
-                    samplesByPath[path] = samplesByPath.TryGetValue(path, out int samples)
-                        ? samples + 1
-                        : 1;
+                            for (int index = 0; index < children.Count; index++)
+                            {
+                                pending.Add(children[index]);
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // A malformed node must not abort the whole capture.
+                    }
                 }
             }
 
