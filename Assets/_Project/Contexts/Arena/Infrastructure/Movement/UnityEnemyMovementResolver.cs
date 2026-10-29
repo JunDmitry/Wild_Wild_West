@@ -16,10 +16,14 @@ namespace Game.Arena.Infrastructure.Movement
     /// and scene geometry. On each resolve it spends at most
     /// <see cref="QueryBudget"/> scene-geometry queries, picking enemies by age
     /// priority (never queried, then oldest, then a materially changed
-    /// direction); a skipped enemy reuses its last queried reachable distance
-    /// along its current direction (ADR-0038). The Domain remains the authority
-    /// that validates the movement path and applies the step, so this resolver
-    /// never re-aims, extends, adds, or drops an intent.
+    /// direction). A queried enemy casts far enough to clear the whole window in
+    /// which it may be skipped, and a skipped enemy reuses the world-space
+    /// obstruction point from that query: the distance to it is recomputed from
+    /// the current position, so advancing toward the obstruction shrinks the
+    /// allowed step instead of letting the enemy pass through it (ADR-0038). The
+    /// Domain remains the authority that validates the movement path and applies
+    /// the step, so this resolver never re-aims, extends, adds, or drops an
+    /// intent.
     /// </summary>
     public sealed class UnityEnemyMovementResolver : IEnemyMovementResolver
     {
@@ -68,15 +72,28 @@ namespace Game.Arena.Infrastructure.Movement
             _entries.Clear();
             _tick++;
             SelectQueries(intents);
+            int horizon = StalenessHorizon(intents.Count);
 
             for (int index = 0; index < intents.Count; index++)
             {
-                _entries.Add(ResolveIntent(intents[index], _selected[index]));
+                _entries.Add(ResolveIntent(intents[index], _selected[index], horizon));
             }
 
             PruneAbsentEntries();
 
             return _entries;
+        }
+
+        /// <summary>
+        /// Number of ticks an intent may wait between queries at the current
+        /// batch size. A queried intent casts far enough to stay safe for this
+        /// whole window, so a reused result is never shorter-lived than the gap
+        /// it has to cover.
+        /// </summary>
+        private static int StalenessHorizon(int intentCount)
+        {
+            int horizon = (intentCount + QueryBudget - 1) / QueryBudget;
+            return horizon < 1 ? 1 : horizon;
         }
 
         /// <summary>
@@ -187,7 +204,12 @@ namespace Game.Arena.Infrastructure.Movement
             }
         }
 
-        private void StoreGeometry(EnemyId enemyId, Vector3 direction, float reachableDistance)
+        private void StoreGeometry(
+            EnemyId enemyId,
+            Vector3 from,
+            Vector3 direction,
+            float contactDistance,
+            bool obstructed)
         {
             GeometryCacheEntry entry = _geometryCache.TryGetValue(
                 enemyId,
@@ -195,7 +217,9 @@ namespace Game.Arena.Infrastructure.Movement
                 ? cached
                 : default;
 
-            entry.ReachableDistance = reachableDistance;
+            entry.ObstructionX = from.x + (direction.x * contactDistance);
+            entry.ObstructionZ = from.z + (direction.z * contactDistance);
+            entry.Obstructed = obstructed;
             entry.DirectionX = direction.x;
             entry.DirectionZ = direction.z;
             entry.LastQueryTick = _tick;
@@ -203,9 +227,36 @@ namespace Game.Arena.Infrastructure.Movement
             _geometryCache[enemyId] = entry;
         }
 
+        /// <summary>
+        /// Distance a skipped enemy may still travel along its current direction
+        /// before reaching the obstruction it last queried. The cached point is
+        /// in world space, so the Domain advancing the enemy toward it shrinks
+        /// the result on every tick; a point behind the current direction no
+        /// longer constrains the step.
+        /// </summary>
+        private static float ReusedDistance(
+            in GeometryCacheEntry entry,
+            Vector3 from,
+            Vector3 direction)
+        {
+            float offsetX = entry.ObstructionX - from.x;
+            float offsetZ = entry.ObstructionZ - from.z;
+            float along = (offsetX * direction.x) + (offsetZ * direction.z);
+
+            if (along <= 0f)
+            {
+                return float.PositiveInfinity;
+            }
+
+            return entry.Obstructed
+                ? Mathf.Max(0f, along - CollisionSkin)
+                : along;
+        }
+
         private EnemyMovementBatchResolutionEntry ResolveIntent(
             EnemyMovementIntent intent,
-            bool queryGeometry)
+            bool queryGeometry,
+            int horizon)
         {
             PlanarMovementIntent movement = intent.Intent;
             float requested = movement.RequestedDistance.Value;
@@ -240,13 +291,16 @@ namespace Game.Arena.Infrastructure.Movement
                     from,
                     direction,
                     travel,
-                    radius);
-                StoreGeometry(intent.EnemyId, direction, geometryLimited);
+                    radius,
+                    travel * horizon,
+                    out float contactDistance,
+                    out bool obstructed);
+                StoreGeometry(intent.EnemyId, from, direction, contactDistance, obstructed);
             }
             else
             {
                 geometryLimited = hasCached
-                    ? cached.ReachableDistance
+                    ? ReusedDistance(cached, from, direction)
                     : float.PositiveInfinity;
             }
 
@@ -311,8 +365,11 @@ namespace Game.Arena.Infrastructure.Movement
             EnemyId enemyId,
             Vector3 from,
             Vector3 direction,
-            float distance,
-            float radius)
+            float travel,
+            float radius,
+            float castDistance,
+            out float contactDistance,
+            out bool obstructed)
         {
             bool hasTransform = _enemyTransforms.TryGetTransform(enemyId, out Transform enemyTransform)
                 && enemyTransform != null;
@@ -328,11 +385,11 @@ namespace Game.Arena.Infrastructure.Movement
                 radius,
                 direction,
                 _hitsBuffer,
-                distance,
+                castDistance,
                 _layerMask,
                 QueryTriggerInteraction.Ignore);
 
-            float reachableDistance = distance;
+            float nearest = castDistance;
 
             for (int index = 0; index < hitsCount; index++)
             {
@@ -358,20 +415,23 @@ namespace Game.Arena.Infrastructure.Movement
                     continue;
                 }
 
-                if (hit.distance >= reachableDistance)
+                if (hit.distance >= nearest)
                 {
                     continue;
                 }
 
-                reachableDistance = hit.distance;
+                nearest = hit.distance;
             }
 
-            if (reachableDistance >= distance)
+            contactDistance = nearest;
+            obstructed = nearest < castDistance;
+
+            if (!obstructed)
             {
-                return distance;
+                return travel;
             }
 
-            return Mathf.Max(0f, reachableDistance - CollisionSkin);
+            return Mathf.Min(travel, Mathf.Max(0f, nearest - CollisionSkin));
         }
 
         private static float CenterHeightOffset(Transform enemyTransform, float radius)
@@ -385,7 +445,11 @@ namespace Game.Arena.Infrastructure.Movement
 
         private struct GeometryCacheEntry
         {
-            public float ReachableDistance;
+            // World-space point of the nearest obstruction along the queried
+            // direction, or the far end of the cast when the path was clear.
+            public float ObstructionX;
+            public float ObstructionZ;
+            public bool Obstructed;
             public float DirectionX;
             public float DirectionZ;
             public long LastQueryTick;
