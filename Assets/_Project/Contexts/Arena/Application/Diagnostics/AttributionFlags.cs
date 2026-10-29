@@ -5,11 +5,13 @@ namespace Game.Arena.Application.Diagnostics
 {
     /// <summary>
     /// TEMPORARY attribution instrumentation for coder task t9-gc-residual-b.
-    /// Reads the player's command-line switches once and exposes them to the
-    /// tick and dispatch paths so a single measurement build can be run as
-    /// several A/B variants. Every flag is inert when absent. This file and
-    /// every call site that reads it are deleted before the acceptance runs;
-    /// the committed tree must not contain attribution switches.
+    /// Parses the player's command-line switches exactly once at type
+    /// initialisation and exposes them to the tick and dispatch paths so a
+    /// single measurement build can be run as several A/B variants. Every
+    /// flag is inert when absent, and every accessor is allocation-free after
+    /// initialisation. This file and every call site that reads it are
+    /// deleted before the acceptance runs; the committed tree must not
+    /// contain attribution switches.
     /// </summary>
     public static class AttributionFlags
     {
@@ -20,96 +22,104 @@ namespace Game.Arena.Application.Diagnostics
         private const string SkipHandlerFlag = "-perfskiphandler";
         private const string WaveEnemiesFlag = "-perfwaveenemies";
 
-        private static readonly string[] Arguments = Environment.GetCommandLineArgs();
+        private static readonly HashSet<string> Tokens =
+            new(StringComparer.OrdinalIgnoreCase);
 
-        private static readonly HashSet<string> DispatchStages =
-            CollectValues(SkipDispatchStageFlag);
+        private static readonly Dictionary<string, HashSet<string>> Values =
+            new(StringComparer.OrdinalIgnoreCase);
 
-        private static readonly HashSet<string> TickStages =
-            CollectValues(SkipTickStageFlag);
+        static AttributionFlags()
+        {
+            string[] arguments = Environment.GetCommandLineArgs();
 
-        private static readonly HashSet<string> Handlers =
-            CollectValues(SkipHandlerFlag);
+            for (int index = 0; index < arguments.Length; index++)
+            {
+                string argument = arguments[index];
 
-        public static bool NotTick => HasFlag(NotTickFlag);
+                if (string.IsNullOrEmpty(argument))
+                {
+                    continue;
+                }
 
-        public static bool SkipDispatch => HasFlag(SkipDispatchFlag);
+                int separator = argument.IndexOf('=');
+
+                if (separator > 0 && argument[0] == '-')
+                {
+                    AddValue(argument.Substring(0, separator), argument.Substring(separator + 1));
+                    continue;
+                }
+
+                Tokens.Add(argument);
+
+                if (argument[0] == '-' && index < arguments.Length - 1)
+                {
+                    string next = arguments[index + 1];
+
+                    if (next.Length > 0 && next[0] != '-')
+                    {
+                        AddValue(argument, next);
+                    }
+                }
+            }
+        }
+
+        public static bool NotTick => Has(NotTickFlag);
+
+        public static bool SkipDispatch => Has(SkipDispatchFlag);
 
         public static int? WaveEnemies => ReadInt(WaveEnemiesFlag);
 
         public static bool SkipsDispatchStage(string stageName)
         {
-            return DispatchStages.Contains(stageName);
+            return HasValue(SkipDispatchStageFlag, stageName);
         }
 
         public static bool SkipsTickStage(string stageName)
         {
-            return TickStages.Contains(stageName);
+            return HasValue(SkipTickStageFlag, stageName);
         }
 
         public static bool SkipsHandler(string handlerTypeName)
         {
-            return Handlers.Contains(handlerTypeName);
+            return HasValue(SkipHandlerFlag, handlerTypeName);
         }
 
-        private static HashSet<string> CollectValues(string flag)
+        private static void AddValue(string flag, string value)
         {
-            HashSet<string> values = new(StringComparer.OrdinalIgnoreCase);
-            string prefix = flag + "=";
+            Tokens.Add(flag);
 
-            for (int index = 0; index < Arguments.Length; index++)
+            if (Values.TryGetValue(flag, out HashSet<string> values) == false)
             {
-                string argument = Arguments[index];
-
-                if (string.Equals(argument, flag, StringComparison.OrdinalIgnoreCase)
-                    && index < Arguments.Length - 1)
-                {
-                    values.Add(Arguments[index + 1]);
-                }
-                else if (argument.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    values.Add(argument.Substring(prefix.Length));
-                }
+                values = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                Values.Add(flag, values);
             }
 
-            return values;
+            values.Add(value);
         }
 
-        private static bool HasFlag(string flag)
+        private static bool Has(string flag)
         {
-            string prefix = flag + "=";
+            return Tokens.Contains(flag);
+        }
 
-            for (int index = 0; index < Arguments.Length; index++)
-            {
-                if (string.Equals(Arguments[index], flag, StringComparison.OrdinalIgnoreCase)
-                    || Arguments[index].StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+        private static bool HasValue(string flag, string value)
+        {
+            return Values.TryGetValue(flag, out HashSet<string> values)
+                && values.Contains(value);
         }
 
         private static int? ReadInt(string flag)
         {
-            string prefix = flag + "=";
-
-            for (int index = 0; index < Arguments.Length; index++)
+            if (Values.TryGetValue(flag, out HashSet<string> values) == false)
             {
-                string argument = Arguments[index];
+                return null;
+            }
 
-                if (string.Equals(argument, flag, StringComparison.OrdinalIgnoreCase)
-                    && index < Arguments.Length - 1
-                    && int.TryParse(Arguments[index + 1], out int separateValue))
+            foreach (string value in values)
+            {
+                if (int.TryParse(value, out int parsed))
                 {
-                    return separateValue;
-                }
-
-                if (argument.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                    && int.TryParse(argument.Substring(prefix.Length), out int equalsValue))
-                {
-                    return equalsValue;
+                    return parsed;
                 }
             }
 
