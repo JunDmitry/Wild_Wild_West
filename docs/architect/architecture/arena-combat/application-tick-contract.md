@@ -95,8 +95,16 @@ height, that lies outside the player's current view whenever the band offers
 such a point; if every band candidate is visible, it returns the band point
 farthest from the Aim Direction, so an Enemy never materializes in front of
 the player. The adapter owns that choice — it is the only layer that knows the
-camera. The Domain validates the result only: outside Arena Bounds, inside the
-Spawn Band, on the ground, plus wave-phase and duplicate-identity rules.
+camera. The adapter also receives the live Enemy footprints (position and
+collision radius) and may return only a point whose horizontal distance from
+every footprint is at least the sum of the two collision radii; the outside-view
+and farthest-from-aim rules apply among the unoccupied candidates. The
+Application builds the footprints from a reusable run snapshot and a
+preallocated buffer, so the path allocates nothing after the first spawn
+(ADR-0039). The Domain validates the result only: outside Arena Bounds, inside
+the Spawn Band, on the ground, plus wave-phase and duplicate-identity rules. If
+every candidate is occupied, the adapter returns the farthest-from-aim
+candidate and the overlap is a recorded limitation.
 
 Enemy movement resolution returns one accepted position per intent in the
 batch. The Domain builds the batch: it computes each pursuit intent (direction
@@ -109,6 +117,14 @@ The Domain validates that every accepted position lies on its intent's path.
 The adapter must also keep the Enemy's collision radius inside the Arena
 Bounds — an Enemy spawned in the Spawn Band may legitimately start outside
 them — and the Domain does not re-validate the Bounds for enemy movement.
+
+The cast origin is the Enemy's target collider world centre (its horizontal
+position stays on the intent's path), and the sphere radius is the intent's
+collision radius; the view's target collider is sized from the same radius so
+the two agree (ADR-0039). An Enemy that starts the cast inside another Enemy's
+collider is blocked — the accepted position is the intent's `From` — instead
+of passing through it; overlaps with non-Enemy colliders keep the existing
+geometry rule. Enemies remain blocking geometry; no separation push is added.
 
 The adapter may reuse a scene-geometry result from a recent tick within the
 bound recorded in [ADR-0038](../../adr/ADR-0038-physics-query-budget.md): with
@@ -157,7 +173,7 @@ Presentation renders from the reported ArenaRunSnapshot. The result also publish
 
 The wave text reads as the S-001 region shows it: WaveText is "Wave 2 of 3", formatted by Application with the same ownership as the health and weapon text (ADR-0024), and a surface that wants the numbers alone reads WaveCurrent and WaveTotal — which is what the defeat window does. A wave beginning is announced from published state, not from a notification: the current wave stays readable in WaveCurrent, so the fact has a state to read afterwards, unlike a damage or a missed attack. Presentation announces once when the run id changes to a Playing run, which is wave 1, and once each time WaveCurrent advances, at the same moment the region updates. Nothing is announced while the run is terminal, and an advancing number that does not begin a wave does not exist — the counter moves only when a wave begins.
 
-An enemy is presented only once it is inside Arena Bounds: Presentation renders it when ArenaBounds.Contains(enemy.Position, enemy.CollisionRadius) holds in the published snapshot. The outside-to-inside transition between successive snapshots is the entry moment; nothing is drawn at the spawn position, and no placeholder, flash, or effect announces it. The entry is derived from published state, not a Domain fact, so no event or notification is added for it. The placement adapter still chooses Spawn Band points outside the current view (§ External Resolution Boundary).
+An enemy is presented only once it is inside Arena Bounds: Presentation renders it when ArenaBounds.Contains(enemy.Position, enemy.CollisionRadius) holds in the published snapshot. The outside-to-inside transition between successive snapshots is the entry moment; nothing is drawn at the spawn position, and no placeholder, flash, or effect announces it. The entry is derived from published state, not a Domain fact, so no event or notification is added for it. The placement adapter still chooses Spawn Band points outside the current view (§ External Resolution Boundary). The presented view's target collider is scaled so its horizontal half-extent equals `CollisionRadius` and its world centre sits `CollisionRadius` above the ground position; the same prefab serves every kind, scaled by `radius / 0.5` (ADR-0039).
 
 The HUD model carries the boss region too: its label, the boss's current and maximum health, the formatted text and fraction, and a presence flag. The flag and the values follow the same rule as rendering — they describe the boss only while ArenaBounds.Contains holds for it in the published snapshot — so an indicator never appears for a boss that is not presented. Application formats the values with the same ownership as the rest of the HUD (ADR-0024), and Presentation binds the region, which appears with the boss and disappears when the boss is defeated.
 
