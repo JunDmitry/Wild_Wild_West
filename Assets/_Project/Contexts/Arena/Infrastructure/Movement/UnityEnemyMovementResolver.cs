@@ -48,6 +48,7 @@ namespace Game.Arena.Infrastructure.Movement
         private readonly Dictionary<EnemyId, GeometryCacheEntry> _geometryCache = new(InitialCacheCapacity);
         private readonly List<EnemyId> _pruneBuffer = new(InitialCacheCapacity);
         private bool[] _selected = new bool[InitialCacheCapacity];
+        private float[] _movementCaps = new float[InitialCacheCapacity];
         private int _selectionCount;
         private long _tick;
 
@@ -82,6 +83,7 @@ namespace Game.Arena.Infrastructure.Movement
                 _entries.Add(ResolveIntent(intents[index], _selected[index], horizon));
             }
 
+            ApplySimultaneousMovementLimit(intents);
             PruneAbsentEntries();
 
             return _entries;
@@ -319,6 +321,145 @@ namespace Game.Arena.Infrastructure.Movement
                 : movement.From.MovedAlong(movement.Direction, Distance.FromValue(travel));
 
             return new EnemyMovementBatchResolutionEntry(intent.EnemyId, accepted);
+        }
+
+        /// <summary>
+        /// Shortens each intent so that no pair of enemies moving in the same
+        /// batch ends closer than the sum of their collision radii. The physics
+        /// cast only sees the other enemy's starting collider and each intent's
+        /// own requested travel, so two enemies closing from opposite sides can
+        /// each find a clear path and meet (or cross) inside one tick. This pass
+        /// caps both at the first contact fraction of their relative motion.
+        /// It is conservative: a pair that already overlaps is left where it is
+        /// rather than pushed apart (ADR-0039: no separation push).
+        /// </summary>
+        private void ApplySimultaneousMovementLimit(IReadOnlyList<EnemyMovementIntent> intents)
+        {
+            int count = intents.Count;
+            PrepareMovementCaps(count);
+
+            for (int first = 0; first < count; first++)
+            {
+                Position3D firstStart = intents[first].Intent.From;
+                Position3D firstEnd = _entries[first].AcceptedPosition;
+                float firstRadius = intents[first].CollisionRadius.Value.Value;
+
+                for (int second = first + 1; second < count; second++)
+                {
+                    Position3D secondStart = intents[second].Intent.From;
+                    Position3D secondEnd = _entries[second].AcceptedPosition;
+                    float secondRadius = intents[second].CollisionRadius.Value.Value;
+
+                    float cap = ContactFraction(
+                        firstStart,
+                        firstEnd,
+                        secondStart,
+                        secondEnd,
+                        firstRadius + secondRadius);
+
+                    if (cap < _movementCaps[first])
+                    {
+                        _movementCaps[first] = cap;
+                    }
+
+                    if (cap < _movementCaps[second])
+                    {
+                        _movementCaps[second] = cap;
+                    }
+                }
+            }
+
+            for (int index = 0; index < count; index++)
+            {
+                float cap = _movementCaps[index];
+
+                if (cap >= 1f)
+                {
+                    continue;
+                }
+
+                Position3D start = intents[index].Intent.From;
+                Position3D end = _entries[index].AcceptedPosition;
+                float x = start.X + ((end.X - start.X) * cap);
+                float z = start.Z + ((end.Z - start.Z) * cap);
+
+                _entries[index] = new EnemyMovementBatchResolutionEntry(
+                    _entries[index].EnemyId,
+                    new Position3D(x, end.Y, z));
+            }
+        }
+
+        private void PrepareMovementCaps(int count)
+        {
+            if (_movementCaps.Length < count)
+            {
+                _movementCaps = new float[count];
+            }
+
+            for (int index = 0; index < count; index++)
+            {
+                _movementCaps[index] = 1f;
+            }
+        }
+
+        /// <summary>
+        /// Earliest fraction of the tick at which two points moving linearly
+        /// from their start to their end would be closer than
+        /// <paramref name="minimumDistance"/>; <c>1</c> when they never are.
+        /// With <c>p</c> the start separation and <c>v</c> the relative
+        /// displacement, the separation squared is
+        /// <c>v²t² + 2(p·v)t + p²</c>.
+        /// </summary>
+        private static float ContactFraction(
+            Position3D firstStart,
+            Position3D firstEnd,
+            Position3D secondStart,
+            Position3D secondEnd,
+            float minimumDistance)
+        {
+            float px = firstStart.X - secondStart.X;
+            float pz = firstStart.Z - secondStart.Z;
+            float vx = (firstEnd.X - firstStart.X) - (secondEnd.X - secondStart.X);
+            float vz = (firstEnd.Z - firstStart.Z) - (secondEnd.Z - secondStart.Z);
+
+            float minimumSquared = minimumDistance * minimumDistance;
+            float startSquared = (px * px) + (pz * pz);
+
+            if (startSquared < minimumSquared)
+            {
+                return 0f;
+            }
+
+            float speedSquared = (vx * vx) + (vz * vz);
+
+            if (speedSquared <= MinimumDirectionLengthSquared)
+            {
+                return 1f;
+            }
+
+            float relativeDot = (px * vx) + (pz * vz);
+
+            if (relativeDot >= 0f)
+            {
+                return 1f;
+            }
+
+            float discriminant = (relativeDot * relativeDot)
+                - (speedSquared * (startSquared - minimumSquared));
+
+            if (discriminant <= 0f)
+            {
+                return 1f;
+            }
+
+            float entry = (-relativeDot - Mathf.Sqrt(discriminant)) / speedSquared;
+
+            if (entry <= 0f)
+            {
+                return 0f;
+            }
+
+            return entry < 1f ? entry : 1f;
         }
 
         /// <summary>

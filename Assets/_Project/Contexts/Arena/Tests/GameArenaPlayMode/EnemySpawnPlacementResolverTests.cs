@@ -156,6 +156,40 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
+        public void Resolve_ManySpawnsInOneRun_ArePairwiseSpaced()
+        {
+            Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
+            UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
+
+            const int spawnCount = 8;
+            Position3D[] spawns = new Position3D[spawnCount];
+            EnemyFootprint[] occupied = new EnemyFootprint[spawnCount];
+            int occupiedCount = 0;
+
+            for (int index = 0; index < spawnCount; index++)
+            {
+                spawns[index] = resolver.ResolveSpawnPosition(
+                    CreateRequest(0.5f),
+                    new ReadOnlySpan<EnemyFootprint>(occupied, 0, occupiedCount));
+
+                occupied[occupiedCount++] = new EnemyFootprint(
+                    spawns[index],
+                    CollisionRadius.FromValue(0.5f));
+            }
+
+            for (int first = 0; first < spawnCount; first++)
+            {
+                for (int second = first + 1; second < spawnCount; second++)
+                {
+                    Assert.That(
+                        spawns[first].GroundDistanceTo(spawns[second]),
+                        Is.GreaterThanOrEqualTo(1f - Tolerance),
+                        "Spawns " + first + " and " + second + " overlap.");
+                }
+            }
+        }
+
+        [Test]
         public void Resolve_MovedEnemyPosition_IsAvoided()
         {
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
