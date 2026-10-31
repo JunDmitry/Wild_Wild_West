@@ -110,6 +110,44 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
+        public void StartingInsideAnotherEnemyCollider_BlocksTheStep()
+        {
+            EnemyId movingId = EnemyId.FromValue(1UL);
+            EnemyId otherId = EnemyId.FromValue(2UL);
+            TestEnemyTransformRegistry transforms = new();
+            transforms.Register(movingId, CreateBody("Mover", new Vector3(10f, 0f, 0f)));
+            Transform otherBody = CreateBody("Other", new Vector3(10.4f, 0f, 0f));
+            transforms.Register(otherId, otherBody);
+            TestEnemyColliderRegistry colliders = new();
+            colliders.Register(otherBody.GetComponent<Collider>(), otherId);
+            UnityEnemyMovementResolver resolver = new(transforms, _arena, colliders);
+
+            EnemyMovementBatchResolutionEntry entry = ResolveSingle(
+                resolver,
+                CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f));
+
+            Assert.That(entry.AcceptedPosition.X, Is.EqualTo(10f).Within(0.0001f));
+            Assert.That(entry.AcceptedPosition.Z, Is.EqualTo(0f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ZeroDistanceNonEnemyHit_DoesNotBlockTheStep()
+        {
+            TestEnemyTransformRegistry transforms = new();
+            transforms.Register(
+                EnemyId.FromValue(1UL),
+                CreateBody("Mover", new Vector3(10f, 0f, 0f)));
+            CreateBody("Other", new Vector3(10.4f, 0f, 0f));
+            UnityEnemyMovementResolver resolver = new(transforms, _arena, EmptyColliders);
+
+            EnemyMovementBatchResolutionEntry entry = ResolveSingle(
+                resolver,
+                CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f));
+
+            Assert.That(entry.AcceptedPosition.X, Is.EqualTo(9.5f).Within(0.0001f));
+        }
+
+        [Test]
         public void WallShortensTheStepAndKeepsItOnThePath()
         {
             TestEnemyTransformRegistry registry = new();

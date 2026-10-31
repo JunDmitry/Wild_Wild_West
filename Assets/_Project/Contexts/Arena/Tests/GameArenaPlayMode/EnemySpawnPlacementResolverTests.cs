@@ -131,6 +131,79 @@ namespace Game.Arena.PlayMode.Tests
             AssertIsSpawnBandPoint(spawn);
         }
 
+        [Test]
+        public void Resolve_TwoSpawnsInOneRun_AreAtLeastTheSumOfRadiiApart()
+        {
+            Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
+            UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
+
+            Position3D first = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
+
+            EnemyFootprint[] occupied =
+            {
+                new(first, CollisionRadius.FromValue(0.5f)),
+            };
+
+            Position3D second = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                occupied);
+
+            Assert.That(
+                first.GroundDistanceTo(second),
+                Is.GreaterThanOrEqualTo(1f - Tolerance));
+        }
+
+        [Test]
+        public void Resolve_MovedEnemyPosition_IsAvoided()
+        {
+            Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
+            UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
+
+            Position3D original = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
+
+            Position3D moved = new(original.X + 0.2f, original.Y, original.Z + 0.2f);
+            EnemyFootprint[] occupied =
+            {
+                new(moved, CollisionRadius.FromValue(0.5f)),
+            };
+
+            Position3D second = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                occupied);
+
+            Assert.That(
+                moved.GroundDistanceTo(second),
+                Is.GreaterThanOrEqualTo(1f - Tolerance));
+        }
+
+        [Test]
+        public void Resolve_EveryCandidateOccupied_ReturnsFarthestFromAim()
+        {
+            Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
+            UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
+
+            Position3D expected = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
+
+            EnemyFootprint[] occupied =
+            {
+                new(Position3D.Zero, CollisionRadius.FromValue(1000f)),
+            };
+
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                occupied);
+
+            AssertIsSpawnBandPoint(spawn);
+            Assert.That(spawn.X, Is.EqualTo(expected.X).Within(Tolerance));
+            Assert.That(spawn.Z, Is.EqualTo(expected.Z).Within(Tolerance));
+        }
+
         private void AssertIsSpawnBandPoint(Position3D spawn)
         {
             Assert.That(_arena.IsSpawnPosition(spawn), Is.True);
