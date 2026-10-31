@@ -35,5 +35,19 @@ namespace Game.CompositionRoot
 
             return false;
         }
+
+        public bool TryGetCollider(EnemyId enemyId, out Collider collider)
+        {
+            if (_views.TryGetView(enemyId, out EnemyView view) && view != null)
+            {
+                collider = view.TargetCollider;
+
+                return collider != null;
+            }
+
+            collider = null;
+
+            return false;
+        }
     }
 }

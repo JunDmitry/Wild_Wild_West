@@ -226,6 +226,12 @@ namespace Game.CompositionRoot.PlayMode.Tests
                 transform = null;
                 return false;
             }
+
+            public bool TryGetCollider(EnemyId enemyId, out Collider collider)
+            {
+                collider = null;
+                return false;
+            }
         }
     }
 }

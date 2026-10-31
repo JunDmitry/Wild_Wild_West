@@ -6,6 +6,7 @@ using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Movement;
+using Game.Arena.Infrastructure.Targeting;
 using UnityEngine;
 
 namespace Game.Arena.Infrastructure.Movement
@@ -39,6 +40,7 @@ namespace Game.Arena.Infrastructure.Movement
         private const float MaterialDirectionChangeDot = 0.999f;
 
         private readonly IEnemyTransformRegistry _enemyTransforms;
+        private readonly IEnemyColliderRegistry _enemyColliders;
         private readonly ArenaDefinition _arena;
         private readonly int _layerMask;
         private readonly RaycastHit[] _hitsBuffer;
@@ -52,10 +54,12 @@ namespace Game.Arena.Infrastructure.Movement
         public UnityEnemyMovementResolver(
             IEnemyTransformRegistry enemyTransforms,
             ArenaDefinition arena,
+            IEnemyColliderRegistry enemyColliders,
             int layerMask = Physics.AllLayers)
         {
             _enemyTransforms = enemyTransforms ?? throw new ArgumentNullException(nameof(enemyTransforms));
             _arena = arena ?? throw new ArgumentNullException(nameof(arena));
+            _enemyColliders = enemyColliders ?? throw new ArgumentNullException(nameof(enemyColliders));
             _layerMask = layerMask;
             _hitsBuffer = new RaycastHit[BufferSize];
         }
@@ -373,11 +377,14 @@ namespace Game.Arena.Infrastructure.Movement
             bool hasTransform = _enemyTransforms.TryGetTransform(enemyId, out Transform enemyTransform)
                 && enemyTransform != null;
 
-            float centerHeight = hasTransform
-                ? CenterHeightOffset(enemyTransform, radius)
-                : radius;
+            bool hasCollider = _enemyTransforms.TryGetCollider(enemyId, out Collider enemyCollider)
+                && enemyCollider != null;
 
-            Vector3 origin = new(from.x, from.y + centerHeight, from.z);
+            float centerHeight = hasCollider
+                ? enemyCollider.bounds.center.y
+                : from.y + radius;
+
+            Vector3 origin = new(from.x, centerHeight, from.z);
 
             int hitsCount = Physics.SphereCastNonAlloc(
                 origin,
@@ -406,6 +413,12 @@ namespace Game.Arena.Infrastructure.Movement
 
                 if (hit.distance <= 0f)
                 {
+                    if (_enemyColliders.TryGetEnemyId(hit.collider, out _))
+                    {
+                        nearest = 0f;
+                        break;
+                    }
+
                     continue;
                 }
 
@@ -431,15 +444,6 @@ namespace Game.Arena.Infrastructure.Movement
             }
 
             return Mathf.Min(travel, Mathf.Max(0f, nearest - CollisionSkin));
-        }
-
-        private static float CenterHeightOffset(Transform enemyTransform, float radius)
-        {
-            Collider enemyCollider = enemyTransform.GetComponent<Collider>();
-
-            return enemyCollider != null
-                ? enemyCollider.bounds.center.y - enemyTransform.position.y
-                : radius;
         }
 
         private struct GeometryCacheEntry

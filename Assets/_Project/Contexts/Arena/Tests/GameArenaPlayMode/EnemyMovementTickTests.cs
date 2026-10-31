@@ -239,7 +239,10 @@ namespace Game.Arena.PlayMode.Tests
                 playerStart: playerStart,
                 playerInputSource: playerInputSource,
                 playerMovementResolver: playerMovementResolver,
-                enemyMovementResolver: new UnityEnemyMovementResolver(_transforms, _arena));
+                enemyMovementResolver: new UnityEnemyMovementResolver(
+                    _transforms,
+                    _arena,
+                    new EmptyEnemyColliderRegistry()));
         }
 
         private EnemyId SeedEnemy(PlayModeTickHarness harness, ulong value, Position3D position)
@@ -319,6 +322,20 @@ namespace Game.Arena.PlayMode.Tests
             public bool TryGetTransform(EnemyId enemyId, out Transform transform)
             {
                 return _transforms.TryGetValue(enemyId, out transform);
+            }
+
+            public bool TryGetCollider(EnemyId enemyId, out Collider collider)
+            {
+                if (_transforms.TryGetValue(enemyId, out Transform transform) && transform != null)
+                {
+                    collider = transform.GetComponent<Collider>();
+
+                    return collider != null;
+                }
+
+                collider = null;
+
+                return false;
             }
         }
 

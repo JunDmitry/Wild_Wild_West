@@ -7,6 +7,7 @@ using Game.Arena.Domain.Interactions;
 using Game.Arena.Domain.Interactions.Movement;
 using Game.Arena.Domain.Movement;
 using Game.Arena.Infrastructure.Movement;
+using Game.Arena.Infrastructure.Targeting;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -17,6 +18,8 @@ namespace Game.Arena.PlayMode.Tests
     {
         private const float ArenaHalfExtent = 20f;
         private const float GroundY = 0f;
+
+        private static readonly IEnemyColliderRegistry EmptyColliders = new TestEnemyColliderRegistry();
 
         private readonly List<GameObject> _created = new();
         private ArenaDefinition _arena;
@@ -50,7 +53,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ReturnsOneEntryPerIntentAndNeverNull()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchRequest request = CreateRequest(
                 CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f),
@@ -67,7 +70,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void UnblockedIntentTravelsTheRequestedDistance()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -83,7 +86,7 @@ namespace Game.Arena.PlayMode.Tests
         {
             TestEnemyTransformRegistry registry = new();
             registry.Register(EnemyId.FromValue(1UL), CreateBody("Enemy", new Vector3(0f, 0f, 0f)));
-            UnityEnemyMovementResolver resolver = new(registry, _arena);
+            UnityEnemyMovementResolver resolver = new(registry, _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -97,7 +100,7 @@ namespace Game.Arena.PlayMode.Tests
         {
             TestEnemyTransformRegistry registry = new();
             registry.Register(EnemyId.FromValue(1UL), CreateBody("Enemy", new Vector3(8.9f, 0f, 0f)));
-            UnityEnemyMovementResolver resolver = new(registry, _arena);
+            UnityEnemyMovementResolver resolver = new(registry, _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -112,7 +115,7 @@ namespace Game.Arena.PlayMode.Tests
             TestEnemyTransformRegistry registry = new();
             registry.Register(EnemyId.FromValue(1UL), CreateBody("Enemy", new Vector3(10f, 0f, 0f)));
             CreateWall(new Vector3(9.2f, 0f, 0f));
-            UnityEnemyMovementResolver resolver = new(registry, _arena);
+            UnityEnemyMovementResolver resolver = new(registry, _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -127,7 +130,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ArenaEdgeClampsTheStepToTheCollisionRadius()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -140,7 +143,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void EnemyOutsideTheBoundsMayMoveInward()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -152,7 +155,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void MissingTransformStillReturnsAnUnblockedPosition()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry entry = ResolveSingle(
                 resolver,
@@ -164,7 +167,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ChangedIntentDirectionIsHonoredOnTheNextResolve()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             EnemyMovementBatchResolutionEntry first = ResolveSingle(
                 resolver,
@@ -182,7 +185,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ResolveQueriesAtMostThreeIntentsPerBatch()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent[] intents = CreateLineOfEnemies(10, 3f, Direction3D.Left, 0.5f);
             CreateLeftWalls(intents);
 
@@ -220,7 +223,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void EveryIntentIsQueriedWithinTheStalenessBound()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent[] intents = CreateLineOfEnemies(10, 3f, Direction3D.Left, 0.5f);
             CreateLeftWalls(intents);
 
@@ -240,7 +243,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void FirstSightEnemyIsQueriedBeforeCachedPeers()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent first = CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f);
             EnemyMovementIntent second = CreateIntent(2UL, new Position3D(10f, GroundY, 4f), Direction3D.Left, 0.5f);
             EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
@@ -261,7 +264,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ChangedDirectionBreaksTheAgeTie()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent first = CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f);
             EnemyMovementIntent second = CreateIntent(2UL, new Position3D(10f, GroundY, 4f), Direction3D.Left, 0.5f);
             EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
@@ -296,7 +299,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void ReusedResultLiesOnTheRequestedPath()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
             CreateLeftWalls(intents);
 
@@ -328,7 +331,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void SkippedEnemyDoesNotCrossACachedObstructionAcrossTicks()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
 
             // Walls ahead of the first three enemies only. The fourth has a
@@ -363,7 +366,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void SkippedEnemyDoesNotMoveIntoTheBlockerItDetected()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
 
             // The target is the third intent, so the age-priority selection
             // skips it on the second resolve and makes it reuse a result.
@@ -399,7 +402,7 @@ namespace Game.Arena.PlayMode.Tests
         [Test]
         public void UnblockedEnemyKeepsItsFullStepOnSkippedTicks()
         {
-            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena);
+            UnityEnemyMovementResolver resolver = new(new TestEnemyTransformRegistry(), _arena, EmptyColliders);
             EnemyMovementIntent[] intents = CreateLineOfEnemies(4, 4f, Direction3D.Left, 0.5f);
 
             for (int tick = 0; tick < 4; tick++)
@@ -570,6 +573,35 @@ namespace Game.Arena.PlayMode.Tests
             public bool TryGetTransform(EnemyId enemyId, out Transform transform)
             {
                 return _transforms.TryGetValue(enemyId, out transform);
+            }
+
+            public bool TryGetCollider(EnemyId enemyId, out Collider collider)
+            {
+                if (_transforms.TryGetValue(enemyId, out Transform transform) && transform != null)
+                {
+                    collider = transform.GetComponent<Collider>();
+
+                    return collider != null;
+                }
+
+                collider = null;
+
+                return false;
+            }
+        }
+
+        private sealed class TestEnemyColliderRegistry : IEnemyColliderRegistry
+        {
+            private readonly Dictionary<Collider, EnemyId> _enemies = new();
+
+            public void Register(Collider collider, EnemyId enemyId)
+            {
+                _enemies[collider] = enemyId;
+            }
+
+            public bool TryGetEnemyId(Collider collider, out EnemyId enemyId)
+            {
+                return _enemies.TryGetValue(collider, out enemyId);
             }
         }
     }

@@ -114,7 +114,8 @@ namespace Game.CompositionRoot
             builder.Register<IEnemyMovementResolver>(
                 container => new UnityEnemyMovementResolver(
                     sceneObjects.EnemyTransforms,
-                    container.Resolve<ArenaGameConfiguration>().Arena),
+                    container.Resolve<ArenaGameConfiguration>().Arena,
+                    colliders),
                 Lifetime.Singleton);
             builder.Register<IEnemySpawnPlacementResolver>(
                 container => new UnityEnemySpawnPlacementResolver(
