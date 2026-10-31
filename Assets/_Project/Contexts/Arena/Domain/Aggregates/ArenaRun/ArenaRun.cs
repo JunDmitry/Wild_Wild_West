@@ -18,6 +18,9 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class ArenaRun
     {
+        private static readonly IReadOnlyList<IArenaDomainEvent> s_noEvents = Array.Empty<IArenaDomainEvent>();
+        private static readonly Comparison<EnemyId> s_compareEnemyIdValues = CompareEnemyIds;
+
         private readonly ArenaDefinition _arenaDefinition;
         private readonly EnemyCatalog _enemyCatalog;
         private readonly WaveCatalog _waveCatalog;
@@ -63,11 +66,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private readonly EnemyMovementBatchRequestOutcome _enemyMovementBatchRequestOutcome;
         private readonly EnemyMovementBatchResolutionOutcome _enemyMovementBatchResolutionOutcome;
         private readonly InteractionCancellationOutcome _cancellationOutcome;
-
-        private static readonly IReadOnlyList<IArenaDomainEvent> NoEvents =
-            Array.Empty<IArenaDomainEvent>();
-
-        private static readonly Comparison<EnemyId> CompareEnemyIdValues = CompareEnemyIds;
 
         internal ArenaRun(
             ArenaRunId id,
@@ -1579,14 +1577,14 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 
         private ArenaRunChange CreateNoChange()
         {
-            _change.Fill(Revision, false, NoEvents);
+            _change.Fill(Revision, false, s_noEvents);
 
             return _change;
         }
 
         private ArenaRunChange CreateStateChange()
         {
-            _change.Fill(Revision, true, NoEvents);
+            _change.Fill(Revision, true, s_noEvents);
 
             return _change;
         }
@@ -1637,7 +1635,7 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
                 _orderedEnemyIds.Add(enemyId);
             }
 
-            _orderedEnemyIds.Sort(CompareEnemyIdValues);
+            _orderedEnemyIds.Sort(s_compareEnemyIdValues);
 
             return _orderedEnemyIds;
         }

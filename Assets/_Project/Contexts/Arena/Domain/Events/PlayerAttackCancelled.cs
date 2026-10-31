@@ -7,10 +7,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class PlayerAttackCancelled : IPooledArenaDomainEvent, IEquatable<PlayerAttackCancelled>
     {
-        internal PlayerAttackCancelled()
-        {
-        }
-
         public PlayerAttackCancelled(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -40,6 +36,10 @@ namespace Game.Arena.Domain.Events
             Cause = cause;
         }
 
+        internal PlayerAttackCancelled()
+        {
+        }
+
         public ArenaRunId ArenaRunId { get; private set; }
 
         public AggregateRevision AggregateRevision { get; private set; }
@@ -49,29 +49,6 @@ namespace Game.Arena.Domain.Events
         public AttackId AttackId { get; private set; }
 
         public AttackCancellationCause Cause { get; private set; }
-
-        internal void Fill(
-            ArenaRunId arenaRunId,
-            AggregateRevision aggregateRevision,
-            PlayerId playerId,
-            AttackId attackId,
-            AttackCancellationCause cause)
-        {
-            ArenaRunId = arenaRunId;
-            AggregateRevision = aggregateRevision;
-            PlayerId = playerId;
-            AttackId = attackId;
-            Cause = cause;
-        }
-
-        void IPooledArenaDomainEvent.Reset()
-        {
-            ArenaRunId = default;
-            AggregateRevision = default;
-            PlayerId = default;
-            AttackId = default;
-            Cause = default;
-        }
 
         public bool Equals(PlayerAttackCancelled other)
         {
@@ -100,6 +77,29 @@ namespace Game.Arena.Domain.Events
                 PlayerId,
                 AttackId,
                 Cause);
+        }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            PlayerId playerId,
+            AttackId attackId,
+            AttackCancellationCause cause)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            PlayerId = playerId;
+            AttackId = attackId;
+            Cause = cause;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            PlayerId = default;
+            AttackId = default;
+            Cause = default;
         }
     }
 }

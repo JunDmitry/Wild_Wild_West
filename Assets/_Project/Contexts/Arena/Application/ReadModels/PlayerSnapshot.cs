@@ -8,10 +8,6 @@ namespace Game.Arena.Application.ReadModels
 {
     public sealed class PlayerSnapshot
     {
-        internal PlayerSnapshot()
-        {
-        }
-
         public PlayerSnapshot(
             PlayerId playerId,
             Position3D position,
@@ -31,6 +27,10 @@ namespace Game.Arena.Application.ReadModels
                 meleeReadyAt,
                 hasPendingAttack,
                 pendingAttack);
+        }
+
+        internal PlayerSnapshot()
+        {
         }
 
         public PlayerId PlayerId { get; private set; }

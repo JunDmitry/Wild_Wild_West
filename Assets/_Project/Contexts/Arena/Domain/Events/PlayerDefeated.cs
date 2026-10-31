@@ -6,10 +6,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class PlayerDefeated : IPooledArenaDomainEvent, IEquatable<PlayerDefeated>
     {
-        internal PlayerDefeated()
-        {
-        }
-
         public PlayerDefeated(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -28,6 +24,10 @@ namespace Game.Arena.Domain.Events
             ArenaRunId = arenaRunId;
             AggregateRevision = aggregateRevision;
             PlayerId = playerId;
+        }
+
+        internal PlayerDefeated()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

@@ -6,10 +6,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class ArenaRunVictorious : IPooledArenaDomainEvent, IEquatable<ArenaRunVictorious>
     {
-        internal ArenaRunVictorious()
-        {
-        }
-
         public ArenaRunVictorious(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision)
@@ -21,6 +17,10 @@ namespace Game.Arena.Domain.Events
 
             ArenaRunId = arenaRunId;
             AggregateRevision = aggregateRevision;
+        }
+
+        internal ArenaRunVictorious()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

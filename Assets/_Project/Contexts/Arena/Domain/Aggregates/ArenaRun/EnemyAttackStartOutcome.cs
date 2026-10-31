@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Game.Arena.Domain.Combat;
 
 namespace Game.Arena.Domain.Aggregates.ArenaRun

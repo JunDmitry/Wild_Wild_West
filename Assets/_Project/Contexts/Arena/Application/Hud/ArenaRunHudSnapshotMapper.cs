@@ -79,18 +79,15 @@ namespace Game.Arena.Application.Hud
 
         private static string MapWeapon(WeaponKind weapon)
         {
-            switch (weapon)
+            return weapon switch
             {
-                case WeaponKind.Ranged:
-                    return "Firearm";
-                case WeaponKind.Melee:
-                    return "Melee Weapon";
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(weapon),
-                        weapon,
-                        "Unknown weapon kind.");
-            }
+                WeaponKind.Ranged => "Firearm",
+                WeaponKind.Melee => "Melee Weapon",
+                _ => throw new ArgumentOutOfRangeException(
+                                        nameof(weapon),
+                                        weapon,
+                                        "Unknown weapon kind."),
+            };
         }
     }
 }

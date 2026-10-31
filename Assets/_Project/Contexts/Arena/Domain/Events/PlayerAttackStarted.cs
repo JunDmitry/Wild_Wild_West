@@ -8,10 +8,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class PlayerAttackStarted : IPooledArenaDomainEvent, IEquatable<PlayerAttackStarted>
     {
-        internal PlayerAttackStarted()
-        {
-        }
-
         public PlayerAttackStarted(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -50,6 +46,10 @@ namespace Game.Arena.Domain.Events
             ImpactAt = impactAt;
         }
 
+        internal PlayerAttackStarted()
+        {
+        }
+
         public ArenaRunId ArenaRunId { get; private set; }
         public AggregateRevision AggregateRevision { get; private set; }
         public PlayerId PlayerId { get; private set; }
@@ -57,35 +57,6 @@ namespace Game.Arena.Domain.Events
         public WeaponKind WeaponKind { get; private set; }
         public GameTimePoint StartedAt { get; private set; }
         public GameTimePoint ImpactAt { get; private set; }
-
-        internal void Fill(
-            ArenaRunId arenaRunId,
-            AggregateRevision aggregateRevision,
-            PlayerId playerId,
-            AttackId attackId,
-            WeaponKind weaponKind,
-            GameTimePoint startedAt,
-            GameTimePoint impactAt)
-        {
-            ArenaRunId = arenaRunId;
-            AggregateRevision = aggregateRevision;
-            PlayerId = playerId;
-            AttackId = attackId;
-            WeaponKind = weaponKind;
-            StartedAt = startedAt;
-            ImpactAt = impactAt;
-        }
-
-        void IPooledArenaDomainEvent.Reset()
-        {
-            ArenaRunId = default;
-            AggregateRevision = default;
-            PlayerId = default;
-            AttackId = default;
-            WeaponKind = default;
-            StartedAt = default;
-            ImpactAt = default;
-        }
 
         public bool Equals(PlayerAttackStarted other)
         {
@@ -118,6 +89,35 @@ namespace Game.Arena.Domain.Events
                 WeaponKind,
                 StartedAt,
                 ImpactAt);
+        }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            PlayerId playerId,
+            AttackId attackId,
+            WeaponKind weaponKind,
+            GameTimePoint startedAt,
+            GameTimePoint impactAt)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            PlayerId = playerId;
+            AttackId = attackId;
+            WeaponKind = weaponKind;
+            StartedAt = startedAt;
+            ImpactAt = impactAt;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            PlayerId = default;
+            AttackId = default;
+            WeaponKind = default;
+            StartedAt = default;
+            ImpactAt = default;
         }
     }
 }

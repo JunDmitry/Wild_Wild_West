@@ -8,10 +8,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class EnemySpawned : IPooledArenaDomainEvent, IEquatable<EnemySpawned>
     {
-        internal EnemySpawned()
-        {
-        }
-
         public EnemySpawned(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -34,6 +30,10 @@ namespace Game.Arena.Domain.Events
             EnemyId = enemyId;
             EnemyKind = enemyKind;
             Position = position;
+        }
+
+        internal EnemySpawned()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

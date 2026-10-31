@@ -6,10 +6,6 @@ namespace Game.Arena.Application.Notifications
 {
     public sealed class ArenaRunEnemyAttackResolvedNotification : IArenaRunNotification
     {
-        internal ArenaRunEnemyAttackResolvedNotification()
-        {
-        }
-
         public ArenaRunEnemyAttackResolvedNotification(
             ArenaRunId arenaRunId,
             AggregateRevision revision,
@@ -17,6 +13,10 @@ namespace Game.Arena.Application.Notifications
             ArenaRunEnemyAttackOutcome outcome)
         {
             Fill(arenaRunId, revision, enemyId, outcome);
+        }
+
+        internal ArenaRunEnemyAttackResolvedNotification()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

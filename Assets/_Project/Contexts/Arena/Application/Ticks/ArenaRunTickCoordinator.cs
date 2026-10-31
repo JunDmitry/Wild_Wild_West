@@ -1,5 +1,4 @@
 ﻿using Game.Arena.Application.Input;
-using Game.Arena.Application.ReadModels;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Identity;
 using Game.Arena.Domain.Time;

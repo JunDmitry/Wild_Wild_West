@@ -8,10 +8,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class EnemyAttackCompleted : IPooledArenaDomainEvent, IEquatable<EnemyAttackCompleted>
     {
-        internal EnemyAttackCompleted()
-        {
-        }
-
         public EnemyAttackCompleted(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -41,6 +37,10 @@ namespace Game.Arena.Domain.Events
             AttackId = attackId;
             Outcome = outcome;
             CompletedAt = completedAt;
+        }
+
+        internal EnemyAttackCompleted()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

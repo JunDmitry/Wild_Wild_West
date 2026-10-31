@@ -7,10 +7,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class EnemyDamaged : IPooledArenaDomainEvent, IEquatable<EnemyDamaged>
     {
-        internal EnemyDamaged()
-        {
-        }
-
         public EnemyDamaged(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -33,6 +29,10 @@ namespace Game.Arena.Domain.Events
             EnemyId = enemyId;
             Damage = damage;
             RemainingHealth = remainingHealth;
+        }
+
+        internal EnemyDamaged()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

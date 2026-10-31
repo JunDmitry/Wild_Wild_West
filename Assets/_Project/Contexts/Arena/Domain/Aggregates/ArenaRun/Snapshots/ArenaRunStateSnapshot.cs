@@ -12,20 +12,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
         private readonly List<EnemyStateSnapshot> _enemyBuffer;
         private EnemyStateSnapshot[] _enemySlots;
 
-        internal ArenaRunStateSnapshot(int enemyCapacity)
-        {
-            if (enemyCapacity < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(enemyCapacity));
-            }
-
-            _enemyBuffer = new List<EnemyStateSnapshot>(enemyCapacity);
-            _enemySlots = new EnemyStateSnapshot[enemyCapacity];
-            PlayerSlot = new PlayerStateSnapshot();
-            WaveSlot = new WaveStateSnapshot();
-            Enemies = _enemyBuffer.AsReadOnly();
-        }
-
         public ArenaRunStateSnapshot(
             ArenaRunId arenaRunId,
             AggregateRevision revision,
@@ -71,6 +57,20 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             Enemies = CopyEnemies(enemies);
             WaveSlot = wave;
             WaveTotal = waveTotal;
+        }
+
+        internal ArenaRunStateSnapshot(int enemyCapacity)
+        {
+            if (enemyCapacity < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(enemyCapacity));
+            }
+
+            _enemyBuffer = new List<EnemyStateSnapshot>(enemyCapacity);
+            _enemySlots = new EnemyStateSnapshot[enemyCapacity];
+            PlayerSlot = new PlayerStateSnapshot();
+            WaveSlot = new WaveStateSnapshot();
+            Enemies = _enemyBuffer.AsReadOnly();
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

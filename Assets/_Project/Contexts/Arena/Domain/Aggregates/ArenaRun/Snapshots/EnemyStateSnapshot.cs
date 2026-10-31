@@ -9,10 +9,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class EnemyStateSnapshot
     {
-        internal EnemyStateSnapshot()
-        {
-        }
-
         public EnemyStateSnapshot(
             EnemyId enemyId,
             EnemyKind kind,
@@ -28,6 +24,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Fill(enemyId, kind, position, health, collisionRadius, attackReadyAt, pendingAttack);
+        }
+
+        internal EnemyStateSnapshot()
+        {
         }
 
         public EnemyId EnemyId { get; private set; }

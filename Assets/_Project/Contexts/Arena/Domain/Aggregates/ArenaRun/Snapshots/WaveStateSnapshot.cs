@@ -5,10 +5,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class WaveStateSnapshot
     {
-        internal WaveStateSnapshot()
-        {
-        }
-
         public WaveStateSnapshot(
             WaveNumber number,
             WavePhase phase,
@@ -21,6 +17,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Fill(number, phase, regularEnemiesRemainingToSpawn, bossStatus);
+        }
+
+        internal WaveStateSnapshot()
+        {
         }
 
         public WaveNumber Number { get; private set; }

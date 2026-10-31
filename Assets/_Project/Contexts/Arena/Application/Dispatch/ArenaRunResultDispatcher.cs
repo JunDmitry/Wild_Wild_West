@@ -9,7 +9,7 @@ namespace Game.Arena.Application.Dispatch
 {
     public sealed class ArenaRunResultDispatcher : IArenaRunDispatch
     {
-        private static readonly ArenaRunDispatchStage[] Stages =
+        private static readonly ArenaRunDispatchStage[] s_stages =
         {
             ArenaRunDispatchStage.SnapshotPublication,
             ArenaRunDispatchStage.EntityViewSynchronization,
@@ -154,9 +154,9 @@ namespace Game.Arena.Application.Dispatch
 
             try
             {
-                for (int index = 0; index < Stages.Length; index++)
+                for (int index = 0; index < s_stages.Length; index++)
                 {
-                    ArenaRunDispatchStage stage = Stages[index];
+                    ArenaRunDispatchStage stage = s_stages[index];
 
                     DispatchSnapshotHandlers(stage, result.Snapshot);
                     DispatchHudHandlers(stage, result.Snapshot, result.Hud);
@@ -171,10 +171,10 @@ namespace Game.Arena.Application.Dispatch
 
         private static bool IsNotificationStage(ArenaRunDispatchStage stage)
         {
-            return stage == ArenaRunDispatchStage.GameplayVisual
-                || stage == ArenaRunDispatchStage.Hud
-                || stage == ArenaRunDispatchStage.AudioAndVisualEffects
-                || stage == ArenaRunDispatchStage.AnalyticsAndDiagnostics;
+            return stage is ArenaRunDispatchStage.GameplayVisual
+                or ArenaRunDispatchStage.Hud
+                or ArenaRunDispatchStage.AudioAndVisualEffects
+                or ArenaRunDispatchStage.AnalyticsAndDiagnostics;
         }
 
         private List<SnapshotRegistration> GetSnapshotRegistrations(ArenaRunDispatchStage stage)

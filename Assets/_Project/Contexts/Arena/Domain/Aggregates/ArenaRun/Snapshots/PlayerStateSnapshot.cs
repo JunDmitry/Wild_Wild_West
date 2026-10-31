@@ -9,10 +9,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
 {
     public sealed class PlayerStateSnapshot
     {
-        internal PlayerStateSnapshot()
-        {
-        }
-
         public PlayerStateSnapshot(
             PlayerId playerId,
             Position3D position,
@@ -28,6 +24,10 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Fill(playerId, position, health, selectedWeapon, rangedReadyAt, meleeReadyAt, pendingAttack);
+        }
+
+        internal PlayerStateSnapshot()
+        {
         }
 
         public PlayerId PlayerId { get; private set; }

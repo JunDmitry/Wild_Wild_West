@@ -43,8 +43,7 @@ namespace Game.Arena.Infrastructure.Movement
         private readonly int _layerMask;
         private readonly RaycastHit[] _hitsBuffer;
         private readonly List<EnemyMovementBatchResolutionEntry> _entries = new();
-        private readonly Dictionary<EnemyId, GeometryCacheEntry> _geometryCache =
-            new(InitialCacheCapacity);
+        private readonly Dictionary<EnemyId, GeometryCacheEntry> _geometryCache = new(InitialCacheCapacity);
         private readonly List<EnemyId> _pruneBuffer = new(InitialCacheCapacity);
         private bool[] _selected = new bool[InitialCacheCapacity];
         private int _selectionCount;

@@ -7,10 +7,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class EnemyAttackCancelled : IPooledArenaDomainEvent, IEquatable<EnemyAttackCancelled>
     {
-        internal EnemyAttackCancelled()
-        {
-        }
-
         public EnemyAttackCancelled(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -38,6 +34,10 @@ namespace Game.Arena.Domain.Events
             EnemyId = enemyId;
             AttackId = attackId;
             Cause = cause;
+        }
+
+        internal EnemyAttackCancelled()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

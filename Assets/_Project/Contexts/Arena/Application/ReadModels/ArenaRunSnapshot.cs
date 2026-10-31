@@ -11,6 +11,7 @@ namespace Game.Arena.Application.ReadModels
     public sealed class ArenaRunSnapshot
     {
         private readonly List<EnemySnapshot> _enemyBuffer;
+
         private EnemySnapshot[] _enemySlots;
 
         internal ArenaRunSnapshot(int enemyCapacity)

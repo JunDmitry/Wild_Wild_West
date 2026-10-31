@@ -5,10 +5,6 @@ namespace Game.Arena.Application.ReadModels
 {
     public sealed class WaveSnapshot
     {
-        internal WaveSnapshot()
-        {
-        }
-
         public WaveSnapshot(
             WaveNumber number,
             WavePhase phase,
@@ -16,6 +12,10 @@ namespace Game.Arena.Application.ReadModels
             BossStatus bossStatus)
         {
             Fill(number, phase, regularEnemiesRemainingToSpawn, bossStatus);
+        }
+
+        internal WaveSnapshot()
+        {
         }
 
         public WaveNumber Number { get; private set; }

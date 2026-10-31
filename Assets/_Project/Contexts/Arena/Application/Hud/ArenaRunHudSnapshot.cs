@@ -14,10 +14,6 @@ namespace Game.Arena.Application.Hud
         private bool _cachedBossPresent;
         private bool _hasCachedStrings;
 
-        internal ArenaRunHudSnapshot()
-        {
-        }
-
         public ArenaRunHudSnapshot(
             string healthLabel,
             int healthCurrent,
@@ -45,6 +41,10 @@ namespace Game.Arena.Application.Hud
                 bossHealthCurrent,
                 bossHealthMaximum,
                 isBossPresent);
+        }
+
+        internal ArenaRunHudSnapshot()
+        {
         }
 
         public string HealthLabel { get; private set; }

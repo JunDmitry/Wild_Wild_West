@@ -7,10 +7,6 @@ namespace Game.Arena.Domain.Events
 {
     public sealed class WavePhaseChanged : IPooledArenaDomainEvent, IEquatable<WavePhaseChanged>
     {
-        internal WavePhaseChanged()
-        {
-        }
-
         public WavePhaseChanged(
             ArenaRunId arenaRunId,
             AggregateRevision aggregateRevision,
@@ -35,6 +31,10 @@ namespace Game.Arena.Domain.Events
             NewPhase = newPhase;
         }
 
+        internal WavePhaseChanged()
+        {
+        }
+
         public ArenaRunId ArenaRunId { get; private set; }
 
         public AggregateRevision AggregateRevision { get; private set; }
@@ -44,29 +44,6 @@ namespace Game.Arena.Domain.Events
         public WavePhase PreviousPhase { get; private set; }
 
         public WavePhase NewPhase { get; private set; }
-
-        internal void Fill(
-            ArenaRunId arenaRunId,
-            AggregateRevision aggregateRevision,
-            WaveNumber waveNumber,
-            WavePhase previousPhase,
-            WavePhase newPhase)
-        {
-            ArenaRunId = arenaRunId;
-            AggregateRevision = aggregateRevision;
-            WaveNumber = waveNumber;
-            PreviousPhase = previousPhase;
-            NewPhase = newPhase;
-        }
-
-        void IPooledArenaDomainEvent.Reset()
-        {
-            ArenaRunId = default;
-            AggregateRevision = default;
-            WaveNumber = default;
-            PreviousPhase = default;
-            NewPhase = default;
-        }
 
         public bool Equals(WavePhaseChanged other)
         {
@@ -90,6 +67,29 @@ namespace Game.Arena.Domain.Events
         public override int GetHashCode()
         {
             return HashCode.Combine(ArenaRunId, AggregateRevision, WaveNumber, PreviousPhase, NewPhase);
+        }
+
+        internal void Fill(
+            ArenaRunId arenaRunId,
+            AggregateRevision aggregateRevision,
+            WaveNumber waveNumber,
+            WavePhase previousPhase,
+            WavePhase newPhase)
+        {
+            ArenaRunId = arenaRunId;
+            AggregateRevision = aggregateRevision;
+            WaveNumber = waveNumber;
+            PreviousPhase = previousPhase;
+            NewPhase = newPhase;
+        }
+
+        void IPooledArenaDomainEvent.Reset()
+        {
+            ArenaRunId = default;
+            AggregateRevision = default;
+            WaveNumber = default;
+            PreviousPhase = default;
+            NewPhase = default;
         }
     }
 }

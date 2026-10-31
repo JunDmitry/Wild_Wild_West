@@ -6,15 +6,15 @@ namespace Game.Arena.Application.Notifications
 {
     public sealed class ArenaRunVictoryNotification : IArenaRunNotification
     {
-        internal ArenaRunVictoryNotification()
-        {
-        }
-
         public ArenaRunVictoryNotification(
             ArenaRunId arenaRunId,
             AggregateRevision revision)
         {
             Fill(arenaRunId, revision);
+        }
+
+        internal ArenaRunVictoryNotification()
+        {
         }
 
         public ArenaRunId ArenaRunId { get; private set; }

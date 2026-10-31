@@ -9,11 +9,6 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
     {
         private IReadOnlyList<IArenaDomainEvent> _domainEvents;
 
-        internal ArenaRunChange()
-        {
-            _domainEvents = Array.Empty<IArenaDomainEvent>();
-        }
-
         public ArenaRunChange(
             AggregateRevision revision,
             IReadOnlyList<IArenaDomainEvent> domainEvents)
@@ -37,6 +32,11 @@ namespace Game.Arena.Domain.Aggregates.ArenaRun
             }
 
             Fill(revision, hasStateChange, domainEvents);
+        }
+
+        internal ArenaRunChange()
+        {
+            _domainEvents = Array.Empty<IArenaDomainEvent>();
         }
 
         public AggregateRevision Revision { get; private set; }
