@@ -84,13 +84,13 @@ namespace Game.Arena.Presentation.Enemies
         {
             if (_views.TryGetValue(enemy.EnemyId, out EnemyView existing))
             {
-                existing.Show(enemy.Position);
+                existing.Show(enemy.Position, enemy.CollisionRadius);
                 return;
             }
 
             EnemyView view = CreateView();
             view.name = "Enemy " + enemy.EnemyId;
-            view.Show(enemy.Position);
+            view.Show(enemy.Position, enemy.CollisionRadius);
 
             _views.Add(enemy.EnemyId, view);
 
