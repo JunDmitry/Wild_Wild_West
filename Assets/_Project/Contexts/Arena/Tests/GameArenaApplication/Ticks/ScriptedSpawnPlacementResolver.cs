@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Interactions.Spawn;
@@ -20,7 +21,9 @@ namespace Game.Arena.Application.Tests.Ticks
 
         public IReadOnlyList<EnemySpawnRequest> Requests => _requests;
 
-        public Position3D ResolveSpawnPosition(EnemySpawnRequest request)
+        public Position3D ResolveSpawnPosition(
+            EnemySpawnRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied)
         {
             _requests.Add(request);
             return Position;

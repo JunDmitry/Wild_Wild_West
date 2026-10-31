@@ -9,9 +9,11 @@ namespace Game.Arena.Infrastructure.Spawning
 {
     /// <summary>
     /// Unity adapter behind <see cref="IEnemySpawnPlacementResolver"/>: chooses a
-    /// Spawn Band point outside the current camera frustum, falling back to the
-    /// band point farthest from the player's aim when the whole band is visible.
-    /// The Domain remains the authority that accepts or rejects the point.
+    /// Spawn Band point that clears every live enemy footprint and sits outside
+    /// the current camera frustum, falling back to the farthest-from-aim
+    /// unoccupied point when the whole band is visible. When every candidate is
+    /// occupied it returns the band point farthest from the aim. The Domain
+    /// remains the authority that accepts or rejects the point.
     /// </summary>
     public sealed class UnityEnemySpawnPlacementResolver : IEnemySpawnPlacementResolver
     {
@@ -35,7 +37,9 @@ namespace Game.Arena.Infrastructure.Spawning
             _candidates = new Vector3[SideCount * OffsetsPerBand * PositionsPerSide];
         }
 
-        public Position3D ResolveSpawnPosition(EnemySpawnRequest request)
+        public Position3D ResolveSpawnPosition(
+            EnemySpawnRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied)
         {
             float radius = request.CollisionRadius.Value.Value;
             int candidateCount = FillCandidates(radius);
@@ -46,11 +50,23 @@ namespace Game.Arena.Infrastructure.Spawning
 
                 for (int index = 0; index < candidateCount; index++)
                 {
+                    if (IsOccupied(_candidates[index], radius, occupied))
+                    {
+                        continue;
+                    }
+
                     if (IsInsideView(_candidates[index], radius) == false)
                     {
                         return ToSpawnPosition(_candidates[index]);
                     }
                 }
+            }
+
+            int unoccupied = FarthestFromAimUnoccupied(candidateCount, radius, occupied);
+
+            if (unoccupied >= 0)
+            {
+                return ToSpawnPosition(_candidates[unoccupied]);
             }
 
             return ToSpawnPosition(FarthestFromAim(candidateCount));
@@ -119,6 +135,27 @@ namespace Game.Arena.Infrastructure.Spawning
             return GeometryUtility.TestPlanesAABB(_frustumPlanes, body);
         }
 
+        private static bool IsOccupied(
+            Vector3 candidate,
+            float radius,
+            ReadOnlySpan<EnemyFootprint> occupied)
+        {
+            for (int index = 0; index < occupied.Length; index++)
+            {
+                EnemyFootprint footprint = occupied[index];
+                float minimum = radius + footprint.Radius.Value.Value;
+                float dx = candidate.x - footprint.Position.X;
+                float dz = candidate.z - footprint.Position.Z;
+
+                if ((dx * dx) + (dz * dz) < minimum * minimum)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private Vector3 FarthestFromAim(int candidateCount)
         {
             Vector3 aim = HorizontalAim();
@@ -128,12 +165,7 @@ namespace Game.Arena.Infrastructure.Spawning
 
             for (int index = 0; index < candidateCount; index++)
             {
-                Vector3 offset = _candidates[index] - origin;
-                offset.y = 0f;
-
-                float alignment = offset.sqrMagnitude <= MinimumDirectionLengthSquared
-                    ? 1f
-                    : Vector3.Dot(offset.normalized, aim);
+                float alignment = Alignment(_candidates[index], origin, aim);
 
                 if (alignment < leastAlignment)
                 {
@@ -143,6 +175,45 @@ namespace Game.Arena.Infrastructure.Spawning
             }
 
             return farthest;
+        }
+
+        private int FarthestFromAimUnoccupied(
+            int candidateCount,
+            float radius,
+            ReadOnlySpan<EnemyFootprint> occupied)
+        {
+            Vector3 aim = HorizontalAim();
+            Vector3 origin = PlayerOrigin();
+            int farthest = -1;
+            float leastAlignment = float.PositiveInfinity;
+
+            for (int index = 0; index < candidateCount; index++)
+            {
+                if (IsOccupied(_candidates[index], radius, occupied))
+                {
+                    continue;
+                }
+
+                float alignment = Alignment(_candidates[index], origin, aim);
+
+                if (alignment < leastAlignment)
+                {
+                    leastAlignment = alignment;
+                    farthest = index;
+                }
+            }
+
+            return farthest;
+        }
+
+        private static float Alignment(Vector3 candidate, Vector3 origin, Vector3 aim)
+        {
+            Vector3 offset = candidate - origin;
+            offset.y = 0f;
+
+            return offset.sqrMagnitude <= MinimumDirectionLengthSquared
+                ? 1f
+                : Vector3.Dot(offset.normalized, aim);
         }
 
         private Vector3 HorizontalAim()

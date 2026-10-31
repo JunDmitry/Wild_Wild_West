@@ -268,7 +268,9 @@ namespace Game.Arena.PlayMode.Tests
 
         private sealed class FixedSpawnPlacementResolver : IEnemySpawnPlacementResolver
         {
-            public Position3D ResolveSpawnPosition(EnemySpawnRequest request)
+            public Position3D ResolveSpawnPosition(
+                EnemySpawnRequest request,
+                ReadOnlySpan<EnemyFootprint> occupied)
             {
                 return Position3D.Zero;
             }

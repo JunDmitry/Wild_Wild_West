@@ -1,10 +1,13 @@
-﻿using Game.Arena.Domain.Geometry;
+﻿using System;
+using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Interactions.Spawn;
 
 namespace Game.Arena.Application.Ports
 {
     public interface IEnemySpawnPlacementResolver
     {
-        Position3D ResolveSpawnPosition(EnemySpawnRequest request);
+        Position3D ResolveSpawnPosition(
+            EnemySpawnRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied);
     }
 }
