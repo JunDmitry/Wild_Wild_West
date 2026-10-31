@@ -413,7 +413,8 @@ namespace Game.Arena.Infrastructure.Movement
 
                 if (hit.distance <= 0f)
                 {
-                    if (_enemyColliders.TryGetEnemyId(hit.collider, out _))
+                    if (_enemyColliders.TryGetEnemyId(hit.collider, out EnemyId hitEnemyId)
+                        && hitEnemyId != enemyId)
                     {
                         nearest = 0f;
                         break;
