@@ -126,6 +126,17 @@ collider is blocked — the accepted position is the intent's `From` — instead
 of passing through it; overlaps with non-Enemy colliders keep the existing
 geometry rule. Enemies remain blocking geometry; no separation push is added.
 
+The adapter also receives the live Enemy footprints (identity, position, and
+collision radius) alongside the batch, built by the Application from a reusable
+run snapshot and a preallocated buffer, so an Enemy the Domain omits from the
+batch — one with a pending attack or one already within its attack range — still
+blocks movement. The adapter caps every intent against every other live
+footprint: a batch peer at its accepted position, a stationary Enemy at its
+snapshot position. The cap is the first contact fraction of the relative motion;
+an already-overlapping pair is left in place and no separation push is added
+(ADR-0040). This input is independent of Presentation: an Enemy without a view
+or a collider is still occupied.
+
 The adapter may reuse a scene-geometry result from a recent tick within the
 bound recorded in [ADR-0038](../../adr/ADR-0038-physics-query-budget.md): with
 `N` intents in the batch, each Enemy is re-queried at least every

@@ -70,6 +70,7 @@ ADRs are stored as Markdown files in the `docs/architect/adr/` directory so that
 | ADR-0037 | Scope metric 3 to game-code allocation and bound the engine residual | Accepted | 2026-10-29 | [ADR-0037](ADR-0037-metric-3-scope-and-baseline.md) |
 | ADR-0038 | Bound per-frame physics queries with an age-priority budget | Accepted | 2026-10-29 | [ADR-0038](ADR-0038-physics-query-budget.md) |
 | ADR-0039 | Make CollisionRadius the single collision-shape contract and space spawns by live occupancy | Accepted | 2026-10-31 | [ADR-0039](ADR-0039-collision-shape-and-spawn-occupancy.md) |
+| ADR-0040 | Give movement resolution the live enemy occupancy | Accepted | 2026-10-31 | [ADR-0040](ADR-0040-movement-occupancy-for-stationary-enemies.md) |
 
 ## New ADR Template
 
