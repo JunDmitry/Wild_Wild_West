@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Combat;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Configuration;
@@ -46,7 +48,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
             UnityEnemySpawnPlacementResolver resolver = new(_arena, camera, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(0.5f));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             Assert.That(IsInsideView(camera, spawn, 0.5f), Is.False);
             AssertIsSpawnBandPoint(spawn);
@@ -58,7 +62,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
             UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(0.5f));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             Assert.That(_arena.IsSpawnPosition(spawn), Is.True);
             Assert.That(spawn.Y, Is.EqualTo(_arena.Bounds.GroundY));
@@ -71,7 +77,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
             UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(radius));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(radius),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             float expectedClearance = Mathf.Min(radius, _arena.SpawnBand.Value);
             Assert.That(OutwardDistanceFromArena(spawn), Is.GreaterThanOrEqualTo(expectedClearance - Tolerance));
@@ -85,7 +93,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
             UnityEnemySpawnPlacementResolver resolver = new(_arena, camera, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(0.5f));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             AssertIsSpawnBandPoint(spawn);
             Assert.That(spawn.Z, Is.LessThan(_arena.Bounds.MinimumZ));
@@ -100,7 +110,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.identity);
             UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(0.5f));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             AssertIsSpawnBandPoint(spawn);
             Assert.That(spawn.Z, Is.LessThan(_arena.Bounds.MinimumZ));
@@ -112,7 +124,9 @@ namespace Game.Arena.PlayMode.Tests
             Transform player = CreatePlayer(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
             UnityEnemySpawnPlacementResolver resolver = new(_arena, null, player);
 
-            Position3D spawn = resolver.ResolveSpawnPosition(CreateRequest(0.5f));
+            Position3D spawn = resolver.ResolveSpawnPosition(
+                CreateRequest(0.5f),
+                ReadOnlySpan<EnemyFootprint>.Empty);
 
             AssertIsSpawnBandPoint(spawn);
         }
