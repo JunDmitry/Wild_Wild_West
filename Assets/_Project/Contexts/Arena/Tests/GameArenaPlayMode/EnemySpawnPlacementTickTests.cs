@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Game.Arena.Application.Ports;
 using Game.Arena.Application.ReadModels;
@@ -180,7 +181,8 @@ namespace Game.Arena.PlayMode.Tests
         private sealed class StationaryMovementResolver : IEnemyMovementResolver
         {
             public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
-                EnemyMovementBatchRequest request)
+                EnemyMovementBatchRequest request,
+                ReadOnlySpan<EnemyFootprint> occupied)
             {
                 List<EnemyMovementBatchResolutionEntry> entries = new(request.Intents.Count);
 
@@ -198,7 +200,8 @@ namespace Game.Arena.PlayMode.Tests
         private sealed class PursuitMovementResolver : IEnemyMovementResolver
         {
             public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
-                EnemyMovementBatchRequest request)
+                EnemyMovementBatchRequest request,
+                ReadOnlySpan<EnemyFootprint> occupied)
             {
                 List<EnemyMovementBatchResolutionEntry> entries = new(request.Intents.Count);
 

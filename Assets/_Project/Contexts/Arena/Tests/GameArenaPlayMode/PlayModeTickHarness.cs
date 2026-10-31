@@ -260,7 +260,9 @@ namespace Game.Arena.PlayMode.Tests
 
         private sealed class NoEnemyMovementResolver : IEnemyMovementResolver
         {
-            public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(EnemyMovementBatchRequest request)
+            public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
+                EnemyMovementBatchRequest request,
+                ReadOnlySpan<EnemyFootprint> occupied)
             {
                 return Array.Empty<EnemyMovementBatchResolutionEntry>();
             }

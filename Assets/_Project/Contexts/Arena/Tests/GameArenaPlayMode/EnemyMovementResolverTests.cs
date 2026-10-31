@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
@@ -59,7 +61,7 @@ namespace Game.Arena.PlayMode.Tests
                 CreateIntent(1UL, new Position3D(10f, GroundY, 0f), Direction3D.Left, 0.5f),
                 CreateIntent(2UL, new Position3D(0f, GroundY, 10f), Direction3D.Back, 0.5f));
 
-            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = resolver.Resolve(request);
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = Resolve(resolver,request);
 
             Assert.That(entries, Is.Not.Null);
             Assert.That(entries.Count, Is.EqualTo(2));
@@ -228,7 +230,7 @@ namespace Game.Arena.PlayMode.Tests
             CreateLeftWalls(intents);
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> first =
-                resolver.Resolve(CreateRequest(intents));
+                Resolve(resolver,CreateRequest(intents));
 
             for (int index = 0; index < first.Count; index++)
             {
@@ -243,7 +245,7 @@ namespace Game.Arena.PlayMode.Tests
             }
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> second =
-                resolver.Resolve(CreateRequest(intents));
+                Resolve(resolver,CreateRequest(intents));
 
             for (int index = 0; index < second.Count; index++)
             {
@@ -269,7 +271,7 @@ namespace Game.Arena.PlayMode.Tests
 
             for (int resolve = 0; resolve < 4; resolve++)
             {
-                entries = resolver.Resolve(CreateRequest(intents));
+                entries = Resolve(resolver,CreateRequest(intents));
             }
 
             for (int index = 0; index < entries.Count; index++)
@@ -287,13 +289,13 @@ namespace Game.Arena.PlayMode.Tests
             EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
             EnemyMovementIntent newcomer = CreateIntent(4UL, new Position3D(10f, GroundY, 12f), Direction3D.Left, 0.5f);
 
-            resolver.Resolve(CreateRequest(first, second, third));
+            Resolve(resolver,CreateRequest(first, second, third));
 
             CreateWall(new Vector3(9.2f, GroundY, 0f), new Vector3(0.2f, 1f, 2f));
             CreateWall(new Vector3(9.2f, GroundY, 12f), new Vector3(0.2f, 1f, 2f));
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                resolver.Resolve(CreateRequest(first, second, third, newcomer));
+                Resolve(resolver,CreateRequest(first, second, third, newcomer));
 
             AssertShortened(entries, 3);
             AssertUnshortened(entries, 2);
@@ -307,7 +309,7 @@ namespace Game.Arena.PlayMode.Tests
             EnemyMovementIntent second = CreateIntent(2UL, new Position3D(10f, GroundY, 4f), Direction3D.Left, 0.5f);
             EnemyMovementIntent third = CreateIntent(3UL, new Position3D(10f, GroundY, 8f), Direction3D.Left, 0.5f);
 
-            resolver.Resolve(CreateRequest(first, second, third));
+            Resolve(resolver,CreateRequest(first, second, third));
 
             CreateWall(new Vector3(9.2f, GroundY, 0f), new Vector3(0.2f, 1f, 2f));
             CreateWall(new Vector3(10f, GroundY, 7.2f), new Vector3(2f, 1f, 0.2f));
@@ -324,7 +326,7 @@ namespace Game.Arena.PlayMode.Tests
                 0.5f);
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                resolver.Resolve(CreateRequest(first, second, turnedThird, newcomer));
+                Resolve(resolver,CreateRequest(first, second, turnedThird, newcomer));
 
             AssertShortened(entries, 0);
             AssertUnshortened(entries, 1);
@@ -342,10 +344,10 @@ namespace Game.Arena.PlayMode.Tests
             CreateLeftWalls(intents);
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> first =
-                resolver.Resolve(CreateRequest(intents));
+                Resolve(resolver,CreateRequest(intents));
 
             IReadOnlyList<EnemyMovementBatchResolutionEntry> second =
-                resolver.Resolve(CreateRequest(intents));
+                Resolve(resolver,CreateRequest(intents));
 
             AssertShortened(first, 2);
             AssertShortened(second, 2);
@@ -387,7 +389,7 @@ namespace Game.Arena.PlayMode.Tests
             for (int tick = 0; tick < 6; tick++)
             {
                 IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                    resolver.Resolve(CreateRequest(intents));
+                    Resolve(resolver,CreateRequest(intents));
 
                 for (int index = 0; index < 3; index++)
                 {
@@ -426,7 +428,7 @@ namespace Game.Arena.PlayMode.Tests
             for (int tick = 0; tick < 4; tick++)
             {
                 IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                    resolver.Resolve(CreateRequest(intents));
+                    Resolve(resolver,CreateRequest(intents));
 
                 Assert.That(
                     entries[2].AcceptedPosition.X,
@@ -446,7 +448,7 @@ namespace Game.Arena.PlayMode.Tests
             for (int tick = 0; tick < 4; tick++)
             {
                 IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                    resolver.Resolve(CreateRequest(intents));
+                    Resolve(resolver,CreateRequest(intents));
 
                 for (int index = 0; index < intents.Length; index++)
                 {
@@ -532,12 +534,19 @@ namespace Game.Arena.PlayMode.Tests
                 "Entry " + index + " was shortened although it should not have been queried.");
         }
 
+        private static IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
+            UnityEnemyMovementResolver resolver,
+            EnemyMovementBatchRequest request)
+        {
+            return resolver.Resolve(request, ReadOnlySpan<EnemyFootprint>.Empty);
+        }
+
         private static EnemyMovementBatchResolutionEntry ResolveSingle(
             UnityEnemyMovementResolver resolver,
             EnemyMovementIntent intent)
         {
             IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                resolver.Resolve(CreateRequest(intent));
+                Resolve(resolver,CreateRequest(intent));
 
             Assert.That(entries.Count, Is.EqualTo(1));
 

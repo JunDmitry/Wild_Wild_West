@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Concurrency;
 using Game.Arena.Domain.Configuration;
 using Game.Arena.Domain.Geometry;
@@ -162,6 +164,75 @@ namespace Game.Arena.PlayMode.Tests
         }
 
         [Test]
+        public void StationaryEnemyOutsideBatch_BlocksMover()
+        {
+            // Enemy 2 is stationary and the Domain omits it from the movement
+            // batch (pending attack or already in attack range). It has no view
+            // and no collider, so only the live occupancy can stop enemy 1.
+            Position3D moverStart = new(10f, GroundY, 0f);
+            Position3D stationary = new(5.5f, GroundY, 0f);
+            EnemyFootprint[] occupied =
+            {
+                new EnemyFootprint(
+                    EnemyId.FromValue(1UL),
+                    moverStart,
+                    CollisionRadius.FromValue(Radius)),
+                new EnemyFootprint(
+                    EnemyId.FromValue(2UL),
+                    stationary,
+                    CollisionRadius.FromValue(Radius)),
+            };
+
+            EnemyMovementBatchResolutionEntry[] entries = Resolve(
+                new UnityEnemyMovementResolver(_transforms, _arena, _colliders),
+                occupied,
+                CreateIntent(1UL, moverStart, Direction3D.Left, 4f));
+
+            float distance = GroundDistance(entries[0].AcceptedPosition, stationary);
+
+            Assert.That(
+                distance,
+                Is.GreaterThanOrEqualTo((Radius + Radius) - OverlapTolerance),
+                "The mover reached the stationary Enemy's footprint: distance "
+                + distance + ".");
+        }
+
+        [Test]
+        public void StationaryEnemyWithoutViewOrCollider_BlocksMover()
+        {
+            // Enemy 2's footprint straddles the Arena boundary (centre 29.8,
+            // radius 0.5), so Presentation creates no view and therefore no
+            // collider. It is also outside the movement batch. Only the live
+            // occupancy can stop the mover before it overlaps.
+            Position3D moverStart = new(27f, GroundY, 0f);
+            Position3D stationary = new(29.8f, GroundY, 0f);
+            EnemyFootprint[] occupied =
+            {
+                new EnemyFootprint(
+                    EnemyId.FromValue(1UL),
+                    moverStart,
+                    CollisionRadius.FromValue(Radius)),
+                new EnemyFootprint(
+                    EnemyId.FromValue(2UL),
+                    stationary,
+                    CollisionRadius.FromValue(Radius)),
+            };
+
+            EnemyMovementBatchResolutionEntry[] entries = Resolve(
+                new UnityEnemyMovementResolver(_transforms, _arena, _colliders),
+                occupied,
+                CreateIntent(1UL, moverStart, Direction3D.Right, 4f));
+
+            float distance = GroundDistance(entries[0].AcceptedPosition, stationary);
+
+            Assert.That(
+                distance,
+                Is.GreaterThanOrEqualTo((Radius + Radius) - OverlapTolerance),
+                "The mover reached the viewless, colliderless Enemy's footprint: distance "
+                + distance + ".");
+        }
+
+        [Test]
         public void RepeatedConvergence_StaysNonOverlappingEveryTick()
         {
             UnityEnemyMovementResolver resolver = new(_transforms, _arena, _colliders);
@@ -174,7 +245,7 @@ namespace Game.Arena.PlayMode.Tests
             for (int tick = 0; tick < 8; tick++)
             {
                 IReadOnlyList<EnemyMovementBatchResolutionEntry> resolved =
-                    resolver.Resolve(CreateRequest(intents));
+                    resolver.Resolve(CreateRequest(intents), ReadOnlySpan<EnemyFootprint>.Empty);
 
                 Assert.That(resolved.Count, Is.EqualTo(intents.Length));
                 AssertNoOverlap(resolved, 0, 1);
@@ -196,15 +267,26 @@ namespace Game.Arena.PlayMode.Tests
 
         private EnemyMovementBatchResolutionEntry[] Resolve(params EnemyMovementIntent[] intents)
         {
-            return Resolve(new UnityEnemyMovementResolver(_transforms, _arena, _colliders), intents);
+            return Resolve(
+                new UnityEnemyMovementResolver(_transforms, _arena, _colliders),
+                ReadOnlySpan<EnemyFootprint>.Empty,
+                intents);
         }
 
         private static EnemyMovementBatchResolutionEntry[] Resolve(
             UnityEnemyMovementResolver resolver,
             params EnemyMovementIntent[] intents)
         {
+            return Resolve(resolver, ReadOnlySpan<EnemyFootprint>.Empty, intents);
+        }
+
+        private static EnemyMovementBatchResolutionEntry[] Resolve(
+            UnityEnemyMovementResolver resolver,
+            ReadOnlySpan<EnemyFootprint> occupied,
+            params EnemyMovementIntent[] intents)
+        {
             IReadOnlyList<EnemyMovementBatchResolutionEntry> entries =
-                resolver.Resolve(CreateRequest(intents));
+                resolver.Resolve(CreateRequest(intents), occupied);
 
             EnemyMovementBatchResolutionEntry[] copy = new EnemyMovementBatchResolutionEntry[entries.Count];
 

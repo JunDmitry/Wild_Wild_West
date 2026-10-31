@@ -65,7 +65,9 @@ namespace Game.Arena.Infrastructure.Movement
             _hitsBuffer = new RaycastHit[BufferSize];
         }
 
-        public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(EnemyMovementBatchRequest request)
+        public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
+            EnemyMovementBatchRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied)
         {
             if (request == null)
             {
@@ -83,7 +85,7 @@ namespace Game.Arena.Infrastructure.Movement
                 _entries.Add(ResolveIntent(intents[index], _selected[index], horizon));
             }
 
-            ApplySimultaneousMovementLimit(intents);
+            ApplySimultaneousMovementLimit(intents, occupied);
             PruneAbsentEntries();
 
             return _entries;
@@ -324,16 +326,21 @@ namespace Game.Arena.Infrastructure.Movement
         }
 
         /// <summary>
-        /// Shortens each intent so that no pair of enemies moving in the same
-        /// batch ends closer than the sum of their collision radii. The physics
-        /// cast only sees the other enemy's starting collider and each intent's
-        /// own requested travel, so two enemies closing from opposite sides can
-        /// each find a clear path and meet (or cross) inside one tick. This pass
-        /// caps both at the first contact fraction of their relative motion.
-        /// It is conservative: a pair that already overlaps is left where it is
-        /// rather than pushed apart (ADR-0039: no separation push).
+        /// Shortens each intent so that no pair of enemies ends closer than the
+        /// sum of their collision radii. The physics cast only sees the other
+        /// enemy's starting collider and each intent's own requested travel, so
+        /// two enemies closing from opposite sides can each find a clear path
+        /// and meet (or cross) inside one tick. Batch peers are capped at the
+        /// first contact fraction of their relative motion. Every other live
+        /// enemy in <paramref name="occupied"/> — one omitted from the batch or
+        /// one with no view or collider — is capped at the fraction of the
+        /// mover's motion that reaches it, using its snapshot position. The pass
+        /// is conservative: a pair that already overlaps is left where it is
+        /// rather than pushed apart (ADR-0039, ADR-0040: no separation push).
         /// </summary>
-        private void ApplySimultaneousMovementLimit(IReadOnlyList<EnemyMovementIntent> intents)
+        private void ApplySimultaneousMovementLimit(
+            IReadOnlyList<EnemyMovementIntent> intents,
+            ReadOnlySpan<EnemyFootprint> occupied)
         {
             int count = intents.Count;
             PrepareMovementCaps(count);
@@ -371,6 +378,36 @@ namespace Game.Arena.Infrastructure.Movement
 
             for (int index = 0; index < count; index++)
             {
+                Position3D start = intents[index].Intent.From;
+                Position3D end = _entries[index].AcceptedPosition;
+                float radius = intents[index].CollisionRadius.Value.Value;
+                EnemyId moverId = intents[index].EnemyId;
+
+                for (int other = 0; other < occupied.Length; other++)
+                {
+                    EnemyFootprint footprint = occupied[other];
+
+                    if (footprint.Id == moverId || IsInBatch(intents, footprint.Id))
+                    {
+                        continue;
+                    }
+
+                    float cap = ContactFraction(
+                        start,
+                        end,
+                        footprint.Position,
+                        footprint.Position,
+                        radius + footprint.Radius.Value.Value);
+
+                    if (cap < _movementCaps[index])
+                    {
+                        _movementCaps[index] = cap;
+                    }
+                }
+            }
+
+            for (int index = 0; index < count; index++)
+            {
                 float cap = _movementCaps[index];
 
                 if (cap >= 1f)
@@ -387,6 +424,21 @@ namespace Game.Arena.Infrastructure.Movement
                     _entries[index].EnemyId,
                     new Position3D(x, end.Y, z));
             }
+        }
+
+        private static bool IsInBatch(
+            IReadOnlyList<EnemyMovementIntent> intents,
+            EnemyId enemyId)
+        {
+            for (int index = 0; index < intents.Count; index++)
+            {
+                if (intents[index].EnemyId == enemyId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void PrepareMovementCaps(int count)

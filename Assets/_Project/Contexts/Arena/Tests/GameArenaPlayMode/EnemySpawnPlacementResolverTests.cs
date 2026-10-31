@@ -143,7 +143,7 @@ namespace Game.Arena.PlayMode.Tests
 
             EnemyFootprint[] occupied =
             {
-                new(first, CollisionRadius.FromValue(0.5f)),
+                new(EnemyId.FromValue(1UL), first, CollisionRadius.FromValue(0.5f)),
             };
 
             Position3D second = resolver.ResolveSpawnPosition(
@@ -173,6 +173,7 @@ namespace Game.Arena.PlayMode.Tests
                     new ReadOnlySpan<EnemyFootprint>(occupied, 0, occupiedCount));
 
                 occupied[occupiedCount++] = new EnemyFootprint(
+                    EnemyId.FromValue((ulong)(index + 1)),
                     spawns[index],
                     CollisionRadius.FromValue(0.5f));
             }
@@ -202,7 +203,7 @@ namespace Game.Arena.PlayMode.Tests
             Position3D moved = new(original.X + 0.2f, original.Y, original.Z + 0.2f);
             EnemyFootprint[] occupied =
             {
-                new(moved, CollisionRadius.FromValue(0.5f)),
+                new(EnemyId.FromValue(1UL), moved, CollisionRadius.FromValue(0.5f)),
             };
 
             Position3D second = resolver.ResolveSpawnPosition(
@@ -226,7 +227,7 @@ namespace Game.Arena.PlayMode.Tests
 
             EnemyFootprint[] occupied =
             {
-                new(Position3D.Zero, CollisionRadius.FromValue(1000f)),
+                new(EnemyId.FromValue(1UL), Position3D.Zero, CollisionRadius.FromValue(1000f)),
             };
 
             Position3D spawn = resolver.ResolveSpawnPosition(

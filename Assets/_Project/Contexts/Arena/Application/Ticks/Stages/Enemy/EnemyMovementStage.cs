@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Aggregates.ArenaRun;
 using Game.Arena.Domain.Interactions.Movement;
@@ -12,6 +13,10 @@ namespace Game.Arena.Application.Ticks.Stages
         private readonly PendingInteractionTracker _interactionTracker;
 
         private EnemyMovementBatchResolution _resolution;
+
+        private ArenaRunStateSnapshot _snapshotBuffer;
+        private EnemyFootprint[] _footprints;
+        private int _footprintCapacity = -1;
 
         public EnemyMovementStage(IEnemyMovementResolver resolver, PendingInteractionTracker interactionTracker)
         {
@@ -35,7 +40,8 @@ namespace Game.Arena.Application.Ticks.Stages
 
             EnemyMovementBatchRequest request = requestOutcome.Request;
             _interactionTracker.Track(request.Correlation);
-            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = _resolver.Resolve(request);
+            ReadOnlySpan<EnemyFootprint> occupied = BuildOccupancy(run);
+            IReadOnlyList<EnemyMovementBatchResolutionEntry> entries = _resolver.Resolve(request, occupied);
 
             if (entries == null)
             {
@@ -63,6 +69,39 @@ namespace Game.Arena.Application.Ticks.Stages
             _interactionTracker.Clear();
 
             return StageExecutionStatus.Completed;
+        }
+
+        /// <summary>
+        /// Fills a reusable run snapshot and footprint buffer with every live
+        /// enemy, so the movement resolver caps an intent against an Enemy the
+        /// Domain omitted from the batch or Presentation did not render
+        /// (ADR-0040). The buffers are allocated once per enemy capacity and
+        /// reused on every later tick (ADR-0035).
+        /// </summary>
+        private ReadOnlySpan<EnemyFootprint> BuildOccupancy(ArenaRun run)
+        {
+            int capacity = run.EnemyCapacity;
+
+            if (_footprints == null || _footprintCapacity != capacity)
+            {
+                _snapshotBuffer = run.CreateSnapshotBuffer();
+                _footprints = new EnemyFootprint[capacity];
+                _footprintCapacity = capacity;
+            }
+
+            ArenaRunStateSnapshot snapshot = run.CreateSnapshot(_snapshotBuffer);
+            int count = 0;
+
+            for (int index = 0; index < snapshot.Enemies.Count; index++)
+            {
+                EnemyStateSnapshot enemy = snapshot.Enemies[index];
+                _footprints[count++] = new EnemyFootprint(
+                    enemy.EnemyId,
+                    enemy.Position,
+                    enemy.CollisionRadius);
+            }
+
+            return new ReadOnlySpan<EnemyFootprint>(_footprints, 0, count);
         }
     }
 }

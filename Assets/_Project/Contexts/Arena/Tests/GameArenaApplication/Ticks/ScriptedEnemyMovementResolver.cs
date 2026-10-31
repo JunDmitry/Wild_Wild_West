@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Application.Ports;
 using Game.Arena.Domain.Geometry;
 using Game.Arena.Domain.Interactions.Movement;
@@ -24,7 +25,8 @@ namespace Game.Arena.Application.Tests.Ticks
         private readonly List<EnemyMovementBatchResolutionEntry> _entries = new();
 
         public IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
-            EnemyMovementBatchRequest request)
+            EnemyMovementBatchRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied)
         {
             CallCount++;
             LastRequest = request;

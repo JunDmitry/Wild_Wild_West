@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Game.Arena.Domain.Interactions.Movement;
 
 namespace Game.Arena.Application.Ports
 {
     public interface IEnemyMovementResolver
     {
-        IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(EnemyMovementBatchRequest request);
+        IReadOnlyList<EnemyMovementBatchResolutionEntry> Resolve(
+            EnemyMovementBatchRequest request,
+            ReadOnlySpan<EnemyFootprint> occupied);
     }
 }

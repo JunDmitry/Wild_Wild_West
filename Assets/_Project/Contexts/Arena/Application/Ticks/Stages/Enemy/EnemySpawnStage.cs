@@ -96,7 +96,10 @@ namespace Game.Arena.Application.Ticks.Stages
             for (int index = 0; index < snapshot.Enemies.Count; index++)
             {
                 EnemyStateSnapshot enemy = snapshot.Enemies[index];
-                _footprints[count++] = new EnemyFootprint(enemy.Position, enemy.CollisionRadius);
+                _footprints[count++] = new EnemyFootprint(
+                    enemy.EnemyId,
+                    enemy.Position,
+                    enemy.CollisionRadius);
             }
 
             return new ReadOnlySpan<EnemyFootprint>(_footprints, 0, count);
